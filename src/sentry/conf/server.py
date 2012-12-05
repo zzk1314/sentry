@@ -142,7 +142,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
 
-    'compressor',
+    'pipeline',
     'crispy_forms',
     'djcelery',
     'gunicorn',
@@ -168,17 +168,61 @@ if os.path.exists(NPM_ROOT):
 else:
     LESS_BIN = 'lessc'
 
-# XXX: There is a bug in django-compressor that causes it to incorrectly handle
-# relative URLs in precompiled files (less) when compression is disabled
-COMPRESS_ENABLED = True
-COMPRESS_URL = STATIC_URL
-COMPRESS_OUTPUT_DIR = 'CACHE'
-COMPRESS_PRECOMPILERS = (
-    ('text/less', '%s --strict-imports {infile} {outfile}' % (LESS_BIN,)),
+PIPELINE = False
+PIPELINE_CSS = {
+    'lib': {
+        'source_filenames': (
+          'scripts/lib/select2/select2.css',
+        ),
+        'output_filename': 'styles/vendor.css',
+    },
+    'sentry': {
+        'source_filenames': (
+          'less/sentry.less',
+        ),
+        'output_filename': 'styles/sentry.css',
+    },
+}
+
+PIPELINE_JS = {
+    'vendor': {
+        'source_filenames': (
+          'scripts/lib/jquery.js',
+          'scripts/lib/jquery.animate-colors-min.js',
+          'scripts/lib/jquery.clippy.min.js',
+          'scripts/lib/jquery.cookie.js',
+          'scripts/lib/jquery.flot.min.js',
+          'scripts/lib/json2.js',
+          'scripts/lib/underscore.js',
+          'scripts/lib/backbone.js',
+          'scripts/lib/select2/select2.js',
+          'scripts/lib/bootstrap.js',
+        ),
+        'output_filename': 'scripts/vendor.js',
+    },
+    'sentry': {
+        'source_filenames': (
+          'scripts/core.js',
+          'scripts/models.js',
+          'scripts/templates.js',
+          'scripts/utils.js',
+          'scripts/collections.js',
+          'scripts/views.js',
+          'scripts/app.js',
+        ),
+        'output_filename': 'scripts/sentry.js',
+    }
+}
+
+PIPELINE_COMPILERS = (
+  'pipeline.compilers.less.LessCompiler',
 )
 
+PIPELINE_LESS_BINARY = LESS_BIN
+PIPELINE_LESS_ARGUMENTS = '--strict-imports'
+
+# STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
 STATICFILES_FINDERS = (
-    "compressor.finders.CompressorFinder",
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 )
