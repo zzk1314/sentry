@@ -53,6 +53,20 @@ class PluginManager(InstanceManager):
                 continue
             yield plugin
 
+    def get_urls(self):
+        from django.conf.urls.defaults import patterns, url, include
+
+        urlpatterns = patterns('')
+
+        for plugin in self.all():
+            urlpatterns += patterns('',
+                url(r'^%s/' % plugin.slug, include(plugin.urls)),
+            )
+
+        return urlpatterns
+
+    urls = property(get_urls)
+
     def for_project(self, project):
         for plugin in self.all():
             if not plugin.is_enabled(project):
@@ -148,6 +162,9 @@ class IPlugin(local):
 
     site_conf_form = None
     site_conf_template = 'sentry/plugins/site_configuration.html'
+
+    urls_app_name = None
+    urls_name = None
 
     # Global enabled state
     enabled = True
@@ -302,31 +319,67 @@ class IPlugin(local):
         """
         return self.resource_links
 
-    def get_view_response(self, request, group):
-        from sentry.permissions import can_admin_group
+    def as_view(self, view_func):
+        """
+        Wraps a view function in the required permissions and validation logic
+        for generic pages.
+        """
+        from django.shortcuts import get_object_or_404
+        from sentry.constants import MEMBER_USER
+        from sentry.models import Group
+        from sentry.web.decorators import has_access, login_required
 
-        self.selected = request.path == self.get_url(group)
+        @login_required
+        @has_access(MEMBER_USER)
+        def get_view_response(request, project, group_id, **kwargs):
+            from sentry.permissions import can_admin_group
 
-        if not self.selected:
-            return
+            group = get_object_or_404(Group, pk=group_id, project=project)
 
-        response = self.view(request, group)
+            if not self.is_enabled(project=project):
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER') or reverse('sentry', kwargs={'project_id': project.slug}))
 
-        if not response:
-            return
+            response = view_func(request, group, **kwargs)
 
-        if isinstance(response, HttpResponseRedirect):
-            return response
+            if not response:
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER') or reverse('sentry', kwargs={'project_id': project.slug}))
 
-        if not isinstance(response, Response):
-            raise NotImplementedError('Please use self.render() when returning responses.')
+            if isinstance(response, HttpResponseRedirect):
+                return response
 
-        return response.respond(request, {
-            'plugin': self,
-            'project': group.project,
-            'group': group,
-            'can_admin_event': can_admin_group(request.user, group),
-        })
+            elif not isinstance(response, Response):
+                raise NotImplementedError('You must use self.render() when returning responses.')
+
+            return response.respond(request, {
+                'plugin': self,
+                'project': group.project,
+                'group': group,
+                'can_admin_event': can_admin_group(request.user, group),
+            })
+
+        return get_view_response
+
+    def get_urls(self):
+        """
+        Returns a urlpatterns object.
+
+        Views (unless otherwise nescesary) should be decorated via ``self.as_view(callable)``
+        within the urlpatterns.
+        """
+        from django.conf.urls.defaults import patterns, url
+
+        urlpatterns = patterns('',
+            url(r'^$', self.as_view(self.view)),
+        )
+
+        return urlpatterns
+
+    def urls(self):
+        if self.urls_app_name and self.urls_name:
+            return self.get_urls(), self.urls_app_name, self.urls_name
+        return self.get_urls()
+
+    urls = property(urls)
 
     def view(self, request, group, **kwargs):
         """
