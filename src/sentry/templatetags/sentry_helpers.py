@@ -42,9 +42,15 @@ def pprint(value, break_after=10):
     break_after is used to define how often a <span> is
     inserted (for soft wrapping).
     """
-    from pprint import pformat
+    from sentry.utils.pprint import pformat
 
-    value = pformat(value).decode('utf-8', 'replace')
+    try:
+        value = pformat(value).decode('utf-8', 'replace')
+    except:
+        import logging
+        logging.exception('Erroring running pprint on value')
+        raise
+
     return mark_safe(u'<span></span>'.join(
         [escape(value[i:(i + break_after)]) for i in xrange(0, len(value), break_after)]
     ))
