@@ -14,6 +14,7 @@
             this.model.on('change:lastSeen', this.updateLastSeen);
             this.model.on('change:isBookmarked', this.render);
             this.model.on('change:isResolved', this.render);
+            this.model.on('change:isMuted', this.render);
             this.model.on('change:historicalData', this.renderSparkline);
         },
 
@@ -22,8 +23,11 @@
             this.$el.html(this.template(data));
             this.$el.attr('data-id', this.model.id);
             this.$el.addClass(this.getLevelClassName());
-            if (this.model.get('isResolved')) {
+            if (this.model.get('isResolved') || this.model.get('isMuted')) {
                 this.$el.addClass('resolved');
+            }
+            if (this.model.get('isMuted')) {
+                this.$el.addClass('muted');
             }
             if (this.model.get('historicalData').length > 0) {
                 this.$el.addClass('with-sparkline');
@@ -31,6 +35,14 @@
             this.$el.find('a[data-action=resolve]').click(_.bind(function(e){
                 e.preventDefault();
                 this.resolve();
+            }, this));
+            this.$el.find('a[data-action=mute]').click(_.bind(function(e){
+                e.preventDefault();
+                this.mute();
+            }, this));
+            this.$el.find('a[data-action=unmute]').click(_.bind(function(e){
+                e.preventDefault();
+                this.unmute();
             }, this));
             this.$el.find('a[data-action=bookmark]').click(_.bind(function(e){
                 e.preventDefault();
@@ -51,6 +63,18 @@
             return app.config.urlPrefix + '/api/' + app.config.projectId + '/resolve/';
         },
 
+        getMuteUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.projectId + '/group/' + this.model.get('id') + '/set/mute/';
+        },
+
+        getUnmuteUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.projectId + '/group/' + this.model.get('id') + '/set/unmute/';
+        },
+
+        getBookmarkUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.projectId + '/bookmark/';
+        },
+
         resolve: function(){
             $.ajax({
                 url: this.getResolveUrl(),
@@ -65,8 +89,34 @@
             });
         },
 
-        getBookmarkUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.projectId + '/bookmark/';
+        mute: function(){
+            $.ajax({
+                url: this.getMuteUrl(),
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    gid: this.model.get('id')
+                },
+                success: _.bind(function(response) {
+                    this.model.set('isResolved', false);
+                    this.model.set('isMuted', true);
+                }, this)
+            });
+        },
+
+        unmute: function(){
+            $.ajax({
+                url: this.getUnmuteUrl(),
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    gid: this.model.get('id')
+                },
+                success: _.bind(function(response) {
+                    this.model.set('isResolved', false);
+                    this.model.set('isMuted', false);
+                }, this)
+            });
         },
 
         bookmark: function(){

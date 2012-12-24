@@ -7,7 +7,7 @@ sentry.utils.javascript
 """
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
-from sentry.constants import STATUS_RESOLVED
+from sentry.constants import STATUS_RESOLVED, STATUS_MUTED
 from sentry.models import Group, GroupBookmark
 from sentry.templatetags.sentry_plugins import get_tags
 from sentry.utils import json
@@ -98,6 +98,7 @@ class GroupTransformer(Transformer):
             'timeSpent': obj.avg_time_spent,
             'canResolve': request and request.user.is_authenticated(),
             'isResolved': obj.status == STATUS_RESOLVED,
+            'isMuted': obj.status == STATUS_MUTED,
             'score': getattr(obj, 'sort_value', 0),
             'project': {
                 'name': obj.project.name,

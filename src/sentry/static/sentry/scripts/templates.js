@@ -27,14 +27,16 @@
                 '<ul class="actions">' + 
                     '<% if (canResolve) { %>' + 
                         '<li>' +
-                            '<% if (!isResolved) { %>' + 
-                                '<a href="#" data-action="resolve" title="Mark as Resolved">&#10003;</a>' + 
+                            '<% if (isMuted) { %>' +
+                                '<a href="#" class="checked" data-action="unmute" title="Unmute Updates"><i class="icon-bullhorn"></i></a>' + 
+                            '<% } else if (isResolved) { %>' + 
+                                '<a href="#" data-action="mute" title="Mute Future Updates"><i class="icon-volume-off"></i></a>' + 
                             '<% } else { %>' + 
-                                '<a href="#" class="checked" title="Already Resolved">&#10003;</a>' + 
+                                '<a href="#" data-action="resolve" title="Mark as Resolved"><i class="icon-ok"></i></a>' + 
                             '<% } %>' + 
                         '</li>' + 
                         '<li>' + 
-                            '<a href="#" data-action="bookmark" class="bookmark<% if (isBookmarked) { %> checked<% } %>" title="Bookmark">&#9733;</a>' + 
+                            '<a href="#" data-action="bookmark" class="bookmark<% if (isBookmarked) { %> checked<% } %>" title="Bookmark"><i class="icon-star"></i></a>' + 
                         '</li>' + 
                     '<% } %>' + 
                 '</ul>' + 
