@@ -3,7 +3,7 @@ Configuration
 
 This document describes additional configuration options available to the Sentry server. If you are looking for documentation for the client, it is maintained in the `Raven <http://github.com/getsentry/raven-python>`_ project.
 
-.. note:: While the options below are labeled without the ``SENTRY_`` prefix, when you are configuring them via your ``settings.py`` you **must* specify the prefix.
+.. note:: While the options below are labeled without the ``SENTRY_`` prefix, when you are configuring them via your ``settings.py`` you **must** specify the prefix.
 
 .. data:: sentry.conf.KEY
     :noindex:
@@ -60,7 +60,6 @@ This document describes additional configuration options available to the Sentry
 		    'sentry.filters.StatusFilter',
 		    'sentry.filters.LoggerFilter',
 		    'sentry.filters.LevelFilter',
-		    'sentry.filters.ServerNameFilter',
 		)
 
 .. data:: sentry.conf.LOG_LEVELS
@@ -96,9 +95,12 @@ Authentication
 .. data:: sentry.conf.PUBLIC
     :noindex:
 
-    Should Sentry be protected by a username and password (using @login_required) or be publicly accessible.
+    Should Sentry make all data publicly accessible? This should **only** be
+    used if you're installing Sentry behind your company's firewall.
 
-    Defaults to ``False`` (password protection).
+    Users will still need to have an account to view any data.
+
+    Defaults to ``False``.
 
     ::
 
@@ -159,18 +161,6 @@ Authentication
 
 .. _Mozilla developer docs: https://developer.mozilla.org/En/HTTP_access_control#Simple_requests
 
-.. data:: sentry.conf.USE_JS_CLIENT
-    :noindex:
-
-    Instructs Sentry to install its JavaScript error handler to catch internal errors in the
-    Sentry client-side code.
-
-    Defaults to ``False``.
-
-    ::
-
-        SENTRY_USE_JS_CLIENT = True
-
 
 Notifications
 -------------
@@ -181,49 +171,6 @@ notifications have been moved to the ``sentry.plugins.sentry_mail``. You'll need
 
 The following settings now act as default values for the ``sentry_mail`` plugin, and can be overwritten per-project
 by visiting the plugin configuration page for that project.
-
-.. data:: sentry.conf.MAIL_LEVEL
-    :noindex:
-
-	.. versionadded:: 1.10.0
-
-	The threshold level to restrict emails to.
-
-	Defaults to ``logging.DEBUG``.
-
-	::
-
-		SENTRY_MAIL_LEVEL = logging.DEBUG
-
-.. data:: sentry.conf.MAIL_INCLUDE_LOGGERS
-    :noindex:
-
-	.. versionadded:: 1.10.0
-
-	An explicit list of all logger names to restrict emails to.
-
-	Defaults to ``None``, which means to "all loggers".
-
-	::
-
-		SENTRY_MAIL_INCLUDE_LOGGERS = (
-		  'my.custom.logger.name',
-		)
-
-.. data:: sentry.conf.MAIL_EXCLUDE_LOGGERS
-    :noindex:
-
-	.. versionadded:: 1.10.0
-
-	An explicit list of all logger names to exclude from emails.
-
-	Defaults to ``[]``.
-
-	::
-
-		SENTRY_MAIL_EXCLUDE_LOGGERS = (
-		  'some.annoying.logger',
-		)
 
 .. data:: sentry.conf.EMAIL_SUBJECT_PREFIX
     :noindex:

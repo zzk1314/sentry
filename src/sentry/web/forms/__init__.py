@@ -2,7 +2,7 @@
 sentry.web.forms
 ~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from django import forms
@@ -44,8 +44,11 @@ class NewUserForm(BaseUserForm):
 
 
 class ChangeUserForm(BaseUserForm):
+    is_staff = forms.BooleanField(required=False, label=_('Admin'),
+        help_text=_("Designates whether this user can perform administrative functions."))
+
     class Meta:
-        fields = ('first_name', 'username', 'email', 'is_active')
+        fields = ('first_name', 'username', 'email', 'is_active', 'is_staff')
         model = User
 
 

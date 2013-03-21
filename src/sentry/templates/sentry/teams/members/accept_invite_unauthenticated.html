@@ -1,5 +1,6 @@
 {% extends "sentry/layout.html" %}
 
+{% load url from future %}
 {% load i18n %}
 
 {% block title %}{% trans "Team Invite" %} | {{ block.super }}{% endblock %}
@@ -12,7 +13,7 @@
         <div class="row">
             <div class="span7">
                 <div class="page-header">
-                    <h2>Team Invite</h2>
+                    <h2>{% trans "Team Invite" %}</h2>
                 </div>
 
                 <p style="font-size: 1.3em;">{% blocktrans with team_name=team.name %}<strong>{{ team_owner }}</strong> is using Sentry to aggregate errors for the <strong>{{ team_name }}</strong> team.{% endblocktrans %}</p>
@@ -31,9 +32,9 @@
 
                     <fieldset class="form-actions">
                         <div class="pull-right" style="margin-top: 5px;">
-                            <a href="{% url sentry-login %}">{% trans "Login as an existing user" %}</a>
+                            <a href="{% url 'sentry-login' %}">{% trans "Login as an existing user" %}</a>
                         </div>
-                        <a href="{% url sentry-register %}" class="btn btn-primary">{% trans "Create a new account" %}</a>
+                        <a href="{% url 'sentry-register' %}" class="btn btn-primary">{% trans "Create a new account" %}</a>
                     </fieldset>
                 </form>
             </div>

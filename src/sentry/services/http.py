@@ -2,7 +2,7 @@
 sentry.services.http
 ~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -37,6 +37,7 @@ class SentryHTTPServer(Service):
         options.setdefault('bind', '%s:%s' % (self.host, self.port))
         options.setdefault('daemon', False)
         options.setdefault('timeout', 30)
+        options.setdefault('proc_name', 'Sentry')
         if workers:
             options['workers'] = workers
 

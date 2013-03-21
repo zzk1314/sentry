@@ -2,7 +2,7 @@
 sentry.plugins.sentry_interface_types.models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import sentry
@@ -24,6 +24,7 @@ class InterfaceTypePlugin(TagPlugin):
     author = "Sentry Team"
     author_url = "https://github.com/getsentry/sentry"
     tag = 'interface_type'
+    project_default_enabled = False
 
     def get_tag_values(self, event):
         return [i.rsplit('.', 1)[-1] for i in event.interfaces.iterkeys()]

@@ -2,7 +2,7 @@
 sentry.pool.redis
 ~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import random
@@ -11,7 +11,7 @@ from nydus.db import create_cluster
 
 class RedisCappedPool(object):
     """
-    Implements a capped queue based on Reservoir Sammpling
+    Implements a capped queue based on Reservoir Sampling
     """
     key_expire = 60 * 60  # 1 hour
 
@@ -27,7 +27,7 @@ class RedisCappedPool(object):
             'hosts': hosts,
         })
         # We could set this to the maximum value of random.random() (1.0) if we new this pool class
-        # could stay instantiated. Unfortuantely we'll need an offset per project, which could grow
+        # could stay instantiated. Unfortunately we'll need an offset per project, which could grow
         # indefinitely and would require us to have an LRU.
         self.offset = None
 
@@ -53,11 +53,11 @@ class RedisCappedPool(object):
         """
         val = random.random()
         with self.conn.map() as conn:
-            # we have to fetch both values as we dont know which one is actually set
+            # we have to fetch both values as we don't know which one is actually set
             item_a = conn.zrange(self.keyspace, val, 1, withscores=True)
             item_b = conn.zrevrange(self.keyspace, val, 1, withscores=True)
 
-        # pick either item, doesnt matter
+        # pick either item, doesn't matter
         item, score = (item_a or item_b)
 
         # remove matching scored item (even if its not the same item)

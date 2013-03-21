@@ -2,21 +2,26 @@
 sentry.utils.javascript
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
+
+from sentry.app import env
 from sentry.constants import STATUS_RESOLVED, STATUS_MUTED
 from sentry.models import Group, GroupBookmark
 from sentry.templatetags.sentry_plugins import get_tags
 from sentry.utils import json
+from sentry.utils.db import attach_foreignkey
 
 
 transformers = {}
 
 
 def transform(objects, request=None):
+    if request is None:
+        request = getattr(env, 'request', None)
     if not objects:
         return objects
     elif not isinstance(objects, (list, tuple)):
@@ -59,6 +64,8 @@ class GroupTransformer(Transformer):
     def attach_metadata(self, objects, request=None):
         from sentry.templatetags.sentry_plugins import handle_before_events
 
+        attach_foreignkey(objects, Group.project, ['team'])
+
         if request and objects:
             handle_before_events(request, objects)
 
@@ -84,21 +91,24 @@ class GroupTransformer(Transformer):
             g.historical_data = [x[1] for x in historical_data.get(g.id, [])]
 
     def transform(self, obj, request=None):
+        status = obj.get_status()
         d = {
             'id': str(obj.id),
             'count': str(obj.times_seen),
+            'userCount': str(obj.users_seen),
             'title': escape(obj.message_top()),
             'message': escape(obj.error()),
             'level': obj.level,
             'levelName': escape(obj.get_level_display()),
             'logger': escape(obj.logger),
-            'permalink': reverse('sentry-group', args=[obj.project.slug, obj.id]),
+            'permalink': reverse('sentry-group', args=[obj.team.slug, obj.project.slug, obj.id]),
             'versions': list(obj.get_version() or []),
             'lastSeen': obj.last_seen.isoformat(),
             'timeSpent': obj.avg_time_spent,
             'canResolve': request and request.user.is_authenticated(),
-            'isResolved': obj.status == STATUS_RESOLVED,
-            'isMuted': obj.status == STATUS_MUTED,
+            'isResolved': status == STATUS_RESOLVED,
+            'isMuted': status == STATUS_MUTED,
+            'isPublic': obj.is_public,
             'score': getattr(obj, 'sort_value', 0),
             'project': {
                 'name': obj.project.name,

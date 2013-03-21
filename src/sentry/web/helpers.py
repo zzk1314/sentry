@@ -2,7 +2,7 @@
 sentry.web.views
 ~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -11,47 +11,46 @@ import warnings
 
 from django.conf import settings as dj_settings
 from django.core.urlresolvers import reverse, resolve
-from django.db.models import Q
 from django.http import HttpResponse
 from django.template import loader, RequestContext, Context
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
 
 from sentry.conf import settings
+from sentry.constants import MEMBER_OWNER
 from sentry.models import Project, Team, Option, ProjectOption, ProjectKey
 from sentry.permissions import can_create_projects, can_create_teams
 
 logger = logging.getLogger('sentry.errors')
 
 
-def get_project_list(user=None, access=None, hidden=False, key='id'):
-    """
-    Returns a SortedDict of all projects a user has some level of access to.
-    """
-    base_qs = Project.objects
-    if not hidden:
-        base_qs = base_qs.filter(status=0)
-
-    # Collect kwarg queries to filter on. We can use this to perform a single
-    # query to get all of the desired projects ordered by name
-    filters = Q()
-
-    # If we're not requesting specific access include all
-    # public projects
-    if access is None:
-        filters |= Q(public=True)
-    elif not (user and user.is_authenticated()):
-        return SortedDict()
-
-    # If the user is authenticated, include their memberships
-    if user and user.is_authenticated():
-        teams = Team.objects.get_for_user(user, access).values()
-        if not teams and access is not None:
-            return SortedDict()
-        filters |= Q(team__in=teams)
-
+def get_project_list(user=None, access=None, hidden=False, key='id', team=None):
+    warnings.warn('get_project_list is Deprecated. Use Project.objects.get_for_user instead.', DeprecationWarning)
     return SortedDict((getattr(p, key), p)
-        for p in base_qs.filter(filters).order_by('name'))
+            for p in Project.objects.get_for_user(user, access))
+
+
+def group_is_public(group, user):
+    """
+    Return ``True`` if the this group if the user viewing it should see a restricted view.
+
+    This check should be used in combination with project membership checks, as we're only
+    verifying if the user should have a restricted view of something they already have access
+    to.
+    """
+    # if the group isn't public, this check doesn't matter
+    if not group.is_public:
+        return False
+    # anonymous users always are viewing as if it were public
+    if not user.is_authenticated():
+        return True
+    # superusers can always view events
+    if user.is_superuser:
+        return False
+    # project owners can view events
+    if group.project in get_project_list(user).values():
+        return False
+    return True
 
 
 def get_team_list(user, access=None):
@@ -80,13 +79,6 @@ def get_login_url(reset=False):
     return _LOGIN_URL
 
 
-def iter_data(obj):
-    for k, v in obj.data.iteritems():
-        if k.startswith('_') or k in ['url']:
-            continue
-        yield k, v
-
-
 def get_internal_project():
     try:
         project = Project.objects.get(id=settings.PROJECT)
@@ -103,37 +95,52 @@ def get_internal_project():
     }
 
 
-def get_default_context(request, existing_context=None):
+def get_default_context(request, existing_context=None, team=None):
     from sentry.plugins import plugins
 
     context = {
-        'COMPRESS_ENABLED': dj_settings.COMPRESS_ENABLED,
-        'COMPRESS_LESS': dj_settings.COMPRESS_ENABLED and dj_settings.LESS_BIN,
         'HAS_SEARCH': settings.USE_SEARCH,
         'MESSAGES_PER_PAGE': settings.MESSAGES_PER_PAGE,
-        'INTERNAL_PROJECT': get_internal_project(),
-        'PROJECT_ID': str(settings.PROJECT),
         'URL_PREFIX': settings.URL_PREFIX,
         'PLUGINS': plugins,
-        'USE_JS_CLIENT': settings.USE_JS_CLIENT,
     }
 
     if request:
+        if existing_context and not team and 'team' in existing_context:
+            team = existing_context['team']
+
         context.update({
             'request': request,
-            'can_create_projects': can_create_projects(request.user),
             'can_create_teams': can_create_teams(request.user),
         })
+        if team:
+            context.update({
+                'can_admin_team': Team.objects.get_for_user(request.user, MEMBER_OWNER),
+                'can_create_projects': can_create_projects(request.user, team=team),
+            })
+        else:
+            context['can_create_projects'] = can_create_projects(request.user)
+
         if not existing_context or 'PROJECT_LIST' not in existing_context:
-            context['PROJECT_LIST'] = get_project_list(request.user).values()
+            project_list = Project.objects.get_for_user(request.user, team=team)
+            context['PROJECT_LIST'] = sorted(project_list, key=lambda x: x.name)
         if not existing_context or 'TEAM_LIST' not in existing_context:
-            context['TEAM_LIST'] = Team.objects.get_for_user(request.user).values()
+            context['TEAM_LIST'] = sorted(Team.objects.get_for_user(request.user).values(), key=lambda x: x.name)
 
     return context
 
 
 def render_to_string(template, context=None, request=None):
-    default_context = get_default_context(request, context)
+
+    # HACK: set team session value for dashboard redirect
+    if context and 'team' in context and isinstance(context['team'], Team):
+        team = context['team']
+        if request and request.session.get('team') != team.slug:
+            request.session['team'] = team.slug
+    else:
+        team = None
+
+    default_context = get_default_context(request, context, team=team)
 
     if context is None:
         context = default_context

@@ -2,7 +2,7 @@
 sentry.plugins.bases.issue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from sentry.conf import settings
@@ -13,7 +13,9 @@ from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from social_auth.models import UserSocialAuth
+from sentry.models import Activity
 from sentry.utils.auth import get_auth_providers
+from sentry.utils.http import absolute_uri
 
 
 class NewIssueForm(forms.Form):
@@ -42,7 +44,11 @@ class IssuePlugin(Plugin):
 
     def _get_group_description(self, request, group, event):
         output = [
-            request.build_absolute_uri(group.get_absolute_url()),
+            absolute_uri(reverse('sentry-group', kwargs={
+                'project_id': group.project.slug,
+                'team_slug': group.team.slug,
+                'group_id': group.id,
+            })),
         ]
         body = self._get_group_body(request, group, event)
         if body:
@@ -167,7 +173,20 @@ class IssuePlugin(Plugin):
         if form.is_valid():
             GroupMeta.objects.set_value(group, '%s:tid' % prefix, issue_id)
 
-            return self.redirect(reverse('sentry-group', args=[group.project_id, group.pk]))
+            issue_information = {
+                'title': form.cleaned_data['title'],
+                'provider': self.get_title(),
+                'location': self.get_issue_url(group, issue_id),
+            }
+            Activity.objects.create(
+                project=group.project,
+                group=group,
+                type=Activity.CREATE_ISSUE,
+                user=request.user,
+                data=issue_information,
+            )
+
+            return self.redirect(reverse('sentry-group', args=[group.team.slug, group.project_id, group.pk]))
 
         context = {
             'form': form,

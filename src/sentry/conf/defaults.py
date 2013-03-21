@@ -4,7 +4,7 @@ sentry.conf.defaults
 
 Represents the default values for all Sentry settings.
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -74,20 +74,6 @@ SAMPLE_TIMES = (
 
 MAX_SAMPLE_TIME = 10000
 
-# Restrict emails to only ``messages >= this value``.
-MAIL_LEVEL = logging.DEBUG
-
-# A list of loggers to restrict emails to.
-MAIL_INCLUDE_LOGGERS = None
-
-# A list of loggers to exclude in emails.
-MAIL_EXCLUDE_LOGGERS = []
-
-# Normalize counts to the 15 minute marker. This value MUST be less than 60. A
-# value of 0 would store counts for every minute, and is the lowest level of
-# accuracy provided.
-MINUTE_NORMALIZATION = 15
-
 # The number of events to display per page
 MESSAGES_PER_PAGE = 15
 
@@ -148,20 +134,20 @@ DEFAULT_SORT_OPTION = 'date'
 # Default sort option for the search results
 SEARCH_DEFAULT_SORT_OPTION = 'date'
 
-# Default project access when a project owner is created
-DEFAULT_PROJECT_ACCESS = 'MEMBER_OWNER'
-
 # Default to not sending the Access-Control-Allow-Origin header on api/store
 ALLOW_ORIGIN = None
 
-# Enable capturing of JavaScript errors (Sentry internal errors)
-USE_JS_CLIENT = False
+# Enable scraping of javascript context for source code
+SCRAPE_JAVASCRIPT_CONTEXT = True
 
 # The alias for the cache backend (MUST be a compatible backend string for < 1.3)
 CACHE_BACKEND = 'dummy://'
 
 # The maximum number of events which can be requested as JSON
 MAX_JSON_RESULTS = 1000
+
+# Redis connection information (see Nydus documentation)
+REDIS_OPTIONS = {}
 
 # Buffer backend to use
 BUFFER = 'sentry.buffer.Buffer'
@@ -176,3 +162,8 @@ AUTH_PROVIDERS = {
     'trello': ('TRELLO_API_KEY', 'TRELLO_API_SECRET'),
     'bitbucket': ('BITBUCKET_CONSUMER_KEY', 'BITBUCKET_CONSUMER_SECRET'),
 }
+
+
+# Default alerting threshold values
+DEFAULT_ALERT_PROJECT_THRESHOLD = (500, 100)  # 500%, 100 events
+DEFAULT_ALERT_GROUP_THRESHOLD = (1000, 100)  # 1000%, 100 events

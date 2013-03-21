@@ -4,7 +4,7 @@ sentry.conf.server
 
 These settings act as the default (base) settings for the Sentry-provided web-server
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -17,7 +17,7 @@ import socket
 import sys
 import urlparse
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = True
 
 ADMINS = ()
@@ -142,49 +142,30 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
 
-    'compressor',
     'crispy_forms',
     'djcelery',
     'gunicorn',
     'kombu.transport.django',
-    'raven.contrib.django',
+    'raven.contrib.django.raven_compat',
     'sentry',
     'sentry.plugins.sentry_interface_types',
     'sentry.plugins.sentry_mail',
     'sentry.plugins.sentry_servers',
     'sentry.plugins.sentry_urls',
-    'sentry.plugins.sentry_user_emails',
     'sentry.plugins.sentry_useragents',
     'social_auth',
     'south',
+    'static_compiler',
     'django_social_auth_trello',
 )
 
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/_static/'
 
-NPM_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir, os.pardir, 'node_modules'))
-if os.path.exists(NPM_ROOT):
-    LESS_BIN = os.path.join(NPM_ROOT, 'less', 'bin', 'lessc')
-else:
-    LESS_BIN = None
-
-# XXX: There is a bug in django-compressor that causes it to incorrectly handle
-# relative URLs in precompiled files (less) when compression is disabled
-if LESS_BIN:
-    COMPRESS_ENABLED = True
-    COMPRESS_URL = STATIC_URL
-    COMPRESS_OUTPUT_DIR = 'CACHE'
-    COMPRESS_PRECOMPILERS = (
-        ('text/less', '%s --strict-imports {infile} {outfile}' % (LESS_BIN,)),
-    )
-else:
-    COMPRESS_ENABLED = False
-
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "compressor.finders.CompressorFinder",
+    "static_compiler.finders.StaticCompilerFinder",
 )
 
 LOCALE_PATHS = (
@@ -253,6 +234,7 @@ SOCIAL_AUTH_DEFAULT_USERNAME = lambda: random.choice(['Darth Vader', 'Obi-Wan Ke
 SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 
 # Queue configuration
+from kombu import Queue
 
 BROKER_URL = "django://"
 
@@ -260,6 +242,24 @@ CELERY_IGNORE_RESULT = True
 CELERY_SEND_EVENTS = False
 CELERY_RESULT_BACKEND = None
 CELERY_TASK_RESULT_EXPIRES = 1
+CELERY_DISABLE_RATE_LIMITS = True
+CELERY_DEFAULT_QUEUE = "default"
+CELERY_DEFAULT_EXCHANGE = "default"
+CELERY_DEFAULT_EXCHANGE_TYPE = "direct"
+CELERY_DEFAULT_ROUTING_KEY = "default"
+CELERY_CREATE_MISSING_QUEUES = True
+CELERY_QUEUES = (
+    Queue('default', routing_key='default'),
+    Queue('celery', routing_key='celery'),
+    Queue('alerts', routing_key='alerts'),
+    Queue('cleanup', routing_key='cleanup'),
+    Queue('sourcemaps', routing_key='sourcemaps'),
+    Queue('search', routing_key='search'),
+    Queue('counters', routing_key='counters'),
+    Queue('events', routing_key='events'),
+    Queue('triggers', routing_key='triggers'),
+)
+
 
 # Sentry and Raven configuration
 
@@ -308,6 +308,66 @@ LOGGING = {
         },
     }
 }
+
+NPM_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir, os.pardir, 'node_modules'))
+
+# We only define static bundles if NPM has been setup
+if os.path.exists(NPM_ROOT):
+    STATIC_BUNDLES = {
+        "packages": {
+            "sentry/scripts/global.min.js": {
+                "src": [
+                    "sentry/scripts/core.js",
+                    "sentry/scripts/models.js",
+                    "sentry/scripts/templates.js",
+                    "sentry/scripts/utils.js",
+                    "sentry/scripts/collections.js",
+                    "sentry/scripts/charts.js",
+                    "sentry/scripts/views.js",
+                    "sentry/scripts/app.js",
+                ],
+            },
+            "sentry/scripts/legacy.min.js": {
+                "src": [
+                    "sentry/scripts/sentry.core.js",
+                    "sentry/scripts/sentry.charts.js",
+                    "sentry/scripts/sentry.stream.js",
+                ],
+            },
+            "sentry/scripts/lib.min.js": {
+                "src": [
+                    "sentry/scripts/lib/jquery.js",
+                    "sentry/scripts/lib/jquery-migrate.js",
+                    "sentry/scripts/lib/jquery.animate-colors.js",
+                    "sentry/scripts/lib/jquery.clippy.min.js",
+                    "sentry/scripts/lib/jquery.cookie.js",
+                    "sentry/scripts/lib/jquery.flot.min.js",
+                    "sentry/scripts/lib/simple-slider.js",
+                    "sentry/scripts/lib/json2.js",
+                    "sentry/scripts/lib/underscore.js",
+                    "sentry/scripts/lib/backbone.js",
+                    "sentry/scripts/lib/select2/select2.js",
+                    "sentry/scripts/lib/bootstrap.js",
+                ],
+            },
+            "sentry/styles/global.min.css": {
+                "src": {
+                    "sentry/less/sentry.less": "sentry/styles/sentry.css",
+                },
+            },
+            "sentry/styles/wall.min.css": {
+                "src": {
+                    "sentry/less/wall.less": "sentry/styles/wall.css",
+                },
+            },
+        },
+        "postcompilers": {
+            "*.js": ["node_modules/uglify-js/bin/uglifyjs {input} --source-map-root={relroot}/ --source-map-url={name}.map{ext} --source-map={relpath}/{name}.map{ext} -o {output}"],
+        },
+        "preprocessors": {
+            "*.less": ["node_modules/less/bin/lessc {input} {output}"],
+        },
+    }
 
 # Configure celery
 import djcelery

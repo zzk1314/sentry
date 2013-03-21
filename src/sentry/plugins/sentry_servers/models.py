@@ -2,7 +2,7 @@
 sentry.plugins.sentry_servers.models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import sentry
@@ -24,6 +24,7 @@ class ServersPlugin(TagPlugin):
     author_url = "https://github.com/getsentry/sentry"
     tag = 'server_name'
     tag_label = _('Server Name')
+    project_default_enabled = True
 
     def get_tag_values(self, event):
         if not event.server_name:

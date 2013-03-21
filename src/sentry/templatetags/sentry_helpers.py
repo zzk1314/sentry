@@ -2,10 +2,10 @@
 sentry.templatetags.sentry_helpers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
-# XXX: Import django-paging's template tags so we dont have to worry about
+# XXX: Import django-paging's template tags so we don't have to worry about
 #      INSTALLED_APPS
 from django import template
 from django.template import RequestContext
@@ -18,34 +18,36 @@ from paging.helpers import paginate as paginate_func
 from sentry.conf import settings
 from sentry.constants import STATUS_MUTED
 from sentry.models import Group
+from sentry.web.helpers import group_is_public
+from sentry.utils import to_unicode
+from sentry.utils.avatar import get_gravatar_url
+from sentry.utils.http import absolute_uri
 from sentry.utils.javascript import to_json
+from sentry.utils.safe import safe_execute
 from sentry.utils.strings import truncatechars
 from templatetag_sugar.register import tag
 from templatetag_sugar.parser import Name, Variable, Constant, Optional
 
 import datetime
-import hashlib
-import urllib
 
 register = template.Library()
 
 truncatechars = register.filter(stringfilter(truncatechars))
 truncatechars.is_safe = True
 
-to_json = register.filter(to_json)
+register.filter(to_json)
+
+register.simple_tag(absolute_uri)
 
 
 @register.filter
 def pprint(value, break_after=10):
     """
-    A wrapper around pprint.pprint -- for debugging, really.
-
     break_after is used to define how often a <span> is
     inserted (for soft wrapping).
     """
-    from pprint import pformat
 
-    value = pformat(value).decode('utf-8', 'replace')
+    value = to_unicode(value)
     return mark_safe(u'<span></span>'.join(
         [escape(value[i:(i + break_after)]) for i in xrange(0, len(value), break_after)]
     ))
@@ -70,11 +72,6 @@ def has_charts(group):
 @register.filter
 def as_sorted(value):
     return sorted(value)
-
-
-@register.filter
-def is_dict(value):
-    return isinstance(value, dict)
 
 
 @register.filter
@@ -104,10 +101,15 @@ def to_str(data):
     return str(data)
 
 
+@register.filter
+def is_none(value):
+    return value is None
+
+
 @register.simple_tag
 def sentry_version():
     import sentry
-    return sentry.VERSION
+    return sentry.get_version()
 
 
 @register.filter
@@ -272,22 +274,10 @@ def get_project_dsn(context, user, project, asvar):
 # The "mm" default is for the grey, "mystery man" icon. See:
 #   http://en.gravatar.com/site/implement/images/
 @tag(register, [Variable('email'),
-                Optional([Constant('size'), Variable('sizevar')]),
-                Optional([Constant('default'), Variable('defaultvar')])])
-def gravatar_url(context, email, sizevar=None, defaultvar='mm'):
-    base = 'https://secure.gravatar.com'
-
-    gravatar_url = "%s/avatar/%s" % (base, hashlib.md5(email.lower()).hexdigest())
-
-    properties = {}
-    if sizevar:
-        properties['s'] = str(sizevar)
-    if defaultvar:
-        properties['d'] = defaultvar
-    if properties:
-        gravatar_url += "?" + urllib.urlencode(properties)
-
-    return gravatar_url
+                Optional([Constant('size'), Variable('size')]),
+                Optional([Constant('default'), Variable('default')])])
+def gravatar_url(context, email, size=None, default='mm'):
+    return get_gravatar_url(email, size, default)
 
 
 @register.filter
@@ -341,3 +331,71 @@ def titlize(value):
 @register.filter
 def is_muted(value):
     return value == STATUS_MUTED
+
+
+@register.filter
+def split(value, delim=''):
+    return value.split(delim)
+
+
+@register.filter
+def get_rendered_interfaces(event, request):
+    interface_list = []
+    is_public = group_is_public(event.group, request.user)
+    for interface in event.interfaces.itervalues():
+        html = safe_execute(interface.to_html, event, is_public)
+        if not html:
+            continue
+        interface_list.append((interface, mark_safe(html)))
+    return sorted(interface_list, key=lambda x: x[0].get_display_score(), reverse=True)
+
+
+@register.inclusion_tag('sentry/partial/github_button.html')
+def github_button(user, repo):
+    return {
+        'user': user,
+        'repo': repo,
+    }
+
+
+@register.inclusion_tag('sentry/partial/data_values.html')
+def render_values(value, threshold=5, collapse_to=3):
+    is_dict = isinstance(value, dict)
+    context = {
+        'is_dict': is_dict,
+        'threshold': threshold,
+        'collapse_to': collapse_to,
+    }
+
+    if is_dict:
+        value = sorted(value.iteritems())
+        value_len = len(value)
+        over_threshold = value_len > threshold
+        if over_threshold:
+            context.update({
+                'over_threshold': over_threshold,
+                'hidden_values': value_len - collapse_to,
+                'value_before_expand': value[:collapse_to],
+                'value_after_expand': value[collapse_to:],
+            })
+        else:
+            context.update({
+                'over_threshold': over_threshold,
+                'hidden_values': 0,
+                'value_before_expand': value,
+                'value_after_expand': [],
+            })
+
+    else:
+        context['value'] = value
+
+    return context
+
+
+@register.inclusion_tag('sentry/partial/_client_config.html')
+def client_help(user, project):
+    from sentry.web.frontend.docs import get_key_context
+
+    context = get_key_context(user, project)
+    context['project'] = project
+    return context

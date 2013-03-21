@@ -2,7 +2,7 @@
 sentry.conf.settings
 ~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -31,9 +31,6 @@ if locals().get('REMOTE_URL'):
 
 if locals().get('REMOTE_TIMEOUT'):
     TIMEOUT = REMOTE_TIMEOUT
-
-if locals().get('DEFAULT_PROJECT_ACCESS') not in ('MEMBER_OWNER', 'MEMBER_USER', 'MEMBER_SYSTEM'):
-    DEFAULT_PROJECT_ACCESS = 'MEMBER_OWNER'
 
 
 def get_all_languages():

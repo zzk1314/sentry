@@ -7,7 +7,6 @@ sentry.utils.runner
 :license: BSD, see LICENSE for more details.
 """
 from logan.runner import run_app, configure_app
-from sentry import environment
 
 import base64
 import os
@@ -41,6 +40,9 @@ DATABASES = {
 # If you're expecting any kind of real traffic on Sentry, we highly recommend configuring
 # the CACHES and Redis settings
 
+# You'll need to install the required dependencies for Memcached:
+#   pip install python-memcached
+#
 # CACHES = {
 #     'default': {
 #         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -57,8 +59,11 @@ DATABASES = {
 # http://celery.readthedocs.org/en/latest/
 # BROKER_URL = 'redis://localhost:6379'
 
+# You'll need to install the required dependencies for Redis buffers:
+#   pip install redis hiredis nydus
+#
 # SENTRY_BUFFER = 'sentry.buffer.redis.RedisBuffer'
-# SENTRY_BUFFER_OPTIONS = {
+# SENTRY_REDIS_OPTIONS = {
 #     'hosts': {
 #         0: {
 #             'host': '127.0.0.1',
@@ -69,9 +74,6 @@ DATABASES = {
 
 SENTRY_KEY = %(default_key)r
 
-# Set this to false to require authentication
-SENTRY_PUBLIC = False
-
 # You should configure the absolute URI to Sentry. It will attempt to guess it if you don't
 # but proxies may interfere with this.
 # SENTRY_URL_PREFIX = 'http://sentry.example.com'  # No trailing slash!
@@ -80,6 +82,7 @@ SENTRY_WEB_HOST = '0.0.0.0'
 SENTRY_WEB_PORT = 9000
 SENTRY_WEB_OPTIONS = {
     'workers': 3,  # the number of gunicorn workers
+    'secure_scheme_headers': {'X-FORWARDED-PROTO': 'https'},
 }
 
 # Mail server configuration
@@ -165,9 +168,10 @@ def install_plugins(settings):
 
 def initialize_app(config):
     from django.utils import timezone
+    from sentry.app import env
 
-    environment['config'] = config.get('config_path')
-    environment['start_date'] = timezone.now()
+    env.data['config'] = config.get('config_path')
+    env.data['start_date'] = timezone.now()
 
     install_plugins(config['settings'])
 

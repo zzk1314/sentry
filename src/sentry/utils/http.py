@@ -2,14 +2,20 @@
 sentry.utils.http
 ~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import urllib
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
 
 from sentry.conf import settings
 from sentry.plugins.helpers import get_option
+
+
+def absolute_uri(url=None):
+    if not url:
+        return settings.URL_PREFIX
+    return urljoin(settings.URL_PREFIX, url)
 
 
 def safe_urlencode(params, doseq=0):
@@ -50,6 +56,7 @@ def is_same_domain(url1, url2):
 
 
 def get_origins(project=None):
+    # TODO: we should cache this
     if settings.ALLOW_ORIGIN == '*':
         return frozenset(['*'])
     elif settings.ALLOW_ORIGIN:
@@ -60,9 +67,11 @@ def get_origins(project=None):
     if project:
         optval = get_option('sentry:origins', project)
         if optval:
-            result.extend(map(lambda x: x.lower(), optval))
+            result.extend(optval)
 
-    return frozenset(filter(bool, result))
+    # lowercase and strip the trailing slash from all origin values
+    # filter out empty values
+    return frozenset(filter(bool, map(lambda x: x.lower().rstrip('/'), result)))
 
 
 def is_valid_origin(origin, project=None):
@@ -77,6 +86,9 @@ def is_valid_origin(origin, project=None):
     - *.domain.com: matches domain.com and all subdomains, on any port
     - domain.com: matches domain.com on any port
     """
+    # we always run a case insensitive check
+    origin = origin.lower()
+
     allowed = get_origins(project)
     if '*' in allowed:
         return True
@@ -97,6 +109,9 @@ def is_valid_origin(origin, project=None):
 
     for valid in allowed:
         if '://' in valid:
+            # Support partial uri matches that may include path
+            if origin.startswith(valid):
+                return True
             continue
 
         if valid.startswith('*.'):

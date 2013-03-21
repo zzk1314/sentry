@@ -2,7 +2,7 @@
 sentry.plugins.sentry_mail.models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import sentry
@@ -10,12 +10,14 @@ import sentry
 from django import forms
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import email_re, ValidationError
+from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from sentry.conf import settings
 from sentry.plugins import register
 from sentry.plugins.bases.notify import NotificationPlugin, NotificationConfigurationForm
 from sentry.utils.cache import cache
+from sentry.utils.http import absolute_uri
 
 import re
 
@@ -40,7 +42,7 @@ class MailConfigurationForm(NotificationConfigurationForm):
     send_to = forms.CharField(label=_('Send to'), required=False,
         help_text=_('Enter one or more emails separated by commas or lines.'),
         widget=forms.Textarea(attrs={
-            'placeholder': 'you@example.com\nother@example.com'}))
+            'placeholder': 'you@example.com'}))
 
     def clean_send_to(self):
         value = self.cleaned_data['send_to']
@@ -58,23 +60,12 @@ class MailProcessor(NotificationPlugin):
     version = sentry.VERSION
     author = "Sentry Team"
     author_url = "https://github.com/getsentry/sentry"
-
+    project_default_enabled = True
     project_conf_form = MailConfigurationForm
 
-    def __init__(self, min_level=NOTSET, include_loggers=NOTSET, exclude_loggers=NOTSET,
-                 send_to=None, send_to_members=NOTSET, *args, **kwargs):
-
+    def __init__(self, min_level=0, include_loggers=None, exclude_loggers=None,
+                 send_to=None, send_to_members=True, *args, **kwargs):
         super(MailProcessor, self).__init__(*args, **kwargs)
-
-        if min_level is NOTSET:
-            min_level = settings.MAIL_LEVEL
-        if include_loggers is NOTSET:
-            include_loggers = settings.MAIL_INCLUDE_LOGGERS
-        if exclude_loggers is NOTSET:
-            exclude_loggers = settings.MAIL_EXCLUDE_LOGGERS
-        if send_to_members is NOTSET:
-            send_to_members = True
-
         self.min_level = min_level
         self.include_loggers = include_loggers
         self.exclude_loggers = exclude_loggers
@@ -84,6 +75,9 @@ class MailProcessor(NotificationPlugin):
 
     def _send_mail(self, subject, body, html_body=None, project=None, fail_silently=False, headers=None):
         send_to = self.get_send_to(project)
+        if not send_to:
+            return
+
         subject_prefix = self.get_option('subject_prefix', project) or self.subject_prefix
 
         msg = EmailMultiAlternatives(
@@ -130,12 +124,14 @@ class MailProcessor(NotificationPlugin):
             if isinstance(send_to_list, basestring):
                 send_to_list = [s.strip() for s in send_to_list.split(',')]
 
-            send_to_list = set(filter(bool, send_to_list))
+            send_to_list = set(send_to_list)
 
             send_to_members = self.get_option('send_to_members', project)
             if send_to_members and project and project.team:
                 member_set = self.get_sendable_users(project)
                 send_to_list |= set(self.get_emails_for_users(member_set))
+
+            send_to_list = set(s for s in send_to_list if s)
 
             cache.set(cache_key, send_to_list, 60)  # 1 minute cache
 
@@ -154,20 +150,12 @@ class MailProcessor(NotificationPlugin):
         subject = '[%s] %s: %s' % (project.name.encode('utf-8'), event.get_level_display().upper().encode('utf-8'),
             event.error().encode('utf-8').splitlines()[0])
 
-        link = '%s/%s/group/%d/' % (settings.URL_PREFIX, group.project.slug, group.id)
+        link = absolute_uri(reverse('sentry-group', args=[group.team.slug, group.project.slug, group.id]))
 
-        body = render_to_string('sentry/emails/error.txt', {
-            'group': group,
-            'event': event,
-            'link': link,
-            'interfaces': interface_list,
-        })
-        html_body = UnicodeSafePynliner().from_string(render_to_string('sentry/emails/error.html', {
-            'group': group,
-            'event': event,
-            'link': link,
-            'interfaces': interface_list,
-        })).run()
+        body = self.get_plaintext_body(group, event, link, interface_list)
+
+        html_body = self.get_html_body(group, event, link, interface_list)
+
         headers = {
             'X-Sentry-Logger': event.logger,
             'X-Sentry-Logger-Level': event.get_level_display(),
@@ -183,6 +171,24 @@ class MailProcessor(NotificationPlugin):
             fail_silently=fail_silently,
             headers=headers,
         )
+
+    def get_plaintext_body(self, group, event, link, interface_list):
+        return render_to_string('sentry/emails/error.txt', {
+            'group': group,
+            'event': event,
+            'link': link,
+            'interfaces': interface_list,
+        })
+
+    def get_html_body(self, group, event, link, interface_list):
+        return UnicodeSafePynliner().from_string(render_to_string('sentry/emails/error.html', {
+            'group': group,
+            'event': event,
+            'link': link,
+            'interfaces': interface_list,
+            'settings_link': '%s%s' % (settings.URL_PREFIX,
+                reverse('sentry-account-settings-notifications')),
+        })).run()
 
     def get_option(self, key, *args, **kwargs):
         value = super(MailProcessor, self).get_option(key, *args, **kwargs)

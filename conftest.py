@@ -5,6 +5,9 @@ import os.path
 
 
 def pytest_configure(config):
+    import warnings
+    warnings.filterwarnings('error', '', Warning, r'(sentry|raven)')
+
     if not settings.configured:
         os.environ['DJANGO_SETTINGS_MODULE'] = 'sentry.conf.server'
 
@@ -30,9 +33,16 @@ def pytest_configure(config):
             'NAME': ':memory:',
         })
 
+    # Disable static compiling in tests
+    settings.STATIC_BUNDLES = {}
+
     # override a few things with our test specifics
     settings.INSTALLED_APPS = tuple(settings.INSTALLED_APPS) + (
         'tests',
     )
     settings.SENTRY_KEY = base64.b64encode(os.urandom(40))
     settings.SENTRY_PUBLIC = False
+    # This speeds up the tests considerably, pbkdf2 is by design, slow.
+    settings.PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]

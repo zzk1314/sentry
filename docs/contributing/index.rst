@@ -49,13 +49,20 @@ Create a default Sentry configation just as if this were a production instance:
 
     sentry init
 
-Voila! You're all set to begin developing!
+You'll likely want to make some changes to the default configuration (we recommend developing against Postgres, for example). Once done, migrate your database using the following command:
+
+::
+
+	sentry upgrade
+
+
+.. note:: The ``upgrade`` shortcut is simply a combination of South's migrate, and Django's syncdb commands.
 
 
 Coding Standards
 ----------------
 
-Sentry follows the guidelines layed out in `pep8 <http://www.python.org/dev/peps/pep-0008/>`_  with a little bit
+Sentry follows the guidelines laid out in `pep8 <http://www.python.org/dev/peps/pep-0008/>`_  with a little bit
 of flexibility on things like line length. We always give way for the `Zen of Python <http://www.python.org/dev/peps/pep-0020/>`_. We also use strict mode for JavaScript, enforced by jshint.
 
 You can run all linters with ``make lint``, or respectively ``lint-python`` or ``lint-js``.
@@ -76,6 +83,33 @@ If you only need to run the Python tests, you can do so with ``make test-python`
 You'll notice that the test suite is structured based on where the code lives, and strongly encourages using the mock library to drive more accurate individual tests.
 
 .. note:: We use py.test for the Python test suite, and a combination of phantomjs and jasmine for the JavaScript tests.
+
+
+Static Media
+------------
+
+Sentry uses a library that compiles it's static media assets (LESS and JS files) automatically. If you're developing using
+runserver you'll see changes happen not only in the original files, but also the minified or processed versions of the file.
+
+If you've made changes and need to compile them by hand for any reason, you can do so by running:
+
+::
+
+    sentry compilestatic
+
+The minified and processed files should be committed alongside the unprocessed changes.
+
+Developing with Django
+----------------------
+
+Because Sentry is just Django, you can use all of the standard Django functionality. The only difference is you'll be accessing commands that would normally go through manage.py using the ``sentry`` CLI helper instead.
+
+For example, you probably don't want to use ``sentry start`` for development, as it doesn't support anything like
+automatic reloading on code changes. For that you'd want to use the standard builtin ``runserver`` command:
+
+::
+
+	sentry runserver
 
 
 Contributing Back Code

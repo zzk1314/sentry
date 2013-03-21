@@ -30,6 +30,18 @@ To fake the migrations, run the following::
 
     sentry migrate kombu.transport.django 0001 --fake
 
+Conflicts with social_auth
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A recent release of django-social-auth (0.7.18) added support for South migrations. This means that if you had an older
+version of the package installed, you'll need to "fake" the migrations, as they were already applied.
+
+**You should only do this is you actually receive an error while migrating.**
+
+To fake the migrations, run the following::
+
+    sentry migrate social_auth 0001 --fake
+
 Upgrading from 1.x
 ~~~~~~~~~~~~~~~~~~
 
@@ -46,8 +58,13 @@ Upgrading to >= 5.1
 ~~~~~~~~~~~~~~~~~~~
 
 Version 5.1 of Sentry includes a large set of changes including a new client protocol (version 3). It is
-fully compatible with version 2.0 of the protocl, but no longer supports several deprecated features, including
+fully compatible with version 2.0 of the protocol, but no longer supports several deprecated features, including
 version 1.0.
 
-You should always upgrade your client first, but if you're upgrading from a very old version of Sentry, you may
-have a lapse in data during your upgrade process.
+If you're upgrading from a very old version of Sentry, you may have a lapse in data during your upgrade process.
+
+Upgrading from <= 5.3
+~~~~~~~~~~~~~~~~~~~~~
+
+If you were previously using social auth backends, take note that the callback URLs have been moved. They are now
+all prefixed with '/account/settings/social'.

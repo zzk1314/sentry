@@ -2,7 +2,7 @@
 sentry.manager
 ~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -16,28 +16,30 @@ import logging
 import re
 import warnings
 import weakref
+import time
 
 from celery.signals import task_postrun
 from django.conf import settings as dj_settings
 from django.core.signals import request_finished
 from django.db import models, transaction, IntegrityError
 from django.db.models import Sum
-from django.db.models.expressions import ExpressionNode
 from django.db.models.signals import post_save, post_delete, post_init, class_prepared
 from django.utils import timezone
 from django.utils.datastructures import SortedDict
-from django.utils.encoding import force_unicode, smart_str
+from django.utils.encoding import force_unicode
 
 from raven.utils.encoding import to_string
 from sentry import app
 from sentry.conf import settings
-from sentry.constants import STATUS_RESOLVED, STATUS_UNRESOLVED
+from sentry.constants import STATUS_RESOLVED, STATUS_UNRESOLVED, MINUTE_NORMALIZATION
 from sentry.processors.base import send_group_processors
 from sentry.signals import regression_signal
 from sentry.tasks.index import index_event
-from sentry.utils.cache import cache, Lock
-from sentry.utils.dates import get_sql_date_trunc
-from sentry.utils.db import get_db_engine, has_charts, resolve_expression_node
+from sentry.tasks.fetch_source import fetch_javascript_source
+from sentry.utils.cache import cache, memoize, Lock
+from sentry.utils.dates import get_sql_date_trunc, normalize_datetime
+from sentry.utils.db import get_db_engine, has_charts, attach_foreignkey
+from sentry.utils.models import create_or_update, make_key
 from sentry.utils.queue import maybe_delay
 
 logger = logging.getLogger('sentry.errors')
@@ -79,31 +81,6 @@ class BaseManager(models.Manager):
         self.__dict__.update(state)
         self.__cache = weakref.WeakKeyDictionary()
 
-    def __prep_value(self, key, value):
-        if isinstance(value, models.Model):
-            value = value.pk
-        else:
-            value = unicode(value)
-        parts = key.split('__')
-        if len(key) > 1 and parts[-1] in self.lookup_handlers:
-            value = self.lookup_handlers[parts[-1]](value)
-        return value
-
-    def __prep_key(self, key):
-        if key == 'pk':
-            return self.model._meta.pk.name
-        return key
-
-    def __make_key(self, prefix, kwargs):
-        kwargs_bits = []
-        for k, v in sorted(kwargs.iteritems()):
-            k = self.__prep_key(k)
-            v = smart_str(self.__prep_value(k, v))
-            kwargs_bits.append('%s=%s' % (k, v))
-        kwargs_bits = ':'.join(kwargs_bits)
-
-        return '%s:%s:%s' % (prefix, self.model.__name__, hashlib.md5(kwargs_bits).hexdigest())
-
     def __class_prepared(self, sender, **kwargs):
         """
         Given the cache is configured, connects the required signals for invalidation.
@@ -143,7 +120,7 @@ class BaseManager(models.Manager):
             # store pointers
             cache.set(self.__get_lookup_cache_key(**{key: getattr(instance, key)}), pk_val, self.cache_ttl)  # 1 hour
 
-        # Ensure we dont serialize the database into the cache
+        # Ensure we don't serialize the database into the cache
         db = instance._state.db
         instance._state.db = None
         # store actual object
@@ -175,7 +152,7 @@ class BaseManager(models.Manager):
         cache.delete(self.__get_lookup_cache_key(**{pk_name: instance.pk}))
 
     def __get_lookup_cache_key(self, **kwargs):
-        return self.__make_key('modelcache', kwargs)
+        return make_key(self.model, 'modelcache', kwargs)
 
     def contribute_to_class(self, model, name):
         super(BaseManager, self).contribute_to_class(model, name)
@@ -238,7 +215,7 @@ class BaseManager(models.Manager):
             return self.get(**kwargs), False
         except self.model.DoesNotExist:
             pass
-        lock_key = self.__make_key('lock', kwargs)
+        lock_key = make_key(self.model, 'lock', kwargs)
 
         # instance not found, lets grab a lock and attempt to create it
         with Lock(lock_key):
@@ -251,30 +228,7 @@ class BaseManager(models.Manager):
         return instance, created
 
     def create_or_update(self, **kwargs):
-        """
-        Similar to get_or_create, either updates a row or creates it.
-
-        The result will be (rows affected, False), if the row was not created,
-        or (instance, True) if the object is new.
-        """
-        defaults = kwargs.pop('defaults', {})
-
-        # before locking attempt to fetch the instance
-        affected = self.filter(**kwargs).update(**defaults)
-        if affected:
-            return affected, False
-        lock_key = self.__make_key('lock', kwargs)
-
-        # instance not found, lets grab a lock and attempt to create it
-        with Lock(lock_key) as lock:
-            if lock.was_locked:
-                affected = self.filter(**kwargs).update(**defaults)
-                return affected, False
-
-            for k, v in defaults.iteritems():
-                if isinstance(v, ExpressionNode):
-                    kwargs[k] = resolve_expression_node(self.model(), v)
-            return self.create(**kwargs), True
+        return create_or_update(self.model, **kwargs)
 
 
 class ScoreClause(object):
@@ -294,7 +248,7 @@ class ScoreClause(object):
         elif engine.startswith('mysql'):
             sql = 'log(times_seen) * 600 + unix_timestamp(last_seen)'
         else:
-            # XXX: if we cant do it atomicly let's do it the best we can
+            # XXX: if we cant do it atomically let's do it the best we can
             sql = self.group.get_score()
 
         return (sql, [])
@@ -328,7 +282,7 @@ class ChartMixin(object):
         else:
             db = 'default'
 
-        field = self.model.messagecountbyminute_set.related
+        field = self.model.groupcountbyminute_set.related
         column = field.field.name
         queryset = field.model.objects.filter(**{
             '%s__in' % column: instances,
@@ -342,7 +296,7 @@ class ChartMixin(object):
         else:
             db = 'default'
 
-        queryset = instance.messagecountbyminute_set
+        queryset = instance.groupcountbyminute_set
 
         return self._get_chart_data(queryset, max_days, db, key=key)
 
@@ -357,7 +311,7 @@ class ChartMixin(object):
         # the last interval is not accurate, so we exclude it
         # TODO: it'd be ideal to normalize the last datapoint so that we can include it
         # and not have ~inaccurate data for up to MINUTE_NORMALIZATION
-        today -= datetime.timedelta(minutes=settings.MINUTE_NORMALIZATION)
+        today -= datetime.timedelta(minutes=MINUTE_NORMALIZATION)
 
         if max_days >= 30:
             g_type = 'date'
@@ -374,7 +328,7 @@ class ChartMixin(object):
         else:
             g_type = 'minute'
             d_type = 'minutes'
-            modifier = settings.MINUTE_NORMALIZATION
+            modifier = MINUTE_NORMALIZATION
             points = max_days * 24 * (60 / modifier)
 
         min_date = today - datetime.timedelta(days=max_days)
@@ -413,7 +367,7 @@ class ChartMixin(object):
             results[item] = []
             for point in xrange(points, -1, -1):
                 dt = today - datetime.timedelta(**{d_type: point * modifier})
-                results[item].append((int((dt).strftime('%s')) * 1000, tsdata.get(dt, 0)))
+                results[item].append((int(time.mktime((dt).timetuple())) * 1000, tsdata.get(dt, 0)))
 
         if key is None:
             return results[None]
@@ -428,6 +382,10 @@ class GroupManager(BaseManager, ChartMixin):
         # TODO: this function is way too damn long and needs refactored
         # the inner imports also suck so let's try to move it away from
         # the objects manager
+
+        # TODO: culprit should default to "most recent" frame in stacktraces when
+        # it's not provided.
+
         from sentry.models import Event, Project
 
         project = Project.objects.get_from_cache(pk=project)
@@ -465,13 +423,13 @@ class GroupManager(BaseManager, ChartMixin):
             'level': level,
             'message': message,
             'platform': platform,
+            'culprit': culprit or '',
+            'logger': logger_name,
         }
 
         event = Event(
             project=project,
             event_id=event_id,
-            culprit=culprit or '',
-            logger=logger_name,
             data=data,
             server_name=server_name,
             site=site,
@@ -480,7 +438,7 @@ class GroupManager(BaseManager, ChartMixin):
             **kwargs
         )
 
-        # Calculcate the checksum from the first highest scoring interface
+        # Calculate the checksum from the first highest scoring interface
         if not checksum:
             checksum = get_checksum_from_event(event)
 
@@ -524,9 +482,16 @@ class GroupManager(BaseManager, ChartMixin):
                 transaction.rollback_unless_managed(using=group._state.db)
                 logger.exception(u'Error indexing document: %s', e)
 
+        if settings.SCRAPE_JAVASCRIPT_CONTEXT and event.platform == 'javascript' and not is_sample:
+            try:
+                maybe_delay(fetch_javascript_source, event, expires=900)
+            except Exception, e:
+                transaction.rollback_unless_managed(using=group._state.db)
+                logger.exception(u'Error fetching javascript source: %s', e)
+
         if is_new:
             try:
-                regression_signal.send(sender=self.model, instance=group)
+                regression_signal.send_robust(sender=self.model, instance=group)
             except Exception, e:
                 transaction.rollback_unless_managed(using=group._state.db)
                 logger.exception(u'Error sending regression signal: %s', e)
@@ -536,31 +501,19 @@ class GroupManager(BaseManager, ChartMixin):
         return event
 
     def _create_group(self, event, tags=None, **kwargs):
-        from sentry.models import ProjectCountByMinute, MessageCountByMinute
+        from sentry.models import ProjectCountByMinute, GroupCountByMinute
 
         date = event.datetime
         time_spent = event.time_spent
         project = event.project
 
-        try:
-            group, is_new = self.get_or_create(
-                project=project,
-                culprit=event.culprit,
-                logger=event.logger,
-                checksum=event.checksum,
-                defaults=kwargs
-            )
-        except self.model.MultipleObjectsReturned:
-            # Fix for multiple groups existing due to a race
-            groups = list(self.filter(
-                project=project,
-                culprit=event.culprit,
-                logger=event.logger,
-                checksum=event.checksum,
-            ))
-            for g in groups[1:]:
-                g.delete()
-            group, is_new = groups[0], False
+        group, is_new = self.get_or_create(
+            project=project,
+            checksum=event.checksum,
+            defaults=kwargs
+        )
+        if is_new:
+            transaction.commit_unless_managed(using=group._state.db)
 
         update_kwargs = {
             'times_seen': 1,
@@ -580,13 +533,17 @@ class GroupManager(BaseManager, ChartMixin):
             if message:
                 extra['message'] = message
 
-            if group.status == STATUS_RESOLVED:
-                # Group has changed from resolved -> unresolved
-                is_new = True
+            if group.status == STATUS_RESOLVED or group.is_over_resolve_age():
+                # Making things atomic
+                is_new = bool(self.filter(
+                    id=group.id,
+                ).exclude(
+                    status=STATUS_UNRESOLVED,
+                    active_at__gte=date,
+                ).update(active_at=date, status=STATUS_UNRESOLVED))
 
-                # We have to perform this update inline, as waiting on buffers means
-                # this event could be treated as "new" several times
-                group.update(active_at=date, status=STATUS_UNRESOLVED)
+                group.active_at = date
+                group.status = STATUS_UNRESOLVED
 
             group.last_seen = extra['last_seen']
 
@@ -594,7 +551,7 @@ class GroupManager(BaseManager, ChartMixin):
             silence = silence_timedelta.days * 86400 + silence_timedelta.seconds
 
             app.buffer.incr(self.model, update_kwargs, {
-                'pk': group.pk,
+                'id': group.id,
             }, extra)
         else:
             # TODO: this update should actually happen as part of create
@@ -614,13 +571,9 @@ class GroupManager(BaseManager, ChartMixin):
             is_sample = True
 
         # Rounded down to the nearest interval
-        if settings.MINUTE_NORMALIZATION:
-            minutes = (date.minute - (date.minute % settings.MINUTE_NORMALIZATION))
-        else:
-            minutes = date.minute
-        normalized_datetime = date.replace(second=0, microsecond=0, minute=minutes)
+        normalized_datetime = normalize_datetime(date)
 
-        app.buffer.incr(MessageCountByMinute, update_kwargs, {
+        app.buffer.incr(GroupCountByMinute, update_kwargs, {
             'group': group,
             'project': project,
             'date': normalized_datetime,
@@ -641,33 +594,84 @@ class GroupManager(BaseManager, ChartMixin):
             ('level', event.get_level_display()),
         ]
 
-        self.add_tags(group, tags)
+        user_ident = event.user_ident
+        if user_ident:
+            self.record_affected_user(group, user_ident, event.data.get('sentry.interfaces.User'))
+
+        try:
+            self.add_tags(group, tags)
+        except Exception, e:
+            logger.exception('Unable to record tags: %s' % (e,))
 
         return group, is_new, is_sample
 
+    def record_affected_user(self, group, user_ident, data=None):
+        from sentry.models import TrackedUser, AffectedUserByGroup
+
+        project = group.project
+        date = group.last_seen
+
+        if data:
+            email = data.get('email')
+        else:
+            email = None
+
+        # TODO: we should be able to chain the affected user update so that tracked
+        # user gets updated serially
+        tuser = TrackedUser.objects.get_or_create(
+            project=project,
+            ident=user_ident,
+            defaults={
+                'email': email,
+                'data': data,
+            }
+        )[0]
+
+        app.buffer.incr(TrackedUser, {
+            'num_events': 1,
+        }, {
+            'id': tuser.id,
+        }, {
+            'last_seen': date,
+            'email': email,
+            'data': data,
+        })
+
+        app.buffer.incr(AffectedUserByGroup, {
+            'times_seen': 1,
+        }, {
+            'group': group,
+            'project': project,
+            'tuser': tuser,
+        }, {
+            'last_seen': date,
+        })
+
     def add_tags(self, group, tags):
-        from sentry.models import FilterValue, FilterKey, MessageFilterValue
+        from sentry.models import FilterValue, GroupTag
 
         project = group.project
         date = group.last_seen
 
         for key, value in itertools.ifilter(lambda x: bool(x[1]), tags):
+            if not value:
+                continue
+
+            value = unicode(value)
             if len(value) > MAX_TAG_LENGTH:
                 continue
 
-            # TODO: FilterKey and FilterValue queries should be create's under a try/except
-            FilterKey.objects.get_or_create(
-                project=project,
-                key=key,
-            )
+            app.buffer.incr(FilterValue, {
+                'times_seen': 1,
+            }, {
+                'project': project,
+                'key': key,
+                'value': value,
+            }, {
+                'last_seen': date,
+            })
 
-            FilterValue.objects.get_or_create(
-                project=project,
-                key=key,
-                value=value,
-            )
-
-            app.buffer.incr(MessageFilterValue, {
+            app.buffer.incr(GroupTag, {
                 'times_seen': 1,
             }, {
                 'group': group,
@@ -681,66 +685,74 @@ class GroupManager(BaseManager, ChartMixin):
     def get_by_natural_key(self, project, logger, culprit, checksum):
         return self.get(project=project, logger=logger, view=culprit, checksum=checksum)
 
-    def get_accelerated(self, project_ids, queryset=None, minutes=15):
-        # mintues should
-        from sentry.models import MessageCountByMinute
-        mcbm_tbl = MessageCountByMinute._meta.db_table
-        if queryset is None:
-            queryset = self
+    @memoize
+    def model_fields_clause(self):
+        return ', '.join('sentry_groupedmessage."%s"' % (f.column,) for f in self.model._meta.fields)
 
-        normalization = float(settings.MINUTE_NORMALIZATION)
+    def get_accelerated(self, project_ids, queryset=None, minutes=15):
+        if not project_ids:
+            return self.none()
+
+        if queryset is None:
+            queryset = self.filter(
+                project__in=project_ids,
+                status=STATUS_UNRESOLVED,
+            )
+        else:
+            queryset = queryset._clone()
+            queryset.query.select_related = False
+
+        normalization = float(MINUTE_NORMALIZATION)
+
         assert minutes >= normalization
+
+        intervals = 8
 
         engine = get_db_engine(queryset.db)
         # We technically only support mysql and postgresql, since there seems to be no standard
         # way to get the epoch from a datetime/interval
         if engine.startswith('mysql'):
             minute_clause = "interval %s minute"
-            epoch_clause = "unix_timestamp(utc_timestamp()) - unix_timestamp(%(mcbm_tbl)s.date)"
+            epoch_clause = "unix_timestamp(utc_timestamp()) - unix_timestamp(mcbm.date)"
             now_clause = 'utc_timestamp()'
         else:
             minute_clause = "interval '%s minutes'"
-            epoch_clause = "extract(epoch from now()) - extract(epoch from %(mcbm_tbl)s.date)"
+            epoch_clause = "extract(epoch from now()) - extract(epoch from mcbm.date)"
             now_clause = 'now()'
-
-        epoch_clause = epoch_clause % dict(mcbm_tbl=mcbm_tbl)
-
-        queryset = queryset.annotate(x=Sum('messagecountbyminute__times_seen')).order_by('id')
 
         sql, params = queryset.query.get_compiler(queryset.db).as_sql()
         before_select, after_select = str(sql).split('SELECT ', 1)
-        before_where, after_where = after_select.split(' WHERE ', 1)
-        before_group, after_group = after_where.split(' GROUP BY ', 1)
+        after_where = after_select.split(' WHERE ', 1)[1]
 
         # Ensure we remove any ordering clause
-        after_group = after_group.split(' ORDER BY ')[0]
+        after_where = after_where.split(' ORDER BY ')[0]
 
-        # TODO: adding project_id to sort clause on left join helps query in many cases
         query = """
-        SELECT (SUM(%(mcbm_tbl)s.times_seen) * (%(norm)f / (%(epoch_clause)s / 60)) + 1.0) / (COALESCE(z.rate, 0) + 1.0) as accel,
-               (COALESCE(z.rate, 0) + 1.0) as prev_rate,
-               %(before_where)s
-        LEFT JOIN (SELECT a.group_id, SUM(a.times_seen) / COUNT(a.times_seen) / %(norm)f as rate
-            FROM %(mcbm_tbl)s as a
+        SELECT ((mcbm.times_seen + 1) / ((%(epoch_clause)s) / 60)) / (COALESCE(z.rate, 0) + 1) as sort_value,
+               %(fields)s
+        FROM sentry_groupedmessage
+        INNER JOIN sentry_messagecountbyminute as mcbm
+            ON (sentry_groupedmessage.id = mcbm.group_id)
+        LEFT JOIN (SELECT a.group_id, (SUM(a.times_seen)) / COUNT(a.times_seen) / %(norm)f as rate
+            FROM sentry_messagecountbyminute as a
             WHERE a.date >=  %(now)s - %(max_time)s
             AND a.date < %(now)s - %(min_time)s
             AND a.project_id IN (%(project_ids)s)
             GROUP BY a.group_id) as z
-        ON z.group_id = %(mcbm_tbl)s.group_id
-        WHERE %(mcbm_tbl)s.date >= %(now)s - %(min_time)s
-        AND %(mcbm_tbl)s.date < %(now)s - %(offset_time)s
-        AND %(before_group)s
-        GROUP BY prev_rate, %(mcbm_tbl)s.date, %(after_group)s
-        HAVING SUM(%(mcbm_tbl)s.times_seen) > 0
-        ORDER BY accel DESC
+        ON z.group_id = mcbm.group_id
+        WHERE mcbm.date >= %(now)s - %(min_time)s
+        AND mcbm.date < %(now)s - %(offset_time)s
+        AND mcbm.times_seen > 0
+        AND ((mcbm.times_seen + 1) / ((%(epoch_clause)s) / 60)) > (COALESCE(z.rate, 0) + 1)
+        AND %(after_where)s
+        GROUP BY z.rate, mcbm.times_seen, mcbm.date, %(fields)s
+        ORDER BY sort_value DESC
         """ % dict(
-            mcbm_tbl=mcbm_tbl,
-            before_where=before_where,
-            before_group=before_group,
-            after_group=after_group,
+            fields=self.model_fields_clause,
+            after_where=after_where,
             offset_time=minute_clause % (1,),
             min_time=minute_clause % (minutes + 1,),
-            max_time=minute_clause % (minutes * (60 / normalization),),
+            max_time=minute_clause % (minutes * intervals + 1,),
             norm=normalization,
             epoch_clause=epoch_clause,
             now=now_clause,
@@ -767,7 +779,45 @@ class RawQuerySet(object):
 
 
 class ProjectManager(BaseManager, ChartMixin):
-    pass
+    def get_for_user(self, user=None, access=None, hidden=False, team=None):
+        """
+        Returns a SortedDict of all projects a user has some level of access to.
+        """
+        from sentry.models import Team
+
+        if not (user and user.is_authenticated()):
+            return []
+
+        # TODO: the result of this function should be cached
+        is_authenticated = (user and user.is_authenticated())
+
+        base_qs = self
+        if not hidden:
+            base_qs = base_qs.filter(status=0)
+        if team:
+            base_qs = base_qs.filter(team=team)
+
+        if team and user.is_superuser:
+            projects = set(base_qs)
+        else:
+            if not settings.PUBLIC:
+                # If the user is authenticated, include their memberships
+                teams = Team.objects.get_for_user(user, access).values()
+                if not teams:
+                    return []
+                if team and team not in teams:
+                    return []
+                elif not team:
+                    base_qs = base_qs.filter(team__in=teams)
+
+            projects = set(base_qs)
+
+            if is_authenticated:
+                projects |= set(base_qs.filter(accessgroup__members=user))
+
+        attach_foreignkey(projects, self.model.team)
+
+        return sorted(projects, key=lambda x: x.name)
 
 
 class MetaManager(BaseManager):
@@ -988,17 +1038,14 @@ class SearchDocumentManager(BaseManager):
             token_sql = ' '
 
         sql = """
-            SELECT sd.id AS id,
-                   sd.group_id AS group_id,
-                   SUM(st.times_seen) / sd.total_events as score,
-                   sd.date_changed AS date_changed,
-                   sd.date_added AS date_added
+            SELECT sd.*,
+                   SUM(st.times_seen) / sd.total_events as score
             FROM sentry_searchdocument as sd
             INNER JOIN sentry_searchtoken as st
                 ON st.document_id = sd.id
             WHERE %s
                 sd.project_id = %s
-            GROUP BY sd.id, sd.group_id, sd.total_events, sd.date_changed, sd.date_added
+            GROUP BY sd.id, sd.group_id, sd.total_events, sd.date_changed, sd.date_added, sd.project_id, sd.status
             ORDER BY %s
             LIMIT %d OFFSET %d
         """ % (
@@ -1102,20 +1149,25 @@ class TeamManager(BaseManager):
         """
         from sentry.models import TeamMember
 
-        if not user.is_authenticated():
-            return SortedDict()
-
-        qs = TeamMember.objects.filter(
-            user=user,
-            is_active=True,
-        ).select_related('team')
-        if access is not None:
-            qs = qs.filter(type__lte=access)
-
         results = SortedDict()
-        for tm in sorted(qs, key=lambda x: x.team.name):
-            team = tm.team
-            team.membership = tm
-            results[team.slug] = team
+
+        if not user.is_authenticated():
+            return results
+
+        if settings.PUBLIC and access is None:
+            for team in self.order_by('name').iterator():
+                results[team.slug] = team
+        else:
+            qs = TeamMember.objects.filter(
+                user=user,
+                is_active=True,
+            ).select_related('team')
+            if access is not None:
+                qs = qs.filter(type__lte=access)
+
+            for tm in sorted(qs, key=lambda x: x.team.name):
+                team = tm.team
+                team.membership = tm
+                results[team.slug] = team
 
         return results

@@ -41,7 +41,7 @@ Setting up an Environment
 The first thing you'll need is the Python ``virtualenv`` package. You probably already
 have this, but if not, you can install it with::
 
-  easy_install -U virtualenv
+  easy_install -UZ virtualenv
 
 Once that's done, choose a location for the environment, and create it with the ``virtualenv``
 command. For our guide, we're going to choose ``/www/sentry/``::
@@ -61,16 +61,43 @@ Install Sentry
 Once you've got the environment setup, you can install Sentry and all its dependencies with
 the same command you used to grab virtualenv::
 
-  easy_install -U sentry
+  easy_install -UZ sentry
 
 Don't be worried by the amount of dependencies Sentry has. We have a philosophy of using the right tools for
 the job, and not reinventing them if they already exist.
+
+Using MySQL or Postgres
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We **highly** recommend using PostgreSQL for your database, or MySQL if you have no other choice. The default
+is sqlite and will handle very little load.
+
+These databases require additional packages, but Sentry provides a couple of meta packages to make things easier:
+
+::
+
+  # install sentry and its postgresql dependencies
+  easy_install -UZ sentry[postgres]
+
+  # or if you choose, mysql
+  easy_install -UZ sentry[mysql]
+
+
+Installing from Source
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you're installing the Sentry source (e.g. from git), you'll simply need to run the ``make`` command to
+get all of the dependencies::
+
+  # all things should be this easy
+  make
 
 Once everything's installed, you should be able to execute the Sentry CLI, via ``sentry``, and get something
 like the following::
 
   $ sentry
   usage: sentry [--config=/path/to/settings.py] [command] [options]
+
 
 Initializing the Configuration
 ------------------------------
@@ -114,6 +141,7 @@ is not a fully supported database and should not be used in production**.
     SENTRY_WEB_PORT = 9000
     SENTRY_WEB_OPTIONS = {
         'workers': 3,  # the number of gunicorn workers
+        'secure_scheme_headers': {'X-FORWARDED-PROTO': 'https'},  # detect HTTPS mode from X-Forwarded-Proto header
     }
 
 
@@ -131,7 +159,7 @@ standard implementation, using a simple SMTP server, you can simply configure th
 
 Being that Django is a pluggable framework, you also have the ability to specify different mail backends. See the
 `official Django documentation <https://docs.djangoproject.com/en/1.3/topics/email/?from=olddocs#email-backends>`_ for
-more information on alterantive backends.
+more information on alternative backends.
 
 Running Migrations
 ------------------
@@ -194,6 +222,8 @@ Apache requires the use of mod_proxy for forwarding requests::
 
     ProxyPass / http://localhost:9000/
     ProxyPassReverse / http://localhost:9000/
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https" env=HTTPS
 
 Proxying with Nginx
 ~~~~~~~~~~~~~~~~~~~
@@ -204,9 +234,10 @@ You'll use the builtin HttpProxyModule within Nginx to handle proxying::
       proxy_pass         http://localhost:9000;
       proxy_redirect     off;
 
-      proxy_set_header   Host             $host;
-      proxy_set_header   X-Real-IP        $remote_addr;
-      proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+      proxy_set_header   Host              $host;
+      proxy_set_header   X-Real-IP         $remote_addr;
+      proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+      proxy_set_header   X-Forwarded-Proto $scheme;
     }
 
 Running Sentry as a Service
@@ -337,9 +368,20 @@ following to your ``sentry.conf.py``::
       'django_bcrypt',
   )
 
+Configuring Memcache
+~~~~~~~~~~~~~~~~~~~~
+
 You'll also want to consider configuring cache and buffer settings, which respectively require a cache server and a Redis
-server. While the Django configuration covers caching in great detail, Sentry allows you to specify a backend for its
-own internal purposes::
+server. You'll need to do two things, starting with installing the memcache dependencies:
+
+::
+
+  pip install python-memcached
+
+While the Django configuration covers caching in great detail, Sentry allows you to specify a backend for its
+own internal purposes:
+
+::
 
   # You'll need to install django-pyblibmc for this example to work
   CACHES = {

@@ -40,39 +40,34 @@
                 e.preventDefault();
                 this.mute();
             }, this));
-            this.$el.find('a[data-action=unmute]').click(_.bind(function(e){
+            this.$el.find('a[data-action=unresolve]').click(_.bind(function(e){
                 e.preventDefault();
-                this.unmute();
+                this.unresolve();
             }, this));
             this.$el.find('a[data-action=bookmark]').click(_.bind(function(e){
                 e.preventDefault();
                 this.bookmark();
             }, this));
             this.renderSparkline();
+            this.updateResolved();
+        },
+
+        updateResolved: function(){
+            if (this.model.get('isResolved')) {
+                this.$el.addClass('resolved');
+            } else {
+                this.$el.removeClass('resolved');
+            }
         },
 
         renderSparkline: function(obj){
             var data = this.model.get('historicalData');
-            if (!data)
+            if (!data || !data.length)
                 return;
 
+            this.$el.addClass('with-sparkline');
+
             app.charts.createSparkline(this.$el.find('.sparkline'), data);
-        },
-
-        getResolveUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.projectId + '/resolve/';
-        },
-
-        getMuteUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.projectId + '/group/' + this.model.get('id') + '/set/mute/';
-        },
-
-        getUnmuteUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.projectId + '/group/' + this.model.get('id') + '/set/unmute/';
-        },
-
-        getBookmarkUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.projectId + '/bookmark/';
         },
 
         resolve: function(){
@@ -80,9 +75,6 @@
                 url: this.getResolveUrl(),
                 type: 'post',
                 dataType: 'json',
-                data: {
-                    gid: this.model.get('id')
-                },
                 success: _.bind(function(response) {
                     this.model.set('isResolved', true);
                 }, this)
@@ -104,19 +96,40 @@
             });
         },
 
-        unmute: function(){
+        unresolve: function(){
             $.ajax({
-                url: this.getUnmuteUrl(),
+                url: this.getUnresolveUrl(),
                 type: 'post',
                 dataType: 'json',
-                data: {
-                    gid: this.model.get('id')
-                },
                 success: _.bind(function(response) {
                     this.model.set('isResolved', false);
                     this.model.set('isMuted', false);
                 }, this)
             });
+        },
+
+
+        getResolveUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' +
+                    app.config.projectId + '/group/' + this.model.get('id') +
+                    '/set/resolved/';
+        },
+
+        getMuteUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' + 
+                    app.config.projectId + '/group/' + this.model.get('id') +
+                    '/set/muted/';
+        },
+
+        getUnresolveUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' + 
+                    app.config.projectId + '/group/' + this.model.get('id') +
+                    '/set/unresolved/';
+        },
+
+        getBookmarkUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' +
+                    app.config.projectId + '/bookmark/';
         },
 
         bookmark: function(){
@@ -128,7 +141,7 @@
                     gid: this.model.get('id')
                 },
                 success: _.bind(function(response){
-                    this.model.set('isBookmarked', response.bookmarked);
+                    this.model.set('isBookmarked', response.isBookmarked);
                 }, this)
             });
         },
@@ -186,51 +199,53 @@
 
     app.OrderedElementsView = Backbone.View.extend({
 
-        emptyMessage: '<p>There is nothing to show here.</p>',
+        emptyMessage: '<div class="empty-message"><h2>No events to show.</h2><p>We\'ll notify you if that changes. In the meantime why not take a moment to become more familiar with Sentry.</p><p class="links"><a href="docs/">Installation instructions</a> <a href="settings/">Project settings</a></p></div>',
         loadingMessage: '<p>Loading...</p>',
+        model: app.models.Group,
 
         defaults: {
             maxItems: 50
         },
 
         initialize: function(data){
+            var members = data.members;
+
             _.bindAll(this);
+
+            this.options = $.extend({}, this.defaults, this.options, data);
 
             this.$wrapper = $('#' + this.id);
             this.$parent = $('<ul></ul>');
             this.$empty = $('<li class="empty"></li>');
-
-            var loaded = (data.members !== undefined);
-            if (loaded)
-                this.$empty.html(this.$emptyMessage);
-            else
-                this.$empty.html(this.loadingMessage);
-            this.setEmpty();
             this.$wrapper.html(this.$parent);
 
-            if (data.className)
-                this.$parent.addClass(data.className);
-
-            this.options = $.extend(this.defaults, this.options, data);
+            if (this.options.className)
+                this.$parent.addClass(this.options.className);
 
             this.collection = new app.ScoredList();
-            this.collection.add(data.members || []);
             this.collection.on('add', this.renderMemberInContainer);
             this.collection.on('remove', this.unrenderMember);
             this.collection.on('reset', this.reSortMembers);
-            this.collection.sort();
 
-            // we set this last as it has side effects
-            this.loaded = loaded;
+            delete data.members;
+
+            this.reset(members);
         },
 
-        load: function(data){
-            this.$empty.html(this.emptyMessage);
-            if (data)
-                this.extend(data);
-            else
+        reset: function(members){
+            this.$parent.empty();
+            this.setEmpty();
+
+            if (members === undefined) {
+                this.$empty.html(this.loadingMessage);
+                this.collection.reset();
                 this.setEmpty();
-            this.loaded = true;
+                this.loaded = false;
+            } else {
+                this.$empty.html(this.emptyMessage);
+                this.collection.reset(members);
+                this.loaded = true;
+            }
         },
 
         setEmpty: function(){
@@ -247,7 +262,6 @@
             if (member.get === undefined) {
                 member = new this.model(member);
             }
-
             if (!this.hasMember(member)) {
                 if (this.collection.models.length >= (this.options.maxItems - 1))
                     // bail early if the score is too low
@@ -257,7 +271,6 @@
                     // make sure we limit the number shown
                     while (this.collection.models.length >= this.options.maxItems)
                         this.collection.pop();
-
                 this.collection.add(member);
             } else {
                 this.updateMember(member);
@@ -329,7 +342,7 @@
             }
 
             if (this.loaded)
-                $el.css('background-color', '#eee').animate({backgroundColor: '#fff'}, 1200);
+                $el.css('background-color', '#eee').animate({backgroundColor: '#fff'}, 300);
         },
 
         renderMember: function(member){
@@ -364,13 +377,14 @@
             if (_.isUndefined(data))
                 data = {};
 
-            data.model = app.Group;
+            data.model = app.models.Group;
             
             app.OrderedElementsView.prototype.initialize.call(this, data);
 
-            this.options = $.extend(this.defaults, this.options, data);
+            this.options = $.extend({}, this.defaults, this.options, data);
 
             this.queue = new app.ScoredList();
+
             this.cursor = null;
 
             this.poll();
@@ -395,7 +409,7 @@
         poll: function(){
             var data;
 
-            if (!this.options.realtime)
+            if (!this.options.realtime || !this.options.pollUrl)
                 return window.setTimeout(this.poll, this.options.pollTime);
 
             data = app.utils.getQueryParams();
@@ -433,6 +447,24 @@
                     window.setTimeout(this.poll, this.options.pollTime * 10);
                 }, this)
             });
+        }
+
+    });
+
+    app.UserListView = app.OrderedElementsView.extend({
+
+        defaults: {
+        },
+
+        initialize: function(data){
+            if (_.isUndefined(data))
+                data = {};
+
+            data.model = app.User;
+            
+            app.OrderedElementsView.prototype.initialize.call(this, data);
+
+            this.options = $.extend({}, this.defaults, this.options, data);
         }
 
     });

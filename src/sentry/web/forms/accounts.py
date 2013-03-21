@@ -2,7 +2,7 @@
 sentry.web.forms.accounts
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
 from sentry.conf import settings
+from sentry.constants import EMPTY_PASSWORD_VALUES
 from sentry.models import UserOption
 
 
@@ -27,7 +28,7 @@ class RegistrationForm(forms.ModelForm):
         value = self.cleaned_data.get('email')
         if not value:
             return
-        # We dont really care about why people think they need multiple User accounts with the same
+        # We don't really care about why people think they need multiple User accounts with the same
         # email address -- dealwithit.jpg
         if User.objects.filter(email__iexact=value).exists():
             raise forms.ValidationError(_('An account is already registered with that email address.'))
@@ -42,7 +43,7 @@ class RegistrationForm(forms.ModelForm):
 
 
 class NotificationSettingsForm(forms.Form):
-    alert_email = forms.EmailField(help_text='Designate an alternative email address to send email notifications to.')
+    alert_email = forms.EmailField(help_text=_('Designate an alternative email address to send email notifications to.'))
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -70,20 +71,15 @@ class AccountSettingsForm(forms.Form):
     old_password = forms.CharField(label=_('Current password'), widget=forms.PasswordInput)
     email = forms.EmailField(label=_('Email'))
     first_name = forms.CharField(required=True, label=_('Name'))
-    new_password1 = forms.CharField(label=_('New password'), widget=forms.PasswordInput, required=False)
-    new_password2 = forms.CharField(label=_('New password confirmation'), widget=forms.PasswordInput, required=False)
+    new_password = forms.CharField(label=_('New password'), widget=forms.PasswordInput, required=False)
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
         super(AccountSettingsForm, self).__init__(*args, **kwargs)
 
-    def clean_new_password2(self):
-        password1 = self.cleaned_data.get('new_password1')
-        password2 = self.cleaned_data.get('new_password2')
-        if password1 and password2:
-            if password1 != password2:
-                raise forms.ValidationError(_("The two password fields didn't match."))
-        return password2
+        # HACK: don't require current password if they don't have one
+        if self.user.password in EMPTY_PASSWORD_VALUES:
+            del self.fields['old_password']
 
     def clean_old_password(self):
         """
@@ -95,8 +91,8 @@ class AccountSettingsForm(forms.Form):
         return old_password
 
     def save(self, commit=True):
-        if self.cleaned_data['new_password2']:
-            self.user.set_password(self.cleaned_data['new_password1'])
+        if self.cleaned_data.get('new_password'):
+            self.user.set_password(self.cleaned_data['new_password'])
         self.user.first_name = self.cleaned_data['first_name']
         self.user.email = self.cleaned_data['email']
         if commit:
@@ -108,10 +104,10 @@ class AccountSettingsForm(forms.Form):
 class AppearanceSettingsForm(forms.Form):
     language = forms.ChoiceField(label=_('Language'), choices=settings.LANGUAGES, required=False)
     stacktrace_order = forms.ChoiceField(label=_('Stacktrace order'), choices=(
-        ('-1', 'Default (let Sentry decide)'),
-        ('1', 'Most recent call last'),
-        ('2', 'Most recent call first'),
-    ), help_text='Choose the default ordering of frames in stacktraces.', required=False)
+        ('-1', _('Default (let Sentry decide)')),
+        ('1', _('Most recent call last')),
+        ('2', _('Most recent call first')),
+    ), help_text=_('Choose the default ordering of frames in stacktraces.'), required=False)
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -142,3 +138,20 @@ class AppearanceSettingsForm(forms.Form):
         )
 
         return self.user
+
+
+class RecoverPasswordForm(forms.Form):
+    user = forms.CharField(label=_('Username'))
+
+    def clean_user(self):
+        value = self.cleaned_data.get('user')
+        if value:
+            try:
+                return User.objects.get(username__iexact=value)
+            except User.DoesNotExist:
+                raise forms.ValidationError(_("We were unable to find a matching user."))
+        return None
+
+
+class ChangePasswordRecoverForm(forms.Form):
+    password = forms.CharField(widget=forms.PasswordInput())

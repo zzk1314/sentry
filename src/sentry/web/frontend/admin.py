@@ -2,7 +2,7 @@
 sentry.web.frontend.admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import datetime
@@ -17,19 +17,20 @@ from django.core.context_processors import csrf
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 
-from sentry import environment
+from sentry.app import env
 from sentry.conf import settings
-from sentry.models import Project, MessageCountByMinute
+from sentry.models import Team, Project, GroupCountByMinute
 from sentry.plugins import plugins
+from sentry.utils.http import absolute_uri
 from sentry.web.forms import NewUserForm, ChangeUserForm, RemoveUserForm, TestEmailForm
 from sentry.web.decorators import requires_admin
-from sentry.web.helpers import render_to_response, plugin_config, \
-  render_to_string
+from sentry.web.helpers import (render_to_response, plugin_config,
+    render_to_string)
 
 
 def configure_plugin(request, slug):
@@ -53,7 +54,8 @@ def configure_plugin(request, slug):
 def manage_projects(request):
     project_list = Project.objects.filter(
         status=0,
-    ).select_related('owner')
+        team__isnull=False,
+    ).select_related('owner', 'team')
 
     project_query = request.GET.get('pquery')
     if project_query:
@@ -144,7 +146,7 @@ def create_new_user(request):
             context = {
                 'username': user.username,
                 'password': password,
-                'url': request.build_absolute_uri(reverse('sentry')),
+                'url': absolute_uri(reverse('sentry')),
             }
             if form.cleaned_data['create_project']:
                 context.update({
@@ -253,6 +255,36 @@ def list_user_projects(request, user_id):
 
 
 @requires_admin
+def manage_teams(request):
+    team_list = Team.objects.order_by('-date_added').select_related('owner')
+
+    team_query = request.GET.get('tquery')
+    if team_query:
+        team_list = team_list.filter(name__icontains=team_query)
+
+    sort = request.GET.get('sort')
+    if sort not in ('name', 'date', 'events'):
+        sort = 'date'
+
+    if sort == 'date':
+        order_by = '-date_added'
+    elif sort == 'name':
+        order_by = 'name'
+    elif sort == 'projects':
+        order_by = '-num_projects'
+
+    team_list = team_list.annotate(
+        num_projects=Count('project'),
+    ).order_by(order_by)
+
+    return render_to_response('sentry/admin/teams/list.html', {
+        'team_list': team_list,
+        'team_query': team_query,
+        'sort': sort,
+    }, request)
+
+
+@requires_admin
 def status_env(request):
     config = []
     for k in sorted(dir(settings)):
@@ -267,7 +299,7 @@ def status_env(request):
     return render_to_response('sentry/admin/status/env.html', {
         'python_version': sys.version,
         'config': config,
-        'environment': environment,
+        'environment': env.data,
     }, request)
 
 
@@ -320,8 +352,8 @@ def stats(request):
         ('Projects (24h)', Project.objects.filter(
             date_added__gte=timezone.now() - datetime.timedelta(hours=24),
         ).count()),
-        ('Events', MessageCountByMinute.objects.aggregate(x=Sum('times_seen'))['x'] or 0),
-        ('Events (24h)', MessageCountByMinute.objects.filter(
+        ('Events', GroupCountByMinute.objects.aggregate(x=Sum('times_seen'))['x'] or 0),
+        ('Events (24h)', GroupCountByMinute.objects.filter(
             date__gte=timezone.now() - datetime.timedelta(hours=24),
         ).aggregate(x=Sum('times_seen'))['x'] or 0)
     )

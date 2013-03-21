@@ -1,15 +1,16 @@
 {% extends "sentry/account/base.html" %}
 
+{% load url from future %}
 {% load crispy_forms_tags %}
 {% load i18n %}
 {% load sentry_helpers %}
 
-{% block title %}{% trans "Account Settings" %} | {{ block.super }}{% endblock %}
+{% block title %}{% trans "Appearance" %} | {{ block.super }}{% endblock %}
 
 {% block breadcrumb %}
     {{ block.super }}
-    <li class="divider">/</li>
-    <li><a href="{% url sentry-account-settings %}">{% trans "Account" %}</a></li>
+    <li class="divider"></li>
+    <li><a href="{% url 'sentry-account-settings' %}">{% trans "Account" %}</a></li>
 {% endblock %}
 
 {% block heading %}
@@ -43,10 +44,4 @@
             <button type="submit" class="btn btn-primary">{% trans "Save Changes" %}</button>
         </fieldset>
     </form>
-
-    <script>
-    $('.body select').select2({
-        width: 'element'
-    });
-    </script>
 {% endblock %}

@@ -2,13 +2,14 @@
 sentry.permissions
 ~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from functools import wraps
 from sentry.conf import settings
 from sentry.constants import MEMBER_OWNER
 from sentry.plugins import plugins
+from sentry.utils.cache import cached_for_request
 
 
 def perm_override(perm):
@@ -34,6 +35,7 @@ def requires_login(func):
     return wrapped
 
 
+@cached_for_request
 @requires_login
 @perm_override('can_add_project')
 def can_create_projects(user, team=None):
@@ -55,6 +57,7 @@ def can_create_projects(user, team=None):
     return True
 
 
+@cached_for_request
 @requires_login
 @perm_override('can_add_team')
 def can_create_teams(user):
@@ -180,6 +183,36 @@ def can_admin_group(user, group):
         return False
 
     result = plugins.first('has_perm', user, 'admin_event', group)
+    if result is False:
+        return False
+
+    return True
+
+
+@requires_login
+@perm_override('can_add_projectkey')
+def can_add_project_key(user, project):
+    # must be an owner of the team
+    if project.team and not project.team.member_set.filter(user=user, type=MEMBER_OWNER).exists():
+        return False
+
+    result = plugins.first('has_perm', user, 'add_project_key', project)
+    if result is False:
+        return False
+
+    return True
+
+
+@requires_login
+@perm_override('can_remove_projectkey')
+def can_remove_project_key(user, key):
+    project = key.project
+
+    # must be an owner of the team
+    if project.team and not project.team.member_set.filter(user=user, type=MEMBER_OWNER).exists():
+        return False
+
+    result = plugins.first('has_perm', user, 'remove_project_key', project, key)
     if result is False:
         return False
 

@@ -5,20 +5,26 @@ sentry.interfaces
 Interfaces provide an abstraction for how structured data should be
 validated and rendered.
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
 import itertools
 import urlparse
+import warnings
+
+from pygments import highlight
+# from pygments.lexers import get_lexer_for_filename, TextLexer, ClassNotFound
+from pygments.lexers import TextLexer
+from pygments.formatters import HtmlFormatter
 
 from django.http import QueryDict
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
 from sentry.app import env
 from sentry.models import UserOption
 from sentry.web.helpers import render_to_string
-
 
 _Exception = Exception
 
@@ -29,7 +35,12 @@ def unserialize(klass, data):
     return value
 
 
-def get_context(lineno, context_line, pre_context=None, post_context=None):
+def is_url(filename):
+    return filename.startswith(('http:', 'https:', 'file:'))
+
+
+def get_context(lineno, context_line, pre_context=None, post_context=None, filename=None,
+        format=False):
     lineno = int(lineno)
     context = []
     start_lineno = lineno - len(pre_context or [])
@@ -43,6 +54,9 @@ def get_context(lineno, context_line, pre_context=None, post_context=None):
         start_lineno = lineno
         at_lineno = lineno
 
+    if start_lineno < 0:
+        start_lineno = 0
+
     context.append((at_lineno, context_line))
     at_lineno += 1
 
@@ -51,20 +65,46 @@ def get_context(lineno, context_line, pre_context=None, post_context=None):
             context.append((at_lineno, line))
             at_lineno += 1
 
+    # HACK:
+    if filename and is_url(filename) and '.' not in filename.rsplit('/', 1)[-1]:
+        filename = 'index.html'
+
+    if format:
+        # try:
+        #     lexer = get_lexer_for_filename(filename)
+        # except ClassNotFound:
+        #     lexer = TextLexer()
+        lexer = TextLexer()
+
+        formatter = HtmlFormatter()
+
+        def format(line):
+            if not line:
+                return mark_safe('<pre></pre>')
+            return mark_safe(highlight(line, lexer, formatter))
+
+        context = tuple((n, format(l)) for n, l in context)
+
     return context
 
 
 class Interface(object):
     """
-    An interface is a structured represntation of data, which may
+    An interface is a structured representation of data, which may
     render differently than the default ``extra`` metadata in an event.
     """
 
     score = 0
+    display_score = None
 
     def __init__(self, **kwargs):
         self.attrs = kwargs.keys()
         self.__dict__.update(kwargs)
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.serialize() == other.serialize()
 
     def __setstate__(self, data):
         kwargs = self.unserialize(data)
@@ -73,6 +113,9 @@ class Interface(object):
 
     def __getstate__(self):
         return self.serialize()
+
+    def validate(self):
+        pass
 
     def unserialize(self, data):
         return data
@@ -86,14 +129,23 @@ class Interface(object):
     def get_hash(self):
         return []
 
-    def to_html(self, event):
+    def to_html(self, event, is_public=False, **kwargs):
         return ''
 
-    def to_string(self, event):
+    def to_string(self, event, is_public=False, **kwargs):
         return ''
+
+    def get_slug(self):
+        return type(self).__name__.lower()
 
     def get_title(self):
-        return _(self.__class__.__name__)
+        return _(type(self).__name__)
+
+    def get_display_score(self):
+        return self.display_score or self.score
+
+    def get_score(self):
+        return self.score
 
     def get_search_context(self, event):
         """
@@ -119,15 +171,21 @@ class Message(Interface):
     If your message cannot be parameterized, then the message interface
     will serve no benefit.
 
+    - ``message`` must be no more than 1000 characters in length.
+
     >>> {
     >>>     "message": "My raw message with interpreted strings like %s",
     >>>     "params": ["this"]
     >>> }
     """
+    attrs = ('message', 'params')
 
     def __init__(self, message, params=()):
         self.message = message
         self.params = params
+
+    def validate(self):
+        assert len(self.message) <= 5000
 
     def serialize(self):
         return {
@@ -144,7 +202,7 @@ class Message(Interface):
         elif isinstance(self.params, dict):
             params = self.params.values()
         else:
-            params = ()
+            params = []
         return {
             'text': [self.message] + params,
         }
@@ -159,6 +217,7 @@ class Query(Interface):
     >>>     "engine": "psycopg2"
     >>> }
     """
+    attrs = ('query', 'engine')
 
     def __init__(self, query, engine=None):
         self.query = query
@@ -179,6 +238,130 @@ class Query(Interface):
         }
 
 
+class Frame(object):
+    attrs = ('abs_path', 'filename', 'lineno', 'colno', 'in_app', 'context_line',
+             'pre_context', 'post_context', 'vars', 'module', 'function', 'data')
+
+    def __init__(self, abs_path=None, filename=None, lineno=None, colno=None, in_app=False,
+                 context_line=None, pre_context=(), post_context=(), vars=None,
+                 module=None, function=None, data=None):
+        self.abs_path = abs_path or filename
+        self.filename = filename or abs_path
+
+        if self.is_url():
+            urlparts = urlparse.urlparse(self.abs_path)
+            if urlparts.path:
+                self.filename = urlparts.path
+
+        self.module = module
+        self.function = function
+
+        if lineno is not None:
+            self.lineno = int(lineno)
+        else:
+            self.lineno = None
+        if colno is not None:
+            self.colno = int(colno)
+        else:
+            self.colno = None
+
+        self.in_app = in_app
+        self.context_line = context_line
+        self.pre_context = pre_context
+        self.post_context = post_context
+        self.vars = vars or {}
+        self.data = data or {}
+
+    def __getitem__(self, key):
+        warnings.warn('Frame[key] is deprecated. Use Frame.key instead.', DeprecationWarning)
+        return getattr(self, key)
+
+    def is_url(self):
+        if not self.abs_path:
+            return False
+        return is_url(self.abs_path)
+
+    def is_valid(self):
+        if self.in_app not in (False, True, None):
+            return False
+        return self.filename or self.function or self.module
+
+    def get_hash(self):
+        output = []
+        if self.module:
+            output.append(self.module)
+        elif self.filename and not self.is_url():
+            output.append(self.filename)
+
+        if self.context_line is not None:
+            output.append(self.context_line)
+        elif self.function:
+            output.append(self.function)
+        elif self.lineno is not None:
+            output.append(self.lineno)
+        return output
+
+    def get_context(self, event, is_public=False, **kwargs):
+        if (self.context_line and self.lineno is not None
+                and (self.pre_context or self.post_context)):
+            context = get_context(
+                lineno=self.lineno,
+                context_line=self.context_line,
+                pre_context=self.pre_context,
+                post_context=self.post_context,
+                filename=self.filename or self.module,
+                format=True,
+            )
+            start_lineno = context[0][0]
+        else:
+            context = []
+            start_lineno = None
+
+        frame_data = {
+            'abs_path': self.abs_path,
+            'filename': self.filename,
+            'module': self.module,
+            'function': self.function,
+            'start_lineno': start_lineno,
+            'lineno': self.lineno,
+            'context': context,
+            'context_line': self.context_line,
+            'in_app': self.in_app,
+            'is_url': self.is_url(),
+        }
+        if not is_public:
+            frame_data['vars'] = self.vars or {}
+
+        if event.platform == 'javascript' and self.data:
+            frame_data.update({
+                'sourcemap': self.data['sourcemap'].rsplit('/', 1)[-1],
+                'sourcemap_url': urlparse.urljoin(self.abs_path, self.data['sourcemap']),
+                'orig_function': self.data['orig_function'],
+                'orig_filename': self.data['orig_filename'],
+                'orig_lineno': self.data['orig_lineno'],
+                'orig_colno': self.data['orig_colno'],
+            })
+        return frame_data
+
+    def to_string(self, event):
+        if event.platform is not None:
+            choices = [event.platform]
+        else:
+            choices = []
+        choices.append('default')
+        templates = ['sentry/partial/frames/%s.txt' % choice
+                      for choice in choices]
+        return render_to_string(templates, {
+            'abs_path': self.abs_path,
+            'filename': self.filename,
+            'function': self.function,
+            'module': self.module,
+            'lineno': self.lineno,
+            'colno': self.colno,
+            'context_line': self.context_line,
+        }).strip('\n')
+
+
 class Stacktrace(Interface):
     """
     A stacktrace contains a list of frames, each with various bits (most optional)
@@ -196,16 +379,24 @@ class Stacktrace(Interface):
     ``filename``
       The relative filepath to the call
 
+    OR
+
+    ``function``
+      The name of the function being called
+
+    OR
+
+    ``module``
+      Platform-specific module path (e.g. sentry.interfaces.Stacktrace)
+
     The following additional attributes are supported:
 
     ``lineno``
-      The lineno of the call
+      The line number of the call
+    ``colno``
+      The column number of the call
     ``abs_path``
       The absolute path to filename
-    ``function``
-      The name of the function being called
-    ``module``
-      Platform-specific module path (e.g. sentry.interfaces.Stacktrace)
     ``context_line``
       Source code in filename at lineno
     ``pre_context``
@@ -216,6 +407,8 @@ class Stacktrace(Interface):
       Signifies whether this frame is related to the execution of the relevant code in this stacktrace. For example,
       the frames that might power the framework's webserver of your app are probably not relevant, however calls to
       the framework's library once you start handling code likely are.
+    ``vars``
+      A mapping of variables which were available within this frame (usually context-locals).
 
     >>> {
     >>>     "frames": [{
@@ -240,60 +433,48 @@ class Stacktrace(Interface):
     >>> }
 
     """
+    attrs = ('frames',)
     score = 1000
 
     def __init__(self, frames):
-        self.frames = frames
-        for frame in frames:
+        self.frames = [Frame(**f) for f in frames]
+
+    def validate(self):
+        for frame in self.frames:
             # ensure we've got the correct required values
-            assert 'filename' in frame
-
-            # lineno should be an int
-            if 'lineno' in frame:
-                frame['lineno'] = int(frame['lineno'])
-
-            # in_app should be a boolean
-            if 'in_app' in frame:
-                frame['in_app'] = bool(frame['in_app'])
-
-    def _shorten(self, value, depth=1):
-        if depth > 5:
-            return type(value)
-        if isinstance(value, dict):
-            return dict((k, self._shorten(v, depth + 1)) for k, v in sorted(value.iteritems())[:100 / depth])
-        elif isinstance(value, (list, tuple, set, frozenset)):
-            return tuple(self._shorten(v, depth + 1) for v in value)[:100 / depth]
-        elif isinstance(value, (int, long, float)):
-            return value
-        elif not value:
-            return value
-        return value
+            assert frame.is_valid()
 
     def serialize(self):
+        frames = []
+        for f in self.frames:
+            # compatibility with old serialization
+            if isinstance(f, Frame):
+                frames.append(vars(f))
+            else:
+                frames.append(f)
+
         return {
-            'frames': self.frames,
+            'frames': frames,
         }
+
+    def unserialize(self, data):
+        data['frames'] = [Frame(**f) for f in data.pop('frames', [])]
+        return data
 
     def get_composite_hash(self, interfaces):
         output = self.get_hash()
         if 'sentry.interfaces.Exception' in interfaces:
-            output.append(interfaces['sentry.interfaces.Exception'].type)
+            exc = interfaces['sentry.interfaces.Exception']
+            if exc.type:
+                output.append(exc.type)
+            elif not output:
+                output.append(exc.value)
         return output
 
     def get_hash(self):
         output = []
         for frame in self.frames:
-            if frame.get('module'):
-                output.append(frame['module'])
-            else:
-                output.append(frame['filename'])
-
-            if frame.get('context_line'):
-                output.append(frame['context_line'])
-            elif frame.get('function'):
-                output.append(frame['function'])
-            elif frame.get('lineno'):
-                output.append(frame['lineno'])
+            output.extend(frame.get_hash())
         return output
 
     def is_newest_frame_first(self, event):
@@ -313,52 +494,32 @@ class Stacktrace(Interface):
 
         return newest_first
 
-    def to_html(self, event):
+    def to_html(self, event, is_public=False, **kwargs):
+        if not self.frames:
+            return ''
+
         system_frames = 0
         frames = []
         for frame in self.frames:
-            if frame.get('context_line') and frame.get('lineno') is not None:
-                context = get_context(frame['lineno'], frame['context_line'], frame.get('pre_context'), frame.get('post_context'))
-                start_lineno = context[0][0]
-            else:
-                context = []
-                start_lineno = None
+            frames.append(frame.get_context(event=event, is_public=is_public))
 
-            context_vars = []
-            if frame.get('vars'):
-                context_vars = self._shorten(frame['vars'])
-            else:
-                context_vars = []
-
-            if frame.get('lineno') is not None:
-                lineno = int(frame['lineno'])
-            else:
-                lineno = None
-
-            in_app = bool(frame.get('in_app', True))
-
-            frames.append({
-                'abs_path': frame.get('abs_path'),
-                'filename': frame['filename'],
-                'function': frame.get('function'),
-                'start_lineno': start_lineno,
-                'lineno': lineno,
-                'context': context,
-                'vars': context_vars,
-                'in_app': in_app,
-            })
-
-            if not in_app:
+            if not frame.in_app:
                 system_frames += 1
 
         if len(frames) == system_frames:
             system_frames = 0
+
+        # if theres no system frames, pretend they're all part of the app
+        if not system_frames:
+            for frame in frames:
+                frame['in_app'] = True
 
         newest_first = self.is_newest_frame_first(event)
         if newest_first:
             frames = frames[::-1]
 
         return render_to_string('sentry/partial/interfaces/stacktrace.html', {
+            'is_public': is_public,
             'newest_first': newest_first,
             'system_frames': system_frames,
             'event': event,
@@ -366,10 +527,10 @@ class Stacktrace(Interface):
             'stacktrace': self.get_traceback(event, newest_first=newest_first),
         })
 
-    def to_string(self, event):
-        return self.get_stacktrace(event, system_frames=False)
+    def to_string(self, event, is_public=False, **kwargs):
+        return self.get_stacktrace(event, system_frames=False, max_frames=5)
 
-    def get_stacktrace(self, event, system_frames=True, newest_first=None):
+    def get_stacktrace(self, event, system_frames=True, newest_first=None, max_frames=None):
         if newest_first is None:
             newest_first = self.is_newest_frame_first(event)
 
@@ -382,24 +543,36 @@ class Stacktrace(Interface):
         result.append('')
 
         frames = self.frames
+
+        num_frames = len(frames)
+
         if not system_frames:
-            frames = [f for f in frames if f.get('in_app')]
+            frames = [f for f in frames if f.in_app is not False]
             if not frames:
                 frames = self.frames
 
         if newest_first:
             frames = frames[::-1]
 
-        for frame in frames:
-            pieces = ['  File "%(filename)s"']
-            if 'lineno' in frame:
-                pieces.append(', line %(lineno)s')
-            if 'function' in frame:
-                pieces.append(', in %(function)s')
+        if max_frames:
+            visible_frames = max_frames
+            if newest_first:
+                start, stop = None, max_frames
+            else:
+                start, stop = -max_frames, None
 
-            result.append(''.join(pieces) % frame)
-            if 'context_line' in frame:
-                result.append('    %s' % frame['context_line'].strip())
+        else:
+            visible_frames = len(frames)
+            start, stop = None, None
+
+        if not newest_first and visible_frames < num_frames:
+            result.extend(('(%d additional frame(s) were not displayed)' % (num_frames - visible_frames,), '...'))
+
+        for frame in frames[start:stop]:
+            result.append(frame.to_string(event))
+
+        if newest_first and visible_frames < num_frames:
+            result.extend(('...', '(%d additional frame(s) were not displayed)' % (num_frames - visible_frames,)))
 
         return '\n'.join(result)
 
@@ -413,7 +586,7 @@ class Stacktrace(Interface):
 
     def get_search_context(self, event):
         return {
-            'text': list(itertools.chain(*[[f.get('filename'), f.get('function'), f.get('context_line')] for f in self.frames])),
+            'text': list(itertools.chain(*[[f.filename, f.function, f.context_line] for f in self.frames])),
         }
 
 
@@ -429,8 +602,10 @@ class Exception(Interface):
     >>>     "module": "__builtins__"
     >>> }
     """
+    attrs = ('value', 'type', 'module')
 
     score = 900
+    display_score = 1200
 
     def __init__(self, value, type=None, module=None):
         # A human readable value for the exception
@@ -450,12 +625,13 @@ class Exception(Interface):
     def get_hash(self):
         return filter(bool, [self.type, self.value])
 
-    def to_html(self, event):
+    def to_html(self, event, is_public=False, **kwargs):
         last_frame = None
         interface = event.interfaces.get('sentry.interfaces.Stacktrace')
         if interface is not None and interface.frames:
             last_frame = interface.frames[-1]
         return render_to_string('sentry/partial/interfaces/exception.html', {
+            'is_public': is_public,
             'event': event,
             'exception_value': self.value,
             'exception_type': self.type,
@@ -475,7 +651,8 @@ class Http(Interface):
     are required: ``url`` and ``method``.
 
     The ``env`` variable is a compounded dictionary of HTTP headers as well
-    as environment information passed from the webserver.
+    as environment information passed from the webserver. Sentry will explicitly
+    look for ``REMOTE_ADDR`` in ``env`` for things which require an IP address.
 
     The ``data`` variable should only contain the request body (not the query
     string). It can either be a dictionary (for standard HTTP requests) or a
@@ -497,8 +674,11 @@ class Http(Interface):
     >>>     }
     >>>  }
     """
+    attrs = ('url', 'method', 'data', 'query_string', 'cookies', 'headers',
+             'env')
 
-    score = 10000
+    display_score = 1000
+    score = 800
 
     # methods as defined by http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html + PATCH
     METHODS = ('GET', 'POST', 'PUT', 'OPTIONS', 'HEAD', 'DELETE', 'TRACE', 'CONNECT', 'PATCH')
@@ -528,6 +708,13 @@ class Http(Interface):
             self.cookies = cookies
         else:
             self.cookies = {}
+        # if cookies were a string, convert to a dict
+        # parse_qsl will parse both acceptable formats:
+        #  a=b&c=d
+        # and
+        #  a=b; c=d
+        if isinstance(self.cookies, basestring):
+            self.cookies = dict(urlparse.parse_qsl(self.cookies, keep_blank_values=True))
         # if cookies were [also] included in headers we
         # strip them out
         if headers and 'Cookie' in headers:
@@ -548,7 +735,7 @@ class Http(Interface):
             'env': self.env,
         }
 
-    def to_string(self, event):
+    def to_string(self, event, is_public=False, **kwargs):
         return render_to_string('sentry/partial/interfaces/http.txt', {
             'event': event,
             'full_url': '?'.join(filter(bool, [self.url, self.query_string])),
@@ -569,31 +756,36 @@ class Http(Interface):
         else:
             return True, value
 
-    def to_html(self, event):
+    def to_html(self, event, is_public=False, **kwargs):
         data = self.data
-        data_is_dict = False
         headers_is_dict, headers = self._to_dict(self.headers)
 
         if headers_is_dict and headers.get('Content-Type') == 'application/x-www-form-urlencoded':
-            data_is_dict, data = self._to_dict(data)
+            _, data = self._to_dict(data)
 
-        # It's kind of silly we store this twice
-        cookies_is_dict, cookies = self._to_dict(self.cookies or headers.pop('Cookie', {}))
-
-        return render_to_string('sentry/partial/interfaces/http.html', {
+        context = {
+            'is_public': is_public,
             'event': event,
             'full_url': '?'.join(filter(bool, [self.url, self.query_string])),
             'url': self.url,
             'method': self.method,
             'data': data,
-            'data_is_dict': data_is_dict,
             'query_string': self.query_string,
-            'cookies': cookies,
-            'cookies_is_dict': cookies_is_dict,
             'headers': self.headers,
-            'headers_is_dict': headers_is_dict,
-            'env': self.env,
-        })
+        }
+        if not is_public:
+            # It's kind of silly we store this twice
+            _, cookies = self._to_dict(self.cookies)
+
+            context.update({
+                'cookies': cookies,
+                'env': self.env,
+            })
+
+        return render_to_string('sentry/partial/interfaces/http.html', context)
+
+    def get_title(self):
+        return _('Request')
 
     def get_search_context(self, event):
         return {
@@ -624,8 +816,9 @@ class Template(Interface):
     >>>     ],
     >>> }
     """
-
-    score = 1001
+    attrs = ('filename', 'context_line', 'lineno', 'pre_context', 'post_context',
+             'abs_path')
+    score = 1100
 
     def __init__(self, filename, context_line, lineno, pre_context=None, post_context=None,
                  abs_path=None):
@@ -649,8 +842,16 @@ class Template(Interface):
     def get_hash(self):
         return [self.filename, self.context_line]
 
-    def to_string(self, event):
-        context = get_context(self.lineno, self.context_line, self.pre_context, self.post_context)
+    def to_string(self, event, is_public=False, **kwargs):
+        context = get_context(
+            lineno=self.lineno,
+            context_line=self.context_line,
+            pre_context=self.pre_context,
+            post_context=self.post_context,
+            filename=self.filename,
+            format=False,
+        )
+
         result = [
             'Stacktrace (most recent call last):', '',
             self.get_traceback(event, context)
@@ -658,8 +859,15 @@ class Template(Interface):
 
         return '\n'.join(result)
 
-    def to_html(self, event):
-        context = get_context(self.lineno, self.context_line, self.pre_context, self.post_context)
+    def to_html(self, event, is_public=False, **kwargs):
+        context = get_context(
+            lineno=self.lineno,
+            context_line=self.context_line,
+            pre_context=self.pre_context,
+            post_context=self.post_context,
+            filename=self.filename,
+            format=True,
+        )
 
         return render_to_string('sentry/partial/interfaces/template.html', {
             'event': event,
@@ -669,6 +877,7 @@ class Template(Interface):
             'start_lineno': context[0][0],
             'context': context,
             'template': self.get_traceback(event, context),
+            'is_public': is_public,
         })
 
     def get_traceback(self, event, context):
@@ -690,46 +899,42 @@ class User(Interface):
     """
     An interface which describes the authenticated User for a request.
 
-    All data is arbitrary and optional other than the ``is_authenticated``
-    field which should be a boolean value indiciating whether the user
-    is logged in or not.
+    All data is arbitrary and optional other than the ``id``
+    field which should be a string representing the user's unique identifier.
 
     >>> {
-    >>>     "is_authenticated": true,
     >>>     "id": "unique_id",
-    >>>     "username": "foo",
+    >>>     "username": "my_user",
     >>>     "email": "foo@example.com"
     >>> }
     """
+    attrs = ('id', 'email', 'username', 'data')
 
-    def __init__(self, is_authenticated, **kwargs):
-        self.is_authenticated = is_authenticated
-        self.id = kwargs.pop('id', None)
-        self.username = kwargs.pop('username', None)
-        self.email = kwargs.pop('email', None)
+    def __init__(self, id=None, email=None, username=None, **kwargs):
+        self.id = id
+        self.email = email
+        self.username = username
         self.data = kwargs
 
     def serialize(self):
-        if self.is_authenticated:
-            return {
-                'is_authenticated': self.is_authenticated,
-                'id': self.id,
-                'username': self.username,
-                'email': self.email,
-                'data': self.data,
-            }
-        else:
-            return {
-                'is_authenticated': self.is_authenticated
-            }
+        # XXX: legacy -- delete
+        if hasattr(self, 'is_authenticated'):
+            self.data['is_authenticated'] = self.is_authenticated
+
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'data': self.data,
+        }
 
     def get_hash(self):
         return []
 
-    def to_html(self, event):
+    def to_html(self, event, is_public=False, **kwargs):
         return render_to_string('sentry/partial/interfaces/user.html', {
+            'is_public': is_public,
             'event': event,
-            'user_authenticated': self.is_authenticated,
             'user_id': self.id,
             'user_username': self.username,
             'user_email': self.email,
@@ -737,8 +942,10 @@ class User(Interface):
         })
 
     def get_search_context(self, event):
-        if not self.is_authenticated:
+        tokens = filter(bool, [self.id, self.username, self.email])
+        if not tokens:
             return {}
+
         return {
-            'text': [self.id, self.username, self.email]
+            'text': tokens
         }

@@ -2,7 +2,7 @@
 sentry.models
 ~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -14,6 +14,7 @@ import time
 import uuid
 import urlparse
 
+from datetime import timedelta
 from hashlib import md5
 from indexer.models import BaseIndex
 from picklefield.fields import PickledObjectField
@@ -24,8 +25,8 @@ from django.contrib.auth.signals import user_logged_in
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import F, Sum
-from django.db.models.signals import post_syncdb, post_save, pre_delete, \
-  class_prepared
+from django.db.models.signals import (post_syncdb, post_save, pre_delete,
+    class_prepared)
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.datastructures import SortedDict
@@ -33,28 +34,50 @@ from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 
 from sentry.conf import settings
-from sentry.constants import (STATUS_LEVELS, MEMBER_TYPES,  # NOQA
-  MEMBER_OWNER, MEMBER_USER, MEMBER_SYSTEM)  # NOQA
-from sentry.manager import GroupManager, ProjectManager, \
-  MetaManager, InstanceMetaManager, SearchDocumentManager, BaseManager, \
-  UserOptionManager, FilterKeyManager, TeamManager
-from sentry.utils import cached_property, \
-  MockDjangoRequest
+from sentry.constants import (STATUS_LEVELS, MEMBER_TYPES,
+    MEMBER_OWNER, MEMBER_USER, PLATFORM_TITLES, PLATFORM_LIST,
+    STATUS_UNRESOLVED, STATUS_RESOLVED, STATUS_VISIBLE, STATUS_HIDDEN,
+    MINUTE_NORMALIZATION)
+from sentry.manager import (GroupManager, ProjectManager,
+    MetaManager, InstanceMetaManager, SearchDocumentManager, BaseManager,
+    UserOptionManager, FilterKeyManager, TeamManager)
+from sentry.signals import buffer_incr_complete, regression_signal
+from sentry.utils import MockDjangoRequest
+from sentry.utils.cache import memoize
+from sentry.utils.db import has_trending
 from sentry.utils.models import Model, GzippedDictField, update
 from sentry.utils.imports import import_string
+from sentry.utils.safe import safe_execute
 from sentry.utils.strings import truncatechars
 
 __all__ = ('Event', 'Group', 'Project', 'SearchDocument')
 
 
-def slugify_instance(inst, label):
+def slugify_instance(inst, label, **kwargs):
     base_slug = slugify(label)
+    if not base_slug:
+        base_slug = 'default_%s' % (uuid.uuid4())
     manager = type(inst).objects
     inst.slug = base_slug
     n = 0
-    while manager.filter(slug=inst.slug).exists():
+    while manager.filter(slug=inst.slug, **kwargs).exists():
         n += 1
         inst.slug = base_slug + '-' + str(n)
+
+
+def sane_repr(*attrs):
+    if 'id' not in attrs and 'pk' not in attrs:
+        attrs = ('id',) + attrs
+
+    def _repr(self):
+        cls = type(self).__name__
+
+        pairs = ('%s=%s' % (a, repr(getattr(self, a, None)))
+            for a in attrs)
+
+        return u'<%s at 0x%x: %s>' % (cls, id(self), ', '.join(pairs))
+
+    return _repr
 
 
 class Option(Model):
@@ -72,6 +95,8 @@ class Option(Model):
         'key',
     ])
 
+    __repr__ = sane_repr('key', 'value')
+
 
 class Team(Model):
     """
@@ -80,11 +105,15 @@ class Team(Model):
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=64)
     owner = models.ForeignKey(User)
+    date_added = models.DateTimeField(default=timezone.now, null=True)
+    members = models.ManyToManyField(User, through='sentry.TeamMember', related_name='team_memberships')
 
     objects = TeamManager(cache_fields=(
         'pk',
         'slug',
     ))
+
+    __repr__ = sane_repr('slug', 'owner_id', 'name')
 
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.slug)
@@ -104,14 +133,45 @@ class Team(Model):
         return self.owner.username
 
 
+class AccessGroup(Model):
+    """
+    An access group identifies a set of members with a defined set
+    of permissions (and project access) for a Team.
+
+    Groups may be automated through extensions (such as LDAP) so that
+    membership is automatically maintained. If this is the case the
+    ``managed`` attribute will be ``True``.
+    """
+    team = models.ForeignKey(Team)
+    name = models.CharField(max_length=64)
+    type = models.IntegerField(choices=MEMBER_TYPES, default=MEMBER_USER)
+    managed = models.BooleanField(default=False)
+    data = GzippedDictField(blank=True, null=True)
+    date_added = models.DateTimeField(default=timezone.now)
+
+    projects = models.ManyToManyField('sentry.Project')
+    members = models.ManyToManyField(User)
+
+    objects = BaseManager()
+
+    class Meta:
+        unique_together = (('team', 'name'),)
+
+    __repr__ = sane_repr('team_id', 'name', 'type', 'managed')
+
+
 class TeamMember(Model):
     """
     Identifies relationships between teams and users.
+
+    Users listed as team members are considered to have access to all projects
+    and could be thought of as team owners (though their access level may not)
+    be set to ownership.
     """
     team = models.ForeignKey(Team, related_name="member_set")
     user = models.ForeignKey(User, related_name="sentry_teammember_set")
     is_active = models.BooleanField(default=True)
-    type = models.IntegerField(choices=MEMBER_TYPES, default=globals().get(settings.DEFAULT_PROJECT_ACCESS))
+    type = models.IntegerField(choices=MEMBER_TYPES, default=MEMBER_USER)
     date_added = models.DateTimeField(default=timezone.now)
 
     objects = BaseManager()
@@ -119,8 +179,7 @@ class TeamMember(Model):
     class Meta:
         unique_together = (('team', 'user'),)
 
-    def __unicode__(self):
-        return u'team=%s, user=%s, type=%s' % (self.team_id, self.user_id, self.get_type_display())
+    __repr__ = sane_repr('team_id', 'user_id', 'type')
 
 
 class Project(Model):
@@ -131,34 +190,45 @@ class Project(Model):
     A project may be owned by only a single team, and may or may not
     have an owner (which is thought of as a project creator).
     """
-    slug = models.SlugField(unique=True, null=True)
+    PLATFORM_CHOICES = tuple(
+        (p, PLATFORM_TITLES.get(p, p.title()))
+        for p in PLATFORM_LIST
+    ) + (('other', 'Other'),)
+
+    slug = models.SlugField(null=True)
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, related_name="sentry_owned_project_set", null=True)
     team = models.ForeignKey(Team, null=True)
-    public = models.BooleanField(default=settings.ALLOW_PUBLIC_PROJECTS and settings.PUBLIC)
+    public = models.BooleanField(default=False)
     date_added = models.DateTimeField(default=timezone.now)
     status = models.PositiveIntegerField(default=0, choices=(
-        (0, 'Visible'),
-        (1, 'Hidden'),
+        (STATUS_VISIBLE, 'Visible'),
+        (STATUS_HIDDEN, 'Hidden'),
     ), db_index=True)
+    platform = models.CharField(max_length=32, choices=PLATFORM_CHOICES, null=True)
 
     objects = ProjectManager(cache_fields=[
         'pk',
         'slug',
     ])
 
+    class Meta:
+        unique_together = (('team', 'slug'),)
+
+    __repr__ = sane_repr('team_id', 'slug', 'owner_id')
+
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.slug)
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            slugify_instance(self, self.name)
+            slugify_instance(self, self.name, team=self.team)
         super(Project, self).save(*args, **kwargs)
 
     def delete(self):
-        # This hadles cascades properly
-        # TODO: this doesnt clean up the index
-        for model in (Event, Group, FilterValue, MessageFilterValue, MessageCountByMinute):
+        # This handles cascades properly
+        # TODO: this doesn't clean up the index
+        for model in (Event, Group, FilterValue, GroupTag, GroupCountByMinute):
             model.objects.filter(project=self).delete()
         super(Project, self).delete()
 
@@ -176,13 +246,13 @@ class Project(Model):
                 )
             except Group.DoesNotExist:
                 group.update(project=project)
-                for model in (Event, MessageFilterValue, MessageCountByMinute):
+                for model in (Event, GroupTag, GroupCountByMinute):
                     model.objects.filter(project=self, group=group).update(project=project)
             else:
                 Event.objects.filter(group=group).update(group=other)
 
-                for obj in MessageFilterValue.objects.filter(group=group):
-                    obj2, created = MessageFilterValue.objects.get_or_create(
+                for obj in GroupTag.objects.filter(group=group):
+                    obj2, created = GroupTag.objects.get_or_create(
                         project=project,
                         group=group,
                         key=obj.key,
@@ -192,8 +262,8 @@ class Project(Model):
                     if not created:
                         obj2.update(times_seen=F('times_seen') + obj.times_seen)
 
-                for obj in MessageCountByMinute.objects.filter(group=group):
-                    obj2, created = MessageCountByMinute.objects.get_or_create(
+                for obj in GroupCountByMinute.objects.filter(group=group):
+                    obj2, created = GroupCountByMinute.objects.get_or_create(
                         project=project,
                         group=group,
                         date=obj.date,
@@ -226,6 +296,13 @@ class Project(Model):
             self._tag_cache = tags
         return self._tag_cache
 
+    # TODO: Make these a mixin
+    def update_option(self, *args, **kwargs):
+        return ProjectOption.objects.set_value(self, *args, **kwargs)
+
+    def get_option(self, *args, **kwargs):
+        return ProjectOption.objects.get_value(self, *args, **kwargs)
+
 
 class ProjectKey(Model):
     project = models.ForeignKey(Project, related_name='key_set')
@@ -233,13 +310,19 @@ class ProjectKey(Model):
     secret_key = models.CharField(max_length=32, unique=True, null=True)
     user = models.ForeignKey(User, null=True)
 
+    # For audits
+    user_added = models.ForeignKey(User, null=True, related_name='keys_added_set')
+    date_added = models.DateTimeField(default=timezone.now, null=True)
+
     objects = BaseManager(cache_fields=(
         'public_key',
         'secret_key',
     ))
 
+    __repr__ = sane_repr('project_id', 'user_id', 'public_key')
+
     def __unicode__(self):
-        return u'project=%s, user=%s' % (self.project_id, self.user_id)
+        return unicode(self.public_key)
 
     @classmethod
     def generate_api_key(cls):
@@ -268,6 +351,14 @@ class ProjectKey(Model):
             self.project_id,
         )
 
+    @property
+    def dsn_private(self):
+        return self.get_dsn(public=False)
+
+    @property
+    def dsn_public(self):
+        return self.get_dsn(public=True)
+
 
 class ProjectOption(Model):
     """
@@ -286,8 +377,7 @@ class ProjectOption(Model):
         db_table = 'sentry_projectoptions'
         unique_together = (('project', 'key',),)
 
-    def __unicode__(self):
-        return u'project=%s, key=%s, value=%s' % (self.project_id, self.key, self.value)
+    __repr__ = sane_repr('project_id', 'key', 'value')
 
 
 class PendingTeamMember(Model):
@@ -296,7 +386,7 @@ class PendingTeamMember(Model):
     """
     team = models.ForeignKey(Team, related_name="pending_member_set")
     email = models.EmailField()
-    type = models.IntegerField(choices=MEMBER_TYPES, default=globals().get(settings.DEFAULT_PROJECT_ACCESS))
+    type = models.IntegerField(choices=MEMBER_TYPES, default=MEMBER_USER)
     date_added = models.DateTimeField(default=timezone.now)
 
     objects = BaseManager()
@@ -304,8 +394,7 @@ class PendingTeamMember(Model):
     class Meta:
         unique_together = (('team', 'email'),)
 
-    def __unicode__(self):
-        return u'team=%s, email=%s, type=%s' % (self.team_id, self.email, self.get_type_display())
+    __repr__ = sane_repr('team_id', 'email', 'type')
 
     @property
     def token(self):
@@ -329,7 +418,7 @@ class PendingTeamMember(Model):
         body = render_to_string('sentry/emails/member_invite.txt', context)
 
         try:
-            send_mail('%s Invite to join team: %s' % (settings.EMAIL_SUBJECT_PREFIX, self.team.name),
+            send_mail('%sInvite to join team: %s' % (settings.EMAIL_SUBJECT_PREFIX, self.team.name),
                 body, settings.SERVER_EMAIL, [self.email],
                 fail_silently=False)
         except Exception, e:
@@ -337,7 +426,7 @@ class PendingTeamMember(Model):
             logger.exception(e)
 
 
-class MessageBase(Model):
+class EventBase(Model):
     """
     Abstract base class for both Event and Group.
     """
@@ -348,6 +437,7 @@ class MessageBase(Model):
     culprit = models.CharField(max_length=200, blank=True, null=True, db_column='view')
     checksum = models.CharField(max_length=32, db_index=True)
     data = GzippedDictField(blank=True, null=True)
+    num_comments = models.PositiveIntegerField(default=0, null=True)
     platform = models.CharField(max_length=64, null=True)
 
     class Meta:
@@ -356,7 +446,7 @@ class MessageBase(Model):
     def save(self, *args, **kwargs):
         if len(self.logger) > 64:
             self.logger = self.logger[0:61] + u"..."
-        super(MessageBase, self).save(*args, **kwargs)
+        super(EventBase, self).save(*args, **kwargs)
 
     def error(self):
         if self.message:
@@ -376,13 +466,54 @@ class MessageBase(Model):
             return self.culprit
         return truncatechars(self.message.splitlines()[0], 100)
 
+    @property
+    def team(self):
+        return self.project.team
 
-class Group(MessageBase):
+    @property
+    def user_ident(self):
+        """
+        The identifier from a user is considered from several interfaces.
+
+        In order:
+
+        - User.id
+        - User.email
+        - User.username
+        - Http.env.REMOTE_ADDR
+
+        """
+        user_data = self.data.get('sentry.interfaces.User')
+        if user_data:
+            ident = user_data.get('id')
+            if ident:
+                return 'id:%s' % (ident,)
+
+            ident = user_data.get('email')
+            if ident:
+                return 'email:%s' % (ident,)
+
+            ident = user_data.get('username')
+            if ident:
+                return 'username:%s' % (ident,)
+
+        http_data = self.data.get('sentry.interfaces.Http')
+        if http_data:
+            if 'env' in http_data:
+                ident = http_data['env'].get('REMOTE_ADDR')
+                if ident:
+                    return 'ip:%s' % (ident,)
+
+        return None
+
+
+class Group(EventBase):
     """
     Aggregated message which summarizes a set of Events.
     """
     status = models.PositiveIntegerField(default=0, choices=STATUS_LEVELS, db_index=True)
     times_seen = models.PositiveIntegerField(default=1, db_index=True)
+    users_seen = models.PositiveIntegerField(default=0, db_index=True)
     last_seen = models.DateTimeField(default=timezone.now, db_index=True)
     first_seen = models.DateTimeField(default=timezone.now, db_index=True)
     resolved_at = models.DateTimeField(null=True, db_index=True)
@@ -396,13 +527,15 @@ class Group(MessageBase):
     objects = GroupManager()
 
     class Meta:
-        unique_together = (('project', 'logger', 'culprit', 'checksum'),)
+        unique_together = (('project', 'checksum'),)
         verbose_name_plural = _('grouped messages')
         verbose_name = _('grouped message')
         permissions = (
             ("can_view", "Can view"),
         )
         db_table = 'sentry_groupedmessage'
+
+    __repr__ = sane_repr('project_id', 'checksum')
 
     def __unicode__(self):
         return "(%s) %s" % (self.times_seen, self.error())
@@ -414,6 +547,9 @@ class Group(MessageBase):
             self.first_seen = self.last_seen
         if not self.active_at:
             self.active_at = self.first_seen
+        if self.message:
+            # We limit what we store for the message body
+            self.message = self.message.splitlines()[0][:255]
         super(Group, self).save(*args, **kwargs)
 
     @property
@@ -425,10 +561,16 @@ class Group(MessageBase):
     def natural_key(self):
         return (self.project, self.logger, self.culprit, self.checksum)
 
-    def get_absolute_url(self):
-        if self.project_id:
-            return reverse('sentry-group', kwargs={'group_id': self.pk, 'project_id': self.project.slug})
-        return '#'
+    def is_over_resolve_age(self):
+        resolve_age = self.project.get_option('sentry:resolve_age', None)
+        if not resolve_age:
+            return False
+        return self.last_seen < timezone.now() - timedelta(hours=int(resolve_age))
+
+    def get_status(self):
+        if self.status == STATUS_UNRESOLVED and self.is_over_resolve_age():
+            return STATUS_RESOLVED
+        return self.status
 
     def get_score(self):
         return int(math.log(self.times_seen) * 600 + float(time.mktime(self.last_seen.timetuple())))
@@ -436,7 +578,7 @@ class Group(MessageBase):
     def get_latest_event(self):
         if not hasattr(self, '_latest_event'):
             try:
-                self._latest_event = self.event_set.order_by('-id')[0]
+                self._latest_event = self.event_set.order_by('-datetime')[0]
             except IndexError:
                 self._latest_event = None
         return self._latest_event
@@ -450,7 +592,7 @@ class Group(MessageBase):
         return module, self.data['version']
 
     def get_unique_tags(self, tag):
-        return self.messagefiltervalue_set.filter(
+        return self.grouptag_set.filter(
             key=tag,
         ).values_list(
             'value',
@@ -465,7 +607,7 @@ class Group(MessageBase):
 
     def get_tags(self):
         if not hasattr(self, '_tag_cache'):
-            tags = sorted(self.messagefiltervalue_set.values_list('key', flat=True).distinct())
+            tags = sorted(self.grouptag_set.values_list('key', flat=True).distinct())
             self._tag_cache = tags
         return self._tag_cache
 
@@ -486,8 +628,10 @@ class GroupMeta(Model):
     class Meta:
         unique_together = (('group', 'key'),)
 
+    __repr__ = sane_repr('group_id', 'key', 'value')
 
-class Event(MessageBase):
+
+class Event(EventBase):
     """
     An individual event.
     """
@@ -506,15 +650,9 @@ class Event(MessageBase):
         db_table = 'sentry_message'
         unique_together = ('project', 'event_id')
 
-    def __unicode__(self):
-        return self.error()
+    __repr__ = sane_repr('project_id', 'group_id', 'checksum')
 
-    def get_absolute_url(self):
-        if self.project_id:
-            return reverse('sentry-group-event', kwargs={'group_id': self.group_id, 'event_id': self.pk, 'project_id': self.project.slug})
-        return '#'
-
-    @cached_property
+    @memoize
     def request(self):
         data = self.data
         if 'META' in data:
@@ -535,14 +673,14 @@ class Event(MessageBase):
             return MockDjangoRequest()
 
         fake_request = MockDjangoRequest(**kwargs)
-        if kwargs['url']:
+        if 'url' in kwargs and kwargs['url']:
             fake_request.path_info = '/' + kwargs['url'].split('/', 3)[-1]
         else:
             fake_request.path_info = ''
         fake_request.path = fake_request.path_info
         return fake_request
 
-    @cached_property
+    @memoize
     def interfaces(self):
         result = []
         for key, data in self.data.iteritems():
@@ -552,10 +690,15 @@ class Event(MessageBase):
             try:
                 cls = import_string(key)
             except ImportError:
-                pass  # suppress invalid interfaces
-            value = cls(**data)
-            result.append((value.score, key, value))
-        return SortedDict((k, v) for _, k, v in sorted(result, key=lambda x: x[0], reverse=True))
+                continue  # suppress invalid interfaces
+
+            value = safe_execute(cls, **data)
+            if not value:
+                continue
+
+            result.append((key, value))
+
+        return SortedDict((k, v) for k, v in sorted(result, key=lambda x: x[1].get_score(), reverse=True))
 
     def get_version(self):
         if not self.data:
@@ -588,7 +731,7 @@ class GroupBookmark(Model):
     """
     project = models.ForeignKey(Project, related_name="bookmark_set")  # denormalized
     group = models.ForeignKey(Group, related_name="bookmark_set")
-    # namespace related_name on User since we dont own the model
+    # namespace related_name on User since we don't own the model
     user = models.ForeignKey(User, related_name="sentry_bookmark_set")
 
     objects = BaseManager()
@@ -597,6 +740,8 @@ class GroupBookmark(Model):
         # composite index includes project for efficient queries
         unique_together = (('project', 'user', 'group'),)
 
+    __repr__ = sane_repr('project_id', 'group_id', 'user_id')
+
 
 class FilterKey(Model):
     """
@@ -604,14 +749,14 @@ class FilterKey(Model):
     """
     project = models.ForeignKey(Project)
     key = models.CharField(max_length=32)
+    values_seen = models.PositiveIntegerField(default=0)
 
     objects = FilterKeyManager()
 
     class Meta:
         unique_together = (('project', 'key'),)
 
-    def __unicode__(self):
-        return u'key=%s' % (self.key,)
+    __repr__ = sane_repr('project_id', 'key')
 
 
 class FilterValue(Model):
@@ -621,17 +766,38 @@ class FilterValue(Model):
     project = models.ForeignKey(Project, null=True)
     key = models.CharField(max_length=32)
     value = models.CharField(max_length=200)
+    times_seen = models.PositiveIntegerField(default=0)
+    last_seen = models.DateTimeField(default=timezone.now, db_index=True, null=True)
+    first_seen = models.DateTimeField(default=timezone.now, db_index=True, null=True)
 
     objects = BaseManager()
 
     class Meta:
         unique_together = (('project', 'key', 'value'),)
 
-    def __unicode__(self):
-        return u'key=%s, value=%s' % (self.key, self.value)
+    __repr__ = sane_repr('project_id', 'key', 'value')
 
 
-class MessageFilterValue(Model):
+class GroupTagKey(Model):
+    """
+    Stores a unique tag key name for a group.
+
+    An example key might be "url" or "server_name".
+    """
+    project = models.ForeignKey(Project, null=True)
+    group = models.ForeignKey(Group)
+    key = models.CharField(max_length=32)
+    values_seen = models.PositiveIntegerField(default=0)
+
+    objects = BaseManager()
+
+    class Meta:
+        unique_together = (('project', 'group', 'key'),)
+
+    __repr__ = sane_repr('project_id', 'group_id', 'key')
+
+
+class GroupTag(Model):
     """
     Stores the total number of messages seen by a group matching
     the given filter.
@@ -647,19 +813,21 @@ class MessageFilterValue(Model):
     objects = BaseManager()
 
     class Meta:
+        db_table = 'sentry_messagefiltervalue'
         unique_together = (('project', 'key', 'value', 'group'),)
 
-    def __unicode__(self):
-        return u'group_id=%s, times_seen=%s, key=%s, value=%s' % (self.group_id, self.times_seen,
-                                                                  self.key, self.value)
+    __repr__ = sane_repr('project_id', 'group_id', 'key', 'value')
 
     def save(self, *args, **kwargs):
         if not self.first_seen:
             self.first_seen = self.last_seen
-        super(MessageFilterValue, self).save(*args, **kwargs)
+        super(GroupTag, self).save(*args, **kwargs)
+
+# Legacy
+MessageFilterValue = GroupTag
 
 
-class MessageCountByMinute(Model):
+class GroupCountByMinute(Model):
     """
     Stores the total number of messages seen by a group at N minute intervals.
 
@@ -676,10 +844,13 @@ class MessageCountByMinute(Model):
     objects = BaseManager()
 
     class Meta:
+        db_table = 'sentry_messagecountbyminute'
         unique_together = (('project', 'group', 'date'),)
 
-    def __unicode__(self):
-        return u'group_id=%s, times_seen=%s, date=%s' % (self.group_id, self.times_seen, self.date)
+    __repr__ = sane_repr('project_id', 'group_id', 'date')
+
+# Legacy
+MessageCountByMinute = GroupCountByMinute
 
 
 class ProjectCountByMinute(Model):
@@ -700,6 +871,8 @@ class ProjectCountByMinute(Model):
     class Meta:
         unique_together = (('project', 'date'),)
 
+    __repr__ = sane_repr('project_id', 'date')
+
 
 class SearchDocument(Model):
     project = models.ForeignKey(Project)
@@ -714,6 +887,8 @@ class SearchDocument(Model):
     class Meta:
         unique_together = (('project', 'group'),)
 
+    __repr__ = sane_repr('project_id', 'group_id')
+
 
 class SearchToken(Model):
     document = models.ForeignKey(SearchDocument, related_name="token_set")
@@ -726,8 +901,7 @@ class SearchToken(Model):
     class Meta:
         unique_together = (('document', 'field', 'token'),)
 
-    def __unicode__(self):
-        return u'%s=%s' % (self.field, self.token)
+    __repr__ = sane_repr('document_id', 'field', 'token')
 
 
 class UserOption(Model):
@@ -747,12 +921,197 @@ class UserOption(Model):
     class Meta:
         unique_together = (('user', 'project', 'key',),)
 
-    def __unicode__(self):
-        return u'user=%s, project=%s, key=%s, value=%s' % (self.user_id, self.project_id, self.key, self.value)
+    __repr__ = sane_repr('user_id', 'project_id', 'key', 'value')
+
+
+class LostPasswordHash(Model):
+    user = models.ForeignKey(User, unique=True)
+    hash = models.CharField(max_length=32)
+    date_added = models.DateTimeField(default=timezone.now)
+
+    __repr__ = sane_repr('user_id', 'hash')
+
+    def save(self, *args, **kwargs):
+        if not self.hash:
+            self.set_hash()
+        super(LostPasswordHash, self).save(*args, **kwargs)
+
+    def set_hash(self):
+        import hashlib
+        import random
+
+        self.hash = hashlib.md5(str(random.randint(1, 10000000))).hexdigest()
+
+    def is_valid(self):
+        return self.date_added > timezone.now() - timedelta(days=1)
+
+    def send_recover_mail(self):
+        from django.core.mail import send_mail
+        from sentry.web.helpers import render_to_string
+
+        context = {
+            'user': self.user,
+            'domain': urlparse.urlparse(settings.URL_PREFIX).hostname,
+            'url': '%s%s' % (settings.URL_PREFIX,
+                reverse('sentry-account-recover-confirm', args=[self.user.id, self.hash])),
+        }
+        body = render_to_string('sentry/emails/recover_account.txt', context)
+
+        try:
+            send_mail('%sPassword Recovery' % (settings.EMAIL_SUBJECT_PREFIX,),
+                body, settings.SERVER_EMAIL, [self.user.email],
+                fail_silently=False)
+        except Exception, e:
+            logger = logging.getLogger('sentry.mail.errors')
+            logger.exception(e)
+
+
+class TrackedUser(Model):
+    project = models.ForeignKey(Project)
+    ident = models.CharField(max_length=200)
+    email = models.EmailField(null=True)
+    data = GzippedDictField(blank=True, null=True)
+    last_seen = models.DateTimeField(default=timezone.now, db_index=True)
+    first_seen = models.DateTimeField(default=timezone.now, db_index=True)
+    num_events = models.PositiveIntegerField(default=0)
+    groups = models.ManyToManyField(Group, through='sentry.AffectedUserByGroup')
+
+    objects = BaseManager()
+
+    class Meta:
+        unique_together = (('project', 'ident'),)
+
+    __repr__ = sane_repr('project_id', 'ident', 'email')
+
+
+class AffectedUserByGroup(Model):
+    """
+    Stores a count of how many times a ``Group`` has affected
+    a user.
+    """
+    project = models.ForeignKey(Project)
+    tuser = models.ForeignKey(TrackedUser, null=True)
+    group = models.ForeignKey(Group)
+    ident = models.CharField(max_length=200, null=True)
+    times_seen = models.PositiveIntegerField(default=0)
+    last_seen = models.DateTimeField(default=timezone.now, db_index=True)
+    first_seen = models.DateTimeField(default=timezone.now, db_index=True)
+
+    objects = BaseManager()
+
+    class Meta:
+        unique_together = (('project', 'tuser', 'group'),)
+
+    __repr__ = sane_repr('project_id', 'group_id', 'tuser_id')
+
+
+class Activity(Model):
+    COMMENT = 0
+    SET_RESOLVED = 1
+    SET_UNRESOLVED = 2
+    SET_MUTED = 3
+    SET_PUBLIC = 4
+    SET_PRIVATE = 5
+    SET_REGRESSION = 6
+    CREATE_ISSUE = 7
+
+    TYPE = (
+        # (TYPE, verb-slug)
+        (COMMENT, 'comment'),
+        (SET_RESOLVED, 'set_resolved'),
+        (SET_UNRESOLVED, 'set_unresolved'),
+        (SET_MUTED, 'set_muted'),
+        (SET_PUBLIC, 'set_public'),
+        (SET_PRIVATE, 'set_private'),
+        (SET_REGRESSION, 'set_regression'),
+        (CREATE_ISSUE, 'create_issue'),
+    )
+
+    project = models.ForeignKey(Project)
+    group = models.ForeignKey(Group, null=True)
+    event = models.ForeignKey(Event, null=True)
+    # index on (type, ident)
+    type = models.PositiveIntegerField(choices=TYPE)
+    ident = models.CharField(max_length=64, null=True)
+    # if the user is not set, it's assumed to be the system
+    user = models.ForeignKey(User, null=True)
+    datetime = models.DateTimeField(default=timezone.now)
+    data = GzippedDictField(null=True)
+
+    __repr__ = sane_repr('project_id', 'group_id', 'event_id', 'user_id', 'type', 'ident')
+
+    def save(self, *args, **kwargs):
+        created = bool(not self.id)
+
+        super(Activity, self).save(*args, **kwargs)
+
+        if not created:
+            return
+
+        # HACK: support Group.num_comments
+        if self.type == Activity.COMMENT:
+            self.group.update(num_comments=F('num_comments') + 1)
+
+            if self.event:
+                self.event.update(num_comments=F('num_comments') + 1)
+
+
+class Alert(Model):
+    project = models.ForeignKey(Project)
+    group = models.ForeignKey(Group, null=True)
+    datetime = models.DateTimeField(default=timezone.now)
+    message = models.TextField()
+    data = GzippedDictField(null=True)
+    related_groups = models.ManyToManyField(Group, through='sentry.AlertRelatedGroup', related_name='related_alerts')
+
+    __repr__ = sane_repr('project_id', 'group_id', 'datetime')
+
+    @classmethod
+    def maybe_alert(cls, project_id, message, group_id=None):
+        now = timezone.now()
+        manager = cls.objects
+        # We only create an alert based on:
+        # - an alert for the project hasn't been created in the last 30 minutes
+        # - an alert for the event hasn't been created in the last 60 minutes
+
+        # TODO: there is a race condition if we're calling this function for the same project
+        if manager.filter(project=project_id, datetime__gte=now - timedelta(minutes=30)).exists():
+            return
+
+        if manager.filter(project=project_id, group=group_id, datetime__gte=now - timedelta(minutes=60)).exists():
+            return
+
+        alert = manager.create(
+            project_id=project_id,
+            group_id=group_id,
+            datetime=now,
+            message=message,
+        )
+
+        if not group_id and has_trending():
+            # Capture the top 5 trending events at the time of this error
+            related_groups = Group.objects.get_accelerated([project_id], minutes=MINUTE_NORMALIZATION)[:5]
+            for group in related_groups:
+                AlertRelatedGroup.objects.create(
+                    group=group,
+                    alert=alert,
+                )
+
+        return alert
+
+
+class AlertRelatedGroup(Model):
+    group = models.ForeignKey(Group)
+    alert = models.ForeignKey(Alert)
+    data = GzippedDictField(null=True)
+
+    class Meta:
+        unique_together = (('group', 'alert'),)
+
+    __repr__ = sane_repr('group_id', 'alert_id')
 
 
 ### django-indexer
-
 
 class MessageIndex(BaseIndex):
     model = Event
@@ -778,7 +1137,7 @@ def create_default_project(created_models, verbosity=2, **kwargs):
             return
 
         project = Project.objects.create(
-            public=settings.ALLOW_PUBLIC_PROJECTS and settings.PUBLIC,
+            public=False,
             name='Sentry (Internal)',
             slug='sentry',
         )
@@ -791,8 +1150,8 @@ def create_default_project(created_models, verbosity=2, **kwargs):
             print 'Created internal Sentry project (slug=%s, id=%s)' % (project.slug, project.id)
 
         # Iterate all groups to update their relations
-        for model in (Group, Event, FilterValue, MessageFilterValue,
-                      MessageCountByMinute):
+        for model in (Group, Event, FilterValue, GroupTag,
+                      GroupCountByMinute):
             if verbosity > 0:
                 print ('Backfilling project ids for %s.. ' % model),
             model.objects.filter(project__isnull=True).update(
@@ -837,7 +1196,7 @@ def create_team_member_for_owner(instance, created, **kwargs):
 
     instance.member_set.get_or_create(
         user=instance.owner,
-        type=globals()[settings.DEFAULT_PROJECT_ACCESS]
+        type=MEMBER_OWNER,
     )
 
 
@@ -881,6 +1240,65 @@ def set_language_on_logon(request, user, **kwargs):
     if language and hasattr(request, 'session'):
         request.session['django_language'] = language
 
+
+@buffer_incr_complete.connect(sender=FilterValue, weak=False)
+def record_project_tag_count(filters, created, **kwargs):
+    from sentry import app
+
+    if not created:
+        return
+
+    app.buffer.incr(FilterKey, {
+        'values_seen': 1,
+    }, {
+        'project': filters['project'],
+        'key': filters['key'],
+    })
+
+
+@buffer_incr_complete.connect(sender=GroupTag, weak=False)
+def record_group_tag_count(filters, created, **kwargs):
+    from sentry import app
+
+    if not created:
+        return
+
+    app.buffer.incr(GroupTagKey, {
+        'values_seen': 1,
+    }, {
+        'project': filters['project'],
+        'group': filters['group'],
+        'key': filters['key'],
+    })
+
+
+@buffer_incr_complete.connect(sender=AffectedUserByGroup, weak=False)
+def record_user_count(filters, created, **kwargs):
+    from sentry import app
+
+    if not created:
+        # if it's not a new row, it's not a unique user
+        return
+
+    app.buffer.incr(Group, {
+        'users_seen': 1,
+    }, {
+        'id': filters['group'].id,
+    })
+
+
+@regression_signal.connect(weak=False)
+def create_regression_activity(instance, **kwargs):
+    if instance.times_seen == 1:
+        # this event is new
+        return
+    Activity.objects.create(
+        project=instance.project,
+        group=instance,
+        type=Activity.SET_REGRESSION,
+    )
+
+
 # Signal registration
 post_syncdb.connect(
     create_default_project,
@@ -917,6 +1335,10 @@ pre_delete.connect(
     dispatch_uid="remove_key_for_team_member",
     weak=False,
 )
-user_logged_in.connect(set_language_on_logon)
+user_logged_in.connect(
+    set_language_on_logon,
+    dispatch_uid="set_language_on_logon",
+    weak=False
+)
 
 add_introspection_rules([], ["^social_auth\.fields\.JSONField"])

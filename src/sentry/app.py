@@ -2,7 +2,7 @@
 sentry.app
 ~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -13,11 +13,12 @@ from threading import local
 
 class State(local):
     request = None
+    data = {}
 
 
-def get_buffer(path, options):
+def get_instance(path, options):
     cls = import_string(path)
     return cls(**options)
 
-buffer = get_buffer(settings.BUFFER, settings.BUFFER_OPTIONS)
+buffer = get_instance(settings.BUFFER, settings.BUFFER_OPTIONS)
 env = State()

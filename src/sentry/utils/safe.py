@@ -2,7 +2,7 @@
 sentry.utils.safe
 ~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -12,11 +12,10 @@ from django.db import transaction
 
 
 def safe_execute(func, *args, **kwargs):
-    sid = transaction.savepoint()
     try:
         result = func(*args, **kwargs)
     except Exception, e:
-        transaction.savepoint_rollback(sid)
+        transaction.rollback_unless_managed()
         if hasattr(func, 'im_class'):
             cls = func.im_class
         else:
@@ -28,5 +27,4 @@ def safe_execute(func, *args, **kwargs):
             'func_kwargs': kwargs,
         }, exc_info=True)
     else:
-        transaction.savepoint_commit(sid)
         return result

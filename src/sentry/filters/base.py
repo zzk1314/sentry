@@ -2,7 +2,7 @@
 sentry.filters.base
 ~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -11,9 +11,12 @@ from __future__ import absolute_import
 
 __all__ = ('Filter', 'GroupFilter', 'EventFilter')
 
+import hashlib
+
 from django.utils.datastructures import SortedDict
 
 from sentry.models import Group, Event, FilterValue, MessageIndex
+from sentry.utils.cache import cache
 from .widgets import ChoiceWidget
 
 
@@ -59,11 +62,15 @@ class Filter(object):
         return '?' + query_dict.urlencode()
 
     def get_choices(self):
-        return SortedDict((l, l)
-            for l in FilterValue.objects.filter(
+        key = 'filters:%s:%s' % (self.project.id, hashlib.md5(self.column).hexdigest())
+        result = cache.get(key)
+        if result is None:
+            result = list(FilterValue.objects.filter(
                 project=self.project,
                 key=self.column,
             ).values_list('value', flat=True).order_by('value')[:self.max_choices])
+            cache.set(key, result, 60)
+        return SortedDict((l, l) for l in result)
 
     def get_query_set(self, queryset):
         kwargs = {self.column: self.get_value()}
@@ -93,12 +100,12 @@ class TagFilter(Filter):
         col, val = self.get_column(), self.get_value()
         if queryset.model == Event:
             queryset = queryset.filter(**dict(
-                group__messagefiltervalue__key=col,
-                group__messagefiltervalue__value=val,
+                group__grouptag__key=col,
+                group__grouptag__value=val,
             ))
         else:
             queryset = queryset.filter(**dict(
-                messagefiltervalue__key=col,
-                messagefiltervalue__value=val,
+                grouptag__key=col,
+                grouptag__value=val,
             ))
         return queryset.distinct()

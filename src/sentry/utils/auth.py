@@ -2,7 +2,7 @@
 sentry.utils.auth
 ~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from django.conf import settings as dj_settings
@@ -43,19 +43,24 @@ class EmailAuthBackend(ModelBackend):
     Supports authenticating via an email address or a username.
     """
     def authenticate(self, username=None, password=None):
+        qs = User.objects.exclude(password='!')
         try:
             # Assume username is a login and attempt to login.
-            user = User.objects.get(username__iexact=username)
+            user = qs.get(username__iexact=username)
         except User.DoesNotExist:
             if '@' in username:
-                try:
-                    user = User.objects.get(email__iexact=username)
-                except User.DoesNotExist:
-                    return None
-            else:
-                return None
+                # email isn't guaranteed unique
+                for user in qs.filter(email__iexact=username):
+                    if not user.password:
+                        continue
+                    if user.check_password(password):
+                        return user
+            return None
 
-        if user.check_password(password):
-            return user
+        try:
+            if user.password and user.check_password(password):
+                return user
+        except ValueError:
+            return None
 
         return None

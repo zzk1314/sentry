@@ -2,7 +2,7 @@
 sentry.templatetags.sentry_plugins
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from django import template
@@ -29,8 +29,7 @@ def get_actions(group, request):
 
         action_list = results
 
-    for action in action_list:
-        yield action[0], action[1], request.path == action[1]
+    return [(a[0], a[1], request.path == a[1]) for a in action_list]
 
 
 @register.filter
@@ -49,8 +48,7 @@ def get_panels(group, request):
 
         panel_list = results
 
-    for panel in panel_list:
-        yield panel[0], panel[1], request.path == panel[1]
+    return [(p[0], p[1], request.path == p[1]) for p in panel_list]
 
 
 @register.filter

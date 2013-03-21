@@ -1,15 +1,24 @@
+"""
+sentry.utils.cache
+~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+import functools
 import logging
 import time
 
-from django.core.cache import get_cache, cache
+from django.core.cache import get_cache, cache as default_cache
 
 from sentry.conf import settings
 
 if settings.CACHE_BACKEND != 'default':
-    cache = get_cache(settings.CACHE_BACKEND)  # NOQA
+    _cache = get_cache(settings.CACHE_BACKEND)  # NOQA
+else:
+    _cache = default_cache
 
-_cache = cache
-
+cache = _cache
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +34,14 @@ class Lock(object):
     >>> with Lock('key name'):
     >>>     # do something
     """
-    def __init__(self, lock_key, timeout=10, cache=None):
+    def __init__(self, lock_key, timeout=3, cache=None, allow_failure=True):
         if cache is None:
             self.cache = _cache
         else:
             self.cache = cache
         self.timeout = timeout
         self.lock_key = lock_key
+        self.allow_failure = allow_failure
 
     def __enter__(self):
         start = time.time()
@@ -50,7 +60,7 @@ class Lock(object):
                 time.sleep(delay)
                 attempt += 1
 
-        if not got_lock:
+        if not got_lock and not self.allow_failure:
             raise UnableToGetLock('Unable to fetch lock after %.2fs' % (time.time() - start,))
 
         return self
@@ -60,3 +70,65 @@ class Lock(object):
             self.cache.delete(self.lock_key)
         except Exception, e:
             logger.exception(e)
+
+
+class memoize(object):
+    """
+    Memoize the result of a property call.
+
+    >>> class A(object):
+    >>>     @memoize
+    >>>     def func(self):
+    >>>         return 'foo'
+    """
+
+    def __init__(self, func):
+        self.__name__ = func.__name__
+        self.__module__ = func.__module__
+        self.__doc__ = func.__doc__
+        self.func = func
+
+    def __get__(self, obj, type=None):
+        if obj is None:
+            return self
+        d, n = vars(obj), self.__name__
+        if n not in d:
+            value = self.func(obj)
+            d[n] = value
+        return value
+
+
+class cached_for_request(memoize):
+    """
+    Memoize the result of a for the duration of a request. If the system does
+    not think it's in a request, the result is never saved.
+
+    >>> class A(object):
+    >>>     @memoize_for_request
+    >>>     def func(self):
+    >>>         return 'foo'
+    """
+    def _get_key(self, args, kwargs):
+        return (self, tuple(args), tuple(kwargs.items()))
+
+    def __call__(self, *args, **kwargs):
+        from sentry.app import env
+
+        request = env.request
+        if not request:
+            return self.func(*args, **kwargs)
+
+        if not hasattr(request, '__func_cache'):
+            data = request.__func_cache = {}
+        else:
+            data = request.__func_cache
+
+        key = self._get_key(args, kwargs)
+
+        if key not in data:
+            value = self.func(*args, **kwargs)
+            data[key] = value
+        return data[key]
+
+    def __get__(self, obj, type=None):
+        return functools.partial(self.__call__, obj)

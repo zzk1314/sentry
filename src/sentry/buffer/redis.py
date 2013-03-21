@@ -2,52 +2,71 @@
 sentry.buffer.redis
 ~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
 from __future__ import with_statement
 
+from django.core.exceptions import ImproperlyConfigured
+
+for package in ('nydus', 'redis'):
+    try:
+        __import__(package, {}, {}, [], -1)
+    except ImportError:
+        raise ImproperlyConfigured('Missing %r package, which is required for Redis buffers' %
+            (package,))
+
 from django.db import models
+from django.utils.encoding import smart_str
 from hashlib import md5
 from nydus.db import create_cluster
 from sentry.buffer import Buffer
+from sentry.conf import settings
 from sentry.utils.compat import pickle
 
 
 class RedisBuffer(Buffer):
     key_expire = 60 * 60  # 1 hour
 
-    def __init__(self, hosts=None, router='nydus.db.routers.keyvalue.PartitionRouter', **options):
+    def __init__(self, **options):
+        if not options:
+            # inherit default options from REDIS_OPTIONS
+            options = settings.REDIS_OPTIONS
+
         super(RedisBuffer, self).__init__(**options)
-        if hosts is None:
-            hosts = {
-                0: {}  # localhost / default
-            }
+        options.setdefault('hosts', {
+            0: {},
+        })
+        options.setdefault('router', 'nydus.db.routers.keyvalue.PartitionRouter')
         self.conn = create_cluster({
             'engine': 'nydus.db.backends.redis.Redis',
-            'router': router,
-            'hosts': hosts,
+            'router': options['router'],
+            'hosts': options['hosts'],
         })
 
-    def _map_column(self, model, column, value):
+    def _coerce_val(self, value):
         if isinstance(value, models.Model):
             value = value.pk
-        else:
-            value = unicode(value)
-        return value
+        return smart_str(value)
 
     def _make_key(self, model, filters, column):
         """
         Returns a Redis-compatible key for the model given filters.
         """
-        return '%s:%s:%s' % (model._meta,
-            md5('&'.join('%s=%s' % (k, self._map_column(model, k, v)) for k, v in sorted(filters.iteritems()))).hexdigest(),
-            column)
+        return '%s:%s:%s' % (
+            model._meta,
+            md5(smart_str('&'.join('%s=%s' % (k, self._coerce_val(v))
+                for k, v in sorted(filters.iteritems())))).hexdigest(),
+            column,
+        )
 
     def _make_extra_key(self, model, filters):
-        return '%s:extra:%s' % (model._meta,
-            md5('&'.join('%s=%s' % (k, self._map_column(model, k, v)) for k, v in sorted(filters.iteritems()))).hexdigest())
+        return '%s:extra:%s' % (
+            model._meta,
+            md5(smart_str('&'.join('%s=%s' % (k, self._coerce_val(v))
+                for k, v in sorted(filters.iteritems())))).hexdigest(),
+        )
 
     def incr(self, model, columns, filters, extra=None):
         with self.conn.map() as conn:
@@ -87,7 +106,7 @@ class RedisBuffer(Buffer):
                     continue
                 extra[key] = pickle.loads(str(value))
 
-        # Filter out empty or zero'd results to avoid a potentially unnescesary update
+        # Filter out empty or zero'd results to avoid a potentially unnecessary update
         results = dict((k, int(v)) for k, v in results.iteritems() if int(v or 0) > 0)
         if not results:
             return

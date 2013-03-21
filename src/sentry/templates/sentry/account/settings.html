@@ -1,5 +1,6 @@
 {% extends "sentry/account/base.html" %}
 
+{% load url from future %}
 {% load crispy_forms_tags %}
 {% load i18n %}
 {% load sentry_helpers %}
@@ -8,8 +9,8 @@
 
 {% block breadcrumb %}
     {{ block.super }}
-    <li class="divider">/</li>
-    <li><a href="{% url sentry-account-settings %}">{% trans "Account" %}</a></li>
+    <li class="divider"></li>
+    <li><a href="{% url 'sentry-account-settings' %}">{% trans "Account" %}</a></li>
 {% endblock %}
 
 {% block heading %}
@@ -22,7 +23,9 @@
         {{ form|as_crispy_errors }}
         <p>{% trans "To make changes to your account, you must first enter your current password." %}</p>
         {% with form.old_password as field %}
-            {% include "sentry/partial/_form_field.html" %}
+            {% if field %}
+                {% include "sentry/partial/_form_field.html" %}
+            {% endif %}
         {% endwith %}
         <hr>
         <fieldset class="control-group">
@@ -49,10 +52,7 @@
         </fieldset>
         <hr>
         <p>{% trans "You may also optionally change your password." %}</p>
-        {% with form.new_password1 as field %}
-            {% include "sentry/partial/_form_field.html" %}
-        {% endwith %}
-        {% with form.new_password2 as field %}
+        {% with form.new_password as field %}
             {% include "sentry/partial/_form_field.html" %}
         {% endwith %}
 

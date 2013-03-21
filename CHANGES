@@ -1,3 +1,134 @@
+Version 5.4.0
+-------------
+
+SENTRY_PUBLIC now dictates whether or not a Sentry install should be considered
+accessible by all users or not. This should better solve the use-case of companies
+hosting a Sentry instance internally and not necessarily needing the permissions
+that teams give you.
+
+If enabled, all teams and all projects will be accessible all members (for any endpoint
+which does not require a certain level of access). Project.is_public now dictates the
+implied state of all events, but will not allow a non-member to browse events.
+
+Additionally, this includes the following other items:
+
+- [Important!] The URLS for social authentication have been moved.
+- Improved rendering of data values in all interfaces.
+- django-compressor was replaced with django-static-compiler.
+- A better defined public view of events (which removes several items from being visible).
+- Improved SourceMap discovery.
+- Most events will no longer cause a hard error when validation fails. Instead we attempt
+  to drop any non-required data so that at least a partial event is stored.
+- MessageCountByMinute was renamed to GroupCountByMinute.
+- MessageFilterValue was renamed to GroupTag.
+- Syntax highlighting was disabled (pending performance solutions).
+- Added Team.date_added column.
+
+
+Version 5.3.0
+-------------
+
+A brand new Sentry design has landed.
+
+Some things of note:
+
+- An improved dashboard.
+- Improved activity feeds on aggregate details.
+- Similar event navigation links on aggregate details.
+- Redesigned team management flow.
+
+Additionally:
+
+- Aggregates now happen on (project, checksum), which means events that have different
+  levels or culprits can now be grouped together.
+- Sentry now requires authentication for all pages.
+- SENTRY_PUBLIC behavior has changed to signify the default state of projects.
+- Project slug's are now only unique within a team.
+
+Version 5.2.2
+-------------
+
+- [New] The dashboard will now stream updates to the new and trending event components.
+
+Version 5.2.1
+-------------
+
+- [Fix] Trends sorting options on the Stream page work correctly again.
+
+Version 5.2.0
+-------------
+
+- [New] A new activity stream exists on event pages.
+- [New] Syntax highlighting now exists on all context frames.
+- [New] Support for JavaScript Sourcemaps now exists.
+- [New] The server will now fetch remote source files for JavaScript events.
+- [New] Sentry will now ask for your project's platform.
+- [Fix] Resolved -> Regressed state change is now atomic.
+- [Fix] ``cleanup`` now runs with lower resource overhead.
+- [Fix] Cookies will now be coerced to dicts if possible.
+- More (storage only still) work on user tracking.
+- Several indexes were added to speed up various queries.
+- Removed savepoint use in plugin hooks (99% of the time there were no queries).
+
+Additional, the following client protocol changes are part of this release:
+
+- Cookies should be not be sent by default.
+- POST data should not be sent by default.
+- Recommended values regexp for sanitizing credit cards was updated.
+- ``colno`` was added to the Stacktrace spec.
+- Timestamps that are more than one minute in the future are now discarded.
+- (Undocumented) Client-side support now exists for GET + Referrer store requests.
+
+We've also reduced the test suite time down to 25% of what it originally was (thanks, Alex!)
+
+Version 5.1.3
+-------------
+
+A new user's affected-tracking mechanism is present (storage only). This will
+become available in the UX in a future version, and relies on the existing HTTP
+and User interface datas.
+
+- [Fix] Correct a bug with search queries.
+- [New] Group.users_seen will now track unique users when possible.
+- [New] Team and project owners can now change ownership (non-superuser).
+- [Fix] Counts are now formatted correctly when number of visible digits > 3.
+
+Version 5.1.2
+-------------
+
+- [Fix] Option schema (key length = 64).
+- [Fix] Template interface now renders correctly.
+- [Fix] Update design on admin status pages.
+- [New] iOS client documentation.
+- Improved client documentation visuals.
+
+Version 5.1.1
+-------------
+
+Several schema changes are made in this upgrade:
+
+- A new model: LostPasswordHash
+- Two new fields on ProjectKey: date_added and user_added
+- A new field on Event: platform
+- A new field on Group: platform
+
+The following changes are also part of this release:
+
+- [New] A new plugin, sentry-interface-types will now automatically tag the available interface
+  types in an event.
+- [New] The platform value sent with an event is now recorded in the database.
+- [New] A recover account flow has been added.
+- [New] There is now a sticky nav on the event details pages.
+- [New] getting started page now shows if there's no data for a project.
+- [New] An API key management page now exists (under project settings).
+- [New] A tag overview page now exists for group details pages.
+- [Fix] Line numbers now show correctly in collapsed source context.
+- [Fix] Pending members now show correctly on the team management page (under project settings).
+- [Fix] The time since value now updates correctly when events change.
+- Various changes to how event details components render.
+- Various fixes for breadcrumbs and header styles.
+- Most plugins will no longer default to enabled on new projects.
+
 Version 5.1.0
 -------------
 
@@ -213,14 +344,14 @@ now __init__(request, project).
 Version 3.6.0
 -------------
 
-This version focuses on improving mebership control. It includes the ability to revoke
+This version focuses on improving membership control. It includes the ability to revoke
 project members access temporarily (by suspending them), as well as revoking users
 (outside of Sentry) via the user.is_active flag.
 
 Additionally, it brings the beginnings of an "invite user" flow, allowing you to
 invite users who may or may not already have accounts in the system. We plan to improve
 this flow in an upcoming release to allow invitees easy registration within the system
-if they dont already have an account.
+if they don't already have an account.
 
 Version 3.5.0
 -------------
@@ -408,7 +539,7 @@ Version 2.2.1
 Version 2.2.0
 -------------
 
-* Sentry has a brand new design utlizing Bootstrap 2.
+* Sentry has a brand new design utilizing Bootstrap 2.
 * Superusers can now create projects for users.
 
 Version 2.1.3

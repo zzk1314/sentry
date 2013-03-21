@@ -2,7 +2,7 @@
 sentry.web.forms.projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 import itertools
@@ -10,10 +10,14 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from sentry.constants import EMPTY_PASSWORD_VALUES
 from sentry.models import Project, ProjectOption
 from sentry.permissions import can_set_public_projects
-from sentry.web.forms.fields import RadioFieldRenderer, UserField, OriginsField, \
-  get_team_choices
+from sentry.web.forms.fields import (RadioFieldRenderer, UserField, OriginsField,
+    RangeField, get_team_choices)
+
+
+BLANK_CHOICE = [("", "")]
 
 
 class ProjectTagsForm(forms.Form):
@@ -37,19 +41,26 @@ class ProjectTagsForm(forms.Form):
         ProjectOption.objects.set_value(self.project, 'tags', filters)
 
 
-class NewProjectForm(forms.ModelForm):
-    name = forms.CharField(label=_('Project Name'), max_length=200, widget=forms.TextInput(attrs={'placeholder': _('My Project Name')}))
+class BaseProjectForm(forms.ModelForm):
+    name = forms.CharField(label=_('Project Name'), max_length=200,
+        widget=forms.TextInput(attrs={'placeholder': _('Production')}))
+    platform = forms.ChoiceField(choices=Project._meta.get_field('platform').get_choices(blank_choice=BLANK_CHOICE),
+        widget=forms.Select(attrs={'data-placeholder': _('Select a platform')}))
 
     class Meta:
-        fields = ('name',)
+        fields = ('name', 'platform')
         model = Project
+
+
+class NewProjectForm(BaseProjectForm):
+    pass
 
 
 class NewProjectAdminForm(NewProjectForm):
     owner = UserField(required=False)
 
     class Meta:
-        fields = ('name', 'owner')
+        fields = ('name', 'platform', 'owner')
         model = Project
 
 
@@ -60,7 +71,7 @@ class RemoveProjectForm(forms.Form):
         # ('3', _('Hide this project.')),
     ), widget=forms.RadioSelect(renderer=RadioFieldRenderer))
     project = forms.ChoiceField(choices=(), required=False)
-    password = forms.CharField(label=_("Password"), widget=forms.PasswordInput, help_text=_("Confirm your identify by entering your password."))
+    password = forms.CharField(label=_("Password"), widget=forms.PasswordInput, help_text=_("Confirm your identity by entering your password."))
 
     def __init__(self, user, project_list, *args, **kwargs):
         super(RemoveProjectForm, self).__init__(*args, **kwargs)
@@ -71,6 +82,10 @@ class RemoveProjectForm(forms.Form):
         else:
             self.fields['project'].choices = [(p.pk, p.name) for p in project_list]
             self.fields['project'].widget.choices = self.fields['project'].choices
+
+        # HACK: don't require current password if they don't have one
+        if self.user.password in EMPTY_PASSWORD_VALUES:
+            del self.fields['password']
 
     def clean(self):
         data = self.cleaned_data
@@ -92,13 +107,17 @@ class RemoveProjectForm(forms.Form):
         return password
 
 
-class EditProjectForm(forms.ModelForm):
-    public = forms.BooleanField(required=False, help_text=_('Allow anyone (even anonymous users) to view this project'))
+class EditProjectForm(BaseProjectForm):
+    public = forms.BooleanField(required=False,
+        help_text=_('Imply public access to any event for this project.'))
     team = forms.TypedChoiceField(choices=(), coerce=int)
-    origins = OriginsField(required=False)
+    origins = OriginsField(label=_('Allowed Domains'), required=False,
+        help_text=_('Separate multiple entries with a newline.'))
+    resolve_age = RangeField(help_text=_('Treat an event as resolved if it hasn\'t been seen for this amount of time.'),
+        required=False, min_value=0, max_value=168, step_value=1)
 
     class Meta:
-        fields = ('name', 'public', 'team')
+        fields = ('name', 'platform', 'public', 'team')
         model = Project
 
     def __init__(self, request, team_list, data, instance, *args, **kwargs):
@@ -118,7 +137,15 @@ class EditProjectForm(forms.ModelForm):
         if not value:
             return
 
-        return self.team_list[int(value)]
+        # TODO: why is this not already an int?
+        value = int(value)
+        if value == -1:
+            return
+
+        if self.instance.team and value == self.instance.team.id:
+            return self.instance.team
+
+        return self.team_list[value]
 
 
 class EditProjectAdminForm(EditProjectForm):
@@ -126,5 +153,25 @@ class EditProjectAdminForm(EditProjectForm):
     owner = UserField(required=False)
 
     class Meta:
-        fields = ('name', 'public', 'team', 'owner')
+        fields = ('name', 'platform', 'public', 'team', 'owner', 'slug')
         model = Project
+
+
+class AlertSettingsForm(forms.Form):
+    active = forms.BooleanField(help_text=_('Enable notifications for this project. Users can override this within their personal settings'),
+        required=False)
+    event_age = RangeField(help_text=_('Notify the first time an event is seen after this amount of time.'),
+        required=False, min_value=0, max_value=168, step_value=1)
+
+
+class NotificationTagValuesForm(forms.Form):
+    values = forms.CharField(required=False)
+
+    def __init__(self, project, tag, *args, **kwargs):
+        self.project = project
+        self.tag = tag
+        super(NotificationTagValuesForm, self).__init__(*args, **kwargs)
+        self.fields['values'].label = self.tag
+
+    def clean_values(self):
+        return set(filter(bool, self.cleaned_data.get('values').split(',')))

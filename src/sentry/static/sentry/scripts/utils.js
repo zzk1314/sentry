@@ -1,4 +1,4 @@
-(function(app, jQuery){
+(function(app, jQuery, _){
     "use strict";
 
     var $ = jQuery;
@@ -63,7 +63,7 @@
                 o = Math.floor(number / x);
                 p = number % x;
                 if (o > 0) {
-                    if (('' + o.length) > 2 || !p)
+                    if (o / 10 > 1 || !p)
                         return '' + o + y;
                     return '' + this.floatFormat(number / x, 1) + y;
                 }
@@ -120,11 +120,137 @@
                 .replace(/-+/g, '-'); // collapse dashes
 
             return str;
+        },
+
+        varToggle: function(link, $elm) {
+            var $link = $(link);
+
+            // assume its collapsed by default
+            if (!$link.attr('data-expand-label'))
+                $link.attr('data-expand-label', $link.html());
+
+            $elm.toggle();
+            if ($elm.is(':visible'))
+                $link.html($link.attr('data-collapse-label'));
+            else
+                $link.html($link.attr('data-expand-label'));
+        },
+
+        getSearchUsersUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.teamId + '/users/search/';
+        },
+
+        getSearchProjectsUrl: function(){
+            return app.config.urlPrefix + '/api/' + app.config.teamId + '/projects/search/';
+        },
+
+        makeSearchableInput: function(el, url, callback) {
+            $(el).select2({
+                allowClear: true,
+                width: 'element',
+                initSelection: function (el, callback) {
+                    var $el = $(el);
+                    callback({id: $el.val(), text: $el.val()});
+                },
+                ajax: {
+                    url: url,
+                    dataType: 'json',
+                    data: function (term, page) {
+                        return {
+                            query: term,
+                            limit: 10
+                        };
+                    },
+                    results: function(data, page) {
+                        var results = callback(data);
+                        return {results: callback(data)};
+                    }
+                }
+            });
+        },
+
+        escape: function(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        },
+
+        makeSearchableUsersInput: function(el) {
+            this.makeSearchableInput(el, this.getSearchUsersUrl(), _.bind(function(data){
+                var results = [];
+                $(data.results).each(_.bind(function(_, val){
+                    var label;
+                    if (val.first_name) {
+                        label = this.escape(val.first_name) + ' &mdash; ' + this.escape(val.username);
+                    } else {
+                        label = this.escape(val.username);
+                    }
+                    label += '<br>' + this.escape(val.email);
+                    results.push({
+                        id: val.username,
+                        text: label
+                    });
+                }, this));
+
+                if ($(results).filter(function(){
+                    return this.id.localeCompare(data.query) === 0;
+                }).length === 0) {
+                    results.push({
+                        id: this.escape(data.query),
+                        text: this.escape(data.query)
+                    });
+                }
+
+                return results;
+            }, this));
+        },
+
+        makeSearchableProjectsInput: function(el) {
+            this.makeSearchableInput(el, this.getSearchProjectsUrl(), _.bind(function(data){
+                var results = [];
+                $(data.results).each(_.bind(function(_, val){
+                    results.push({
+                        id: this.escape(val.slug),
+                        text: this.escape(val.name) + '<br>' + this.escape(val.slug)
+                    });
+                }, this));
+                return results;
+            }, this));
         }
 
     };
 
-}(app, jQuery));
+    $(function(){
+        // Change all select boxes to select2 elements.
+        $('.body select, .toolbar select, .project-controls select').each(function(){
+            var $this = $(this),
+                options = {
+                    width: 'element',
+                    allowClear: false
+                };
+
+            if ($this.attr('data-allowClear')) {
+                options.allowClear = $this.attr('data-allowClear');
+            }
+
+            $this.select2(options);
+        });
+
+        // Update date strings periodically
+        setInterval(function() {
+            $('.pretty-date').each(function(_, el){
+                var $el = $(el);
+                var title = $el.attr('title');
+                if (title) {
+                    var date = app.utils.prettyDate(title);
+                    if (date) {
+                        $el.text(date);
+                    }
+                }
+            });
+        }, 5000);
+    });
+
+    $.fn.select2.defaults.escapeMarkup = function(s) { return s; };
+}(app, jQuery, _));
 
 /**
  * Date.parse with progressive enhancement for ISO 8601 <https://github.com/csnover/js-iso8601>

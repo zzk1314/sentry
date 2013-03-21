@@ -3,12 +3,17 @@
 from __future__ import absolute_import
 
 
+import mock
+from datetime import timedelta
 from django.core import mail
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from sentry.models import Project, ProjectKey, Group, Event, Team, \
-  MessageFilterValue, MessageCountByMinute, FilterValue, PendingTeamMember
-
-from sentry.testutils import TestCase
+from django.utils import timezone
+from sentry.constants import MINUTE_NORMALIZATION
+from sentry.models import (Project, ProjectKey, Group, Event, Team,
+    GroupTag, GroupCountByMinute, FilterValue, PendingTeamMember,
+    LostPasswordHash, Alert)
+from sentry.testutils import TestCase, fixture
 
 
 class ProjectTest(TestCase):
@@ -24,20 +29,18 @@ class ProjectTest(TestCase):
         self.assertFalse(Project.objects.filter(pk=1).exists())
         self.assertFalse(Group.objects.filter(project__isnull=True).exists())
         self.assertFalse(Event.objects.filter(project__isnull=True).exists())
-        self.assertFalse(MessageFilterValue.objects.filter(project__isnull=True).exists())
-        self.assertFalse(MessageCountByMinute.objects.filter(project__isnull=True).exists())
+        self.assertFalse(GroupTag.objects.filter(project__isnull=True).exists())
+        self.assertFalse(GroupCountByMinute.objects.filter(project__isnull=True).exists())
         self.assertFalse(FilterValue.objects.filter(project__isnull=True).exists())
 
         self.assertEquals(project2.group_set.count(), 4)
         self.assertEquals(project2.event_set.count(), 10)
-        self.assertEquals(project2.messagefiltervalue_set.count(), 0)
-        self.assertEquals(project2.messagecountbyminute_set.count(), 0)
+        self.assertEquals(project2.grouptag_set.count(), 0)
+        self.assertEquals(project2.groupcountbyminute_set.count(), 0)
         self.assertEquals(project2.filtervalue_set.count(), 0)
 
 
 class ProjectKeyTest(TestCase):
-    fixtures = ['tests/fixtures/views.json']
-
     def test_get_dsn(self):
         key = ProjectKey(project_id=1, public_key='public', secret_key='secret')
         with self.Settings(SENTRY_URL_PREFIX='http://example.com'):
@@ -66,8 +69,6 @@ class ProjectKeyTest(TestCase):
 
 
 class PendingTeamMemberTest(TestCase):
-    fixtures = ['tests/fixtures/views.json']
-
     def test_token_generation(self):
         member = PendingTeamMember(id=1, team_id=1, email='foo@example.com')
         with self.Settings(SENTRY_KEY='a'):
@@ -89,3 +90,48 @@ class PendingTeamMemberTest(TestCase):
             msg = mail.outbox[0]
 
             self.assertEquals(msg.to, ['foo@example.com'])
+
+
+class LostPasswordTest(TestCase):
+    @fixture
+    def password_hash(self):
+        return LostPasswordHash.objects.create(
+            user=self.user,
+        )
+
+    def test_send_recover_mail(self):
+        self.password_hash.send_recover_mail()
+        assert len(mail.outbox) == 1
+        msg = mail.outbox[0]
+        assert msg.to == [self.user.email]
+        assert msg.subject == '[Sentry] Password Recovery'
+        url = 'http://testserver' + reverse('sentry-account-recover-confirm',
+            args=[self.password_hash.user_id, self.password_hash.hash])
+        assert url in msg.body
+
+
+class AlertTest(TestCase):
+    @fixture
+    def params(self):
+        return {
+            'project_id': self.project.id,
+            'message': 'This is a test message',
+        }
+
+    @mock.patch('sentry.models.has_trending', mock.Mock(return_value=True))
+    @mock.patch('sentry.models.Group.objects.get_accelerated')
+    def test_does_add_trending_events(self, get_accelerated):
+        get_accelerated.return_value = [self.group]
+        alert = Alert.maybe_alert(**self.params)
+        get_accelerated.assert_called_once_with([self.project.id], minutes=MINUTE_NORMALIZATION)
+        assert list(alert.related_groups.all()) == [self.group]
+
+
+class GroupIsOverResolveAgeTest(TestCase):
+    def test_simple(self):
+        group = self.group
+        group.last_seen = timezone.now() - timedelta(hours=2)
+        group.project.update_option('sentry:resolve_age', 1)  # 1 hour
+        assert group.is_over_resolve_age() is True
+        group.last_seen = timezone.now()
+        assert group.is_over_resolve_age() is False

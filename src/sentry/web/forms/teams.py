@@ -2,14 +2,15 @@
 sentry.web.forms.teams
 ~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from django import forms
-
-from sentry.models import Team, TeamMember, PendingTeamMember
-from sentry.web.forms.fields import UserField, get_team_choices
 from django.utils.translation import ugettext_lazy as _
+
+from sentry.constants import MEMBER_TYPES
+from sentry.models import Team, TeamMember, PendingTeamMember, AccessGroup, Project
+from sentry.web.forms.fields import UserField, get_team_choices
 
 
 class RemoveTeamForm(forms.Form):
@@ -17,7 +18,8 @@ class RemoveTeamForm(forms.Form):
 
 
 class NewTeamForm(forms.ModelForm):
-    name = forms.CharField(label=_('Team Name'), max_length=200, widget=forms.TextInput(attrs={'placeholder': _('My Team Name')}))
+    name = forms.CharField(label=_('Team Name'), max_length=200,
+        widget=forms.TextInput(attrs={'placeholder': _('example.com')}))
 
     class Meta:
         fields = ('name',)
@@ -39,10 +41,10 @@ class EditTeamForm(forms.ModelForm):
 
 
 class EditTeamAdminForm(EditTeamForm):
-    owner = UserField(required=False)
+    owner = UserField(required=True)
 
     class Meta:
-        fields = ('name', 'owner',)
+        fields = ('name', 'slug', 'owner',)
         model = Team
 
 
@@ -114,3 +116,45 @@ class NewTeamMemberForm(BaseTeamMemberForm):
 
 class AcceptInviteForm(forms.Form):
     pass
+
+
+class BaseAccessGroupForm(forms.ModelForm):
+    name = forms.CharField(label=_('Group Name'), max_length=200,
+        widget=forms.TextInput(attrs={'placeholder': _('API Team')}))
+    type = forms.ChoiceField(label=_('Access Type'), choices=MEMBER_TYPES,
+        help_text=_('Members will gain this level of access to all projects assigned to this group.'))
+
+    class Meta:
+        fields = ('name', 'type')
+        model = AccessGroup
+
+
+class NewAccessGroupForm(BaseAccessGroupForm):
+    pass
+
+
+class EditAccessGroupForm(BaseAccessGroupForm):
+    pass
+
+
+class RemoveAccessGroupForm(forms.Form):
+    pass
+
+
+class NewAccessGroupMemberForm(forms.Form):
+    user = UserField()
+
+
+class NewAccessGroupProjectForm(forms.Form):
+    project = forms.CharField(label=_('Project'), widget=forms.TextInput(attrs={'placeholder': _('slug')}))
+
+    def __init__(self, group, *args, **kwargs):
+        super(NewAccessGroupProjectForm, self).__init__(*args, **kwargs)
+        self.group = group
+
+    def clean_project(self):
+        value = self.cleaned_data['project']
+        try:
+            return Project.objects.get(team=self.group.team, slug=value)
+        except Project.DoesNotExist:
+            raise forms.ValidationError(_('Invalid project slug'))

@@ -2,16 +2,15 @@
 sentry.plugins.bases.notify
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2010-2012 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from sentry.plugins import Plugin
-from sentry.models import UserOption
+from sentry.models import UserOption, Project
 from sentry.utils.cache import cache
-from sentry.web.helpers import get_project_list
 from sentry.constants import MEMBER_USER
 
 
@@ -42,13 +41,16 @@ class NotificationUserOptionsForm(BaseNotificationUserOptionsForm):
     def __init__(self, *args, **kwargs):
         super(NotificationUserOptionsForm, self).__init__(*args, **kwargs)
         user = self.user
-        self.project_list = get_project_list(user, access=MEMBER_USER, key='slug')
-        project_list = sorted(self.project_list.items())
-        self.fields['projects'].choices = project_list
+        self.project_list = dict(
+            (p.slug, p) for p in
+            Project.objects.get_for_user(user, access=MEMBER_USER)
+        )
+        project_choices = sorted((p.slug, p.name) for p in self.project_list.values())
+        self.fields['projects'].choices = project_choices
         self.fields['projects'].widget.choices = self.fields['projects'].choices
 
         enabled_projects = []
-        for slug, project in project_list:
+        for slug, project in self.project_list.iteritems():
             is_enabled = self.plugin.get_option('alert', project=project, user=user)
             if is_enabled == 1 or is_enabled is None:
                 enabled_projects.append(slug)
@@ -160,6 +162,13 @@ class NotificationPlugin(Plugin):
         if exclude_loggers and group.logger in exclude_loggers:
             return False
 
+        allowed_tags = project.get_option('notifcation:tags', {})
+        if allowed_tags:
+            tags = event.data.get('tags', ())
+            if not tags:
+                return False
+            if not any(v in allowed_tags.get(k, ()) for k, v in tags):
+                return False
         return True
 
     ## plugin hooks

@@ -6,22 +6,79 @@ import mock
 
 from sentry.interfaces import Stacktrace, Exception
 from sentry.models import Event
-
-from sentry.testutils import TestCase
+from sentry.testutils import TestCase, fixture
 
 
 class StacktraceTest(TestCase):
-    def test_requires_filename_and_lineno(self):
-        self.assertRaises(AssertionError, Stacktrace, frames=[{
-            'lineno': 1,
-        }])
+    @fixture
+    def interface(self):
+        return Stacktrace(frames=[
+            {
+                'filename': 'foo/bar.py'
+            },
+            {
+                'filename': 'foo/baz.py',
+                'lineno': 1,
+                'in_app': True,
+            }
+        ])
+
+    def test_legacy_interface(self):
+        # Simple test to ensure legacy data works correctly with the ``Frame``
+        # objects
+        event = self.event
+        interface = Stacktrace(**event.data['sentry.interfaces.Stacktrace'])
+        assert len(interface.frames) == 5
+        assert interface == event.interfaces['sentry.interfaces.Stacktrace']
+
+    def test_requires_filename(self):
+        with self.assertRaises(AssertionError):
+            Stacktrace(frames=[{}]).validate()
+
         Stacktrace(frames=[{
             'filename': 'foo.py',
-        }])
+        }]).validate()
         Stacktrace(frames=[{
             'lineno': 1,
             'filename': 'foo.py',
+        }]).validate()
+
+    def test_allows_abs_path_without_filename(self):
+        interface = Stacktrace(frames=[{
+            'lineno': 1,
+            'abs_path': 'foo/bar/baz.py',
         }])
+        frame = interface.frames[0]
+        assert frame.filename == 'foo/bar/baz.py'
+        assert frame.abs_path == frame.filename
+
+    def test_coerces_url_filenames(self):
+        interface = Stacktrace(frames=[{
+            'lineno': 1,
+            'filename': 'http://foo.com/foo.js',
+        }])
+        frame = interface.frames[0]
+        assert frame.filename == '/foo.js'
+        assert frame.abs_path == 'http://foo.com/foo.js'
+
+    def test_coerces_url_abs_paths(self):
+        interface = Stacktrace(frames=[{
+            'lineno': 1,
+            'filename': 'foo.js',
+            'abs_path': 'http://foo.com/foo.js',
+        }])
+        frame = interface.frames[0]
+        assert frame.filename == '/foo.js'
+        assert frame.abs_path == 'http://foo.com/foo.js'
+
+    def test_ignores_results_with_empty_path(self):
+        interface = Stacktrace(frames=[{
+            'lineno': 1,
+            'filename': 'http://foo.com',
+        }])
+        frame = interface.frames[0]
+        assert frame.filename == 'http://foo.com'
+        assert frame.abs_path == frame.filename
 
     def test_serialize_returns_frames(self):
         interface = Stacktrace(frames=[{
@@ -29,7 +86,7 @@ class StacktraceTest(TestCase):
             'filename': 'foo.py',
         }])
         result = interface.serialize()
-        self.assertTrue('frames' in result)
+        assert 'frames' in result
 
     def test_get_hash_with_only_required_vars(self):
         interface = Stacktrace(frames=[{
@@ -38,6 +95,31 @@ class StacktraceTest(TestCase):
         }])
         result = interface.get_hash()
         self.assertEquals(result, ['foo.py', 1])
+
+    def test_get_hash_ignores_filename_if_http(self):
+        interface = Stacktrace(frames=[{
+            'context_line': 'hello world',
+            'filename': 'http://foo.com/foo.py',
+        }])
+        result = interface.get_hash()
+        self.assertEquals(result, ['hello world'])
+
+    def test_get_hash_ignores_filename_if_https(self):
+        interface = Stacktrace(frames=[{
+            'context_line': 'hello world',
+            'filename': 'https://foo.com/foo.py',
+        }])
+        result = interface.get_hash()
+        self.assertEquals(result, ['hello world'])
+
+    def test_get_hash_ignores_filename_if_abs_path_is_http(self):
+        interface = Stacktrace(frames=[{
+            'context_line': 'hello world',
+            'abs_path': 'https://foo.com/foo.py',
+            'filename': 'foo.py',
+        }])
+        result = interface.get_hash()
+        self.assertEquals(result, ['hello world'])
 
     def test_get_hash_uses_module_over_filename(self):
         interface = Stacktrace(frames=[{
@@ -80,53 +162,64 @@ class StacktraceTest(TestCase):
         })
         self.assertEquals(result[-1], 'exception')
 
+    def test_get_composite_hash_uses_exception_value_if_no_type_or_stack(self):
+        interface = Stacktrace(frames=[])
+        interface_exc = Exception(value='bar')
+        result = interface.get_composite_hash({
+            'sentry.interfaces.Exception': interface_exc,
+        })
+        self.assertEquals(result[-1], 'bar')
+
     @mock.patch('sentry.interfaces.Stacktrace.get_stacktrace')
     def test_to_string_returns_stacktrace(self, get_stacktrace):
         event = mock.Mock(spec=Event())
         interface = Stacktrace(frames=[])
         result = interface.to_string(event)
-        get_stacktrace.assert_called_once_with(event, system_frames=False)
+        get_stacktrace.assert_called_once_with(event, system_frames=False, max_frames=5)
         self.assertEquals(result, get_stacktrace.return_value)
 
-    @mock.patch('sentry.interfaces.Stacktrace.get_stacktrace')
     @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
+    @mock.patch('sentry.interfaces.Stacktrace.get_stacktrace')
     def test_get_traceback_response(self, get_stacktrace):
         event = mock.Mock(spec=Event())
         event.message = 'foo'
         get_stacktrace.return_value = 'bar'
-        interface = Stacktrace(frames=[])
+        interface = Stacktrace(frames=[{'lineno': 1, 'filename': 'foo.py'}])
         result = interface.get_traceback(event)
         get_stacktrace.assert_called_once_with(event, newest_first=None)
         self.assertEquals(result, 'foo\n\nbar')
 
+    @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
     @mock.patch('sentry.interfaces.Stacktrace.get_traceback')
     @mock.patch('sentry.interfaces.render_to_string')
-    @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
-    def test_to_html_render_call(self, render_to_string, get_traceback):
+    @mock.patch('sentry.interfaces.Frame.get_context')
+    def test_to_html_render_call(self, get_frame_context, render_to_string, get_traceback):
         event = mock.Mock(spec=Event())
         get_traceback.return_value = 'bar'
-        interface = Stacktrace(frames=[])
+        interface = Stacktrace(frames=[{'lineno': 1, 'filename': 'foo.py'}])
         result = interface.to_html(event)
         get_traceback.assert_called_once_with(event, newest_first=False)
+        get_frame_context.assert_called_once_with(event=event, is_public=False)
         render_to_string.assert_called_once_with('sentry/partial/interfaces/stacktrace.html', {
             'event': event,
-            'frames': [],
+            'frames': [get_frame_context.return_value],
             'stacktrace': 'bar',
             'system_frames': 0,
             'newest_first': False,
+            'is_public': False,
         })
         self.assertEquals(result, render_to_string.return_value)
 
-    @mock.patch('sentry.interfaces.Stacktrace.get_traceback')
     @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
+    @mock.patch('sentry.interfaces.Stacktrace.get_traceback')
     def test_to_html_response(self, get_traceback):
         event = mock.Mock(spec=Event())
         event.message = 'foo'
         get_traceback.return_value = 'bar'
-        interface = Stacktrace(frames=[])
+        interface = Stacktrace(frames=[{'lineno': 1, 'filename': 'foo.py'}])
         result = interface.to_html(event)
         get_traceback.assert_called_once_with(event, newest_first=False)
-        self.assertTrue('<div id="traceback" class="module">' in result)
+        self.assertTrue('<div class="module">' in result)
 
     @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
     def test_get_stacktrace_with_only_filename(self):
@@ -134,6 +227,13 @@ class StacktraceTest(TestCase):
         interface = Stacktrace(frames=[{'filename': 'foo'}, {'filename': 'bar'}])
         result = interface.get_stacktrace(event)
         self.assertEquals(result, 'Stacktrace (most recent call last):\n\n  File "foo"\n  File "bar"')
+
+    @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
+    def test_get_stacktrace_with_module(self):
+        event = mock.Mock(spec=Event())
+        interface = Stacktrace(frames=[{'module': 'foo'}, {'module': 'bar'}])
+        result = interface.get_stacktrace(event)
+        self.assertEquals(result, 'Stacktrace (most recent call last):\n\n  Module "foo"\n  Module "bar"')
 
     @mock.patch('sentry.interfaces.Stacktrace.is_newest_frame_first', mock.Mock(return_value=False))
     def test_get_stacktrace_with_filename_and_function(self):

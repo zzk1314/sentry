@@ -1,5 +1,6 @@
 {% extends "sentry/projects/base.html" %}
 
+{% load url from future %}
 {% load crispy_forms_tags %}
 {% load i18n %}
 
@@ -7,14 +8,20 @@
 
 {% block breadcrumb %}
     {{ block.super }}
-    <li class="divider">/</li>
-    <li><a href="{% url sentry-new-project %}">{% trans "New Project" %}</a></li>
+    <li class="divider"></li>
+    <li><a href="{% url 'sentry-new-project' team.slug %}">{% trans "New Project" %}</a></li>
 {% endblock %}
 
 {% block main %}
     <section class="body">
-        <p>{% trans "Use this page to create a new project within Sentry. Once done, you'll be able to configure your client to send messages to this project." %}</p>
-        <hr>
+        <div class="page-header">
+            <h2>{% trans "Create a New Project" %}</h2>
+        </div>
+
+        <p>{% blocktrans %}Projects allow you to scope events to a specific application in your organization. For example, you might have seperate projects for production vs development instances, or separate projects for your web app and mobile app.{% endblocktrans %}</p>
+
+        <br>
+
         <form class="form-stacked" action="" method="post" id="new_project">
             {% csrf_token %}
 
