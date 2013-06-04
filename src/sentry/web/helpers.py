@@ -10,11 +10,13 @@ import logging
 import warnings
 
 from django.conf import settings as dj_settings
+from django.contrib import messages
 from django.core.urlresolvers import reverse, resolve
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader, RequestContext, Context
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
 
 from sentry.conf import settings
 from sentry.constants import MEMBER_OWNER
@@ -211,3 +213,10 @@ def plugin_config(plugin, project, request):
 
 def get_raven_js_url():
     return settings.RAVEN_JS_URL
+
+
+def success(request):
+    messages.add_message(
+        request, messages.SUCCESS,
+        _('Your changes have been saved.'))
+    return HttpResponseRedirect(request.path)

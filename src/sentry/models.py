@@ -160,6 +160,7 @@ class AccessGroup(Model):
     managed = models.BooleanField(default=False)
     data = GzippedDictField(blank=True, null=True)
     date_added = models.DateTimeField(default=timezone.now)
+    last_synced = models.DateTimeField(default=timezone.now, null=True)
 
     projects = models.ManyToManyField('sentry.Project')
     members = models.ManyToManyField(django_settings.AUTH_USER_MODEL)
@@ -170,6 +171,25 @@ class AccessGroup(Model):
         unique_together = (('team', 'name'),)
 
     __repr__ = sane_repr('team_id', 'name', 'type', 'managed')
+
+
+class AccessGroupOption(Model):
+    """
+    Options specific to an instance of a access group.
+
+    Options which are specific to a plugin should namespace
+    their key. e.g. key='myplugin:optname'
+    """
+    access_group = models.ForeignKey(Team)
+    key = models.CharField(max_length=64)
+    value = PickledObjectField()
+
+    objects = InstanceMetaManager('access_group')
+
+    class Meta:
+        unique_together = (('access_group', 'key',),)
+
+    __repr__ = sane_repr('access_group_id', 'key', 'value')
 
 
 class TeamMember(Model):

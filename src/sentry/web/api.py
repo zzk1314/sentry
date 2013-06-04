@@ -208,10 +208,6 @@ class APIView(BaseView):
 
         return response
 
-    # XXX: backported from Django 1.5
-    def _allowed_methods(self):
-        return [m.upper() for m in self.http_method_names if hasattr(self, m)]
-
     def options(self, request, *args, **kwargs):
         response = HttpResponse()
         response['Allow'] = ', '.join(self._allowed_methods())
