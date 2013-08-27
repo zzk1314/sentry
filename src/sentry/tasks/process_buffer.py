@@ -7,9 +7,11 @@ sentry.tasks.process_buffer
 """
 
 from celery.task import task
+from sentry.utils.logging import log_exceptions
 
 
 @task(name='sentry.tasks.process_buffer.process_incr', queue='counters')
+@log_exceptions
 def process_incr(**kwargs):
     """
     Processes a buffer event.

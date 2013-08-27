@@ -5,6 +5,7 @@ sentry.utils.models
 :copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import, print_function
 
 import hashlib
 import logging
@@ -27,8 +28,8 @@ class QueryError(Exception):
 
 def merge_account(from_user, to_user):
     # TODO: we could discover relations automatically and make this useful
-    from sentry.models import (GroupBookmark, Project, ProjectKey, Team, TeamMember,
-        UserOption)
+    from sentry.models import (
+        GroupBookmark, Project, ProjectKey, Team, TeamMember, UserOption)
 
     for obj in ProjectKey.objects.filter(user=from_user):
         obj.update(user=to_user)

@@ -50,9 +50,6 @@ class SentryManagerTest(TestCase):
         assert EventMapping.objects.filter(
             group=group, event_id=event_id).exists()
 
-    def test_invalid_project(self):
-        self.assertRaises(Project.DoesNotExist, Group.objects.from_kwargs, 2, message='foo')
-
     def test_valid_only_message(self):
         event = Group.objects.from_kwargs(1, message='foo')
         self.assertEquals(event.group.last_seen, event.datetime)

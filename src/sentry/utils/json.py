@@ -5,13 +5,11 @@ sentry.utils.json
 :copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
-
-# Avoid shadowing the standard library json module
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 from django.core.serializers.json import DjangoJSONEncoder
-import json
 
+import json
 import datetime
 import uuid
 

@@ -5,6 +5,7 @@ sentry.utils.query
 :copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import, print_function
 
 from django.db import transaction, IntegrityError
 from django.db.models import ForeignKey
@@ -202,7 +203,6 @@ def merge_into(self, other, callback=lambda x: x, using='default'):
             and f.rel.to == s_model
             if f.rel.to
         )
-        print model, objects, fields
         if not fields:
             # the collector pulls in the self reference, so if it's our model
             # we actually assume it's probably not related to itself, and its

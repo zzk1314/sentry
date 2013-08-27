@@ -35,7 +35,7 @@ def get_filters(model=None, project=None):
                 module = __import__(module_name, {}, {}, class_name)
                 cls = getattr(module, class_name)
             except Exception:
-                logger = logging.getLogger('sentry.errors.filters')
+                logger = logging.getLogger('sentry.errors')
                 logger.exception('Unable to import %s', class_path)
                 continue
             FILTER_CACHE[class_path] = cls

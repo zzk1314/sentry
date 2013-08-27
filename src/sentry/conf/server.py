@@ -281,36 +281,35 @@ LOGGING = {
     'handlers': {
         'console': {
             'level': 'WARNING',
-            'class': 'logging.StreamHandler'
-        },
-        'sentry': {
-            'class': 'raven.contrib.django.handlers.SentryHandler',
-        }
-    },
-    'formatters': {
-        'client_info': {
-            'format': '%(name)s %(levelname)s %(project_slug)s/%(team_slug)s %(message)s'
-        }
-    },
-    'loggers': {
-        '()': {
-            'handlers': ['console', 'sentry'],
-        },
-        'root': {
-            'handlers': ['console', 'sentry'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
         'sentry': {
             'level': 'ERROR',
-            'handlers': ['console', 'sentry'],
+            'class': 'raven.contrib.django.handlers.SentryHandler',
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '[%(levelname)s] %(message)s',
+        },
+        'client_info': {
+            'format': '[%(levelname)s] %(project_slug)s/%(team_slug)s %(message)s'
+        }
+    },
+    'root': {
+        'handlers': ['console', 'sentry'],
+    },
+    'loggers': {
+        'sentry': {
+            'level': 'ERROR',
+        },
+        'sentry.errors': {
+            'handlers': ['console'],
             'propagate': False,
         },
         'sentry.coreapi': {
             'formatter': 'client_info',
-        },
-        'sentry.errors': {
-            'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
         },
         'django.request': {
             'level': 'ERROR',

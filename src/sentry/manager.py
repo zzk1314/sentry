@@ -43,6 +43,7 @@ from sentry.tasks.index import index_event
 from sentry.utils.cache import cache, memoize
 from sentry.utils.dates import get_sql_date_trunc, normalize_datetime
 from sentry.utils.db import get_db_engine, has_charts, attach_foreignkey
+from sentry.utils.logging import log_exceptions
 from sentry.utils.models import create_or_update, make_key
 from sentry.utils.safe import safe_execute, trim, trim_dict
 from sentry.utils.strings import strip
@@ -489,6 +490,7 @@ class GroupManager(BaseManager, ChartMixin):
 
         return self.save_data(project, data)
 
+    @log_exceptions
     @transaction.commit_on_success
     def save_data(self, project, data, raw=False):
         # TODO: this function is way too damn long and needs refactored
@@ -1175,6 +1177,7 @@ class SearchDocumentManager(BaseManager):
 
         return self.raw(sql, params)
 
+    @log_exceptions
     def index(self, event):
         from sentry.models import SearchToken
 
