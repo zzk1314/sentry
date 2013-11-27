@@ -97,9 +97,7 @@ class SentryManagerTest(TestCase):
     @with_eager_tasks
     def test_does_update_groupcountbyminute(self):
         event = Group.objects.from_kwargs(1, message='foo')
-        inst = GroupCountByMinute.objects.filter(group=event.group)
-        self.assertTrue(inst.exists())
-        inst = inst.get()
+        inst = GroupCountByMinute.objects.get(group=event.group)
         self.assertEquals(inst.times_seen, 1)
 
         event = Group.objects.from_kwargs(1, message='foo')
@@ -109,13 +107,13 @@ class SentryManagerTest(TestCase):
     @with_eager_tasks
     def test_does_update_projectcountbyminute(self):
         event = Group.objects.from_kwargs(1, message='foo')
-        inst = ProjectCountByMinute.objects.filter(project=event.project)
-        self.assertTrue(inst.exists())
-        inst = inst.get()
+        inst = ProjectCountByMinute.objects.get(project=event.project)
         self.assertEquals(inst.times_seen, 1)
 
         event = Group.objects.from_kwargs(1, message='foo')
         inst = ProjectCountByMinute.objects.get(project=event.project)
+        print Group.objects.values_list('message')
+        assert event.project.event_set.count() == 2
         self.assertEquals(inst.times_seen, 2)
 
     @with_eager_tasks
@@ -247,7 +245,7 @@ class TeamManagerTest(TestCase):
 
 
 class CreateOrUpdateTest(TestCase):
-    @mock.patch('sentry.manager.create_or_update', mock.Mock(side_effect=Exception()))
+    @mock.patch('sentry.db.models.manager.create_or_update', mock.Mock(side_effect=Exception()))
     @mock.patch.object(Option.objects.app, 'buffer')
     def test_buffered_flow(self, buffer):
         Option.objects.create_or_update(
@@ -265,7 +263,7 @@ class CreateOrUpdateTest(TestCase):
         )
 
     @mock.patch.object(Option.objects.app, 'buffer', mock.Mock(side_effect=Exception()))
-    @mock.patch('sentry.manager.create_or_update')
+    @mock.patch('sentry.db.models.manager.create_or_update')
     def test_default_flow(self, create_or_update):
         Option.objects.create_or_update(
             key='foo',

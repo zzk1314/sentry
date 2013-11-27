@@ -489,12 +489,12 @@ class GroupManager(BaseManager, ChartMixin):
             transaction.commit_unless_managed(using=group._state.db)
 
         update_kwargs = {
-            'times_seen': 1,
+            'times_seen': F('times_seen') + 1,
         }
         if time_spent:
             update_kwargs.update({
-                'time_spent_total': time_spent,
-                'time_spent_count': 1,
+                'time_spent_total': F('time_spent') + time_spent,
+                'time_spent_count': F('time_spent_count') + 1,
             })
 
         if not is_new:

@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from exam import fixture
 
 from sentry.search.django.backend import DjangoSearchBackend
-from sentry.testutils import TestCase
+from sentry.testutils import TestCase, with_eager_tasks
 
 
 def norm_date(dt):
@@ -18,6 +18,7 @@ class SearchIndexTest(TestCase):
     def backend(self):
         return DjangoSearchBackend()
 
+    @with_eager_tasks
     def test_index_behavior(self):
         event = self.event
 
