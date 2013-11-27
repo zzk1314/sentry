@@ -2,14 +2,30 @@
 sentry.constants
 ~~~~~~~~~~~~~~~~
 
-These settings act as the default (base) settings for the Sentry-provided web-server
+These settings act as the default (base) settings for the Sentry-provided
+web-server
 
 :copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+import logging
+import os.path
 
+from django.conf import settings
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext_lazy as _
+
+
+def get_all_languages():
+    results = []
+    for path in os.listdir(os.path.join(MODULE_ROOT, 'locale')):
+        if path.startswith('.'):
+            continue
+        results.append(path)
+    return results
+
+MODULE_ROOT = os.path.dirname(__import__('sentry').__file__)
+DATA_ROOT = os.path.join(MODULE_ROOT, 'data')
 
 SORT_OPTIONS = SortedDict((
     ('priority', _('Priority')),
@@ -34,21 +50,17 @@ SCORE_CLAUSES = SORT_CLAUSES.copy()
 
 SQLITE_SORT_CLAUSES = SORT_CLAUSES.copy()
 SQLITE_SORT_CLAUSES.update({
-    'date': 'sentry_groupedmessage.last_seen',
-    'new': 'sentry_groupedmessage.first_seen',
+    'date': "(julianday(sentry_groupedmessage.last_seen) - 2440587.5) * 86400.0",
+    'new': "(julianday(sentry_groupedmessage.first_seen) - 2440587.5) * 86400.0",
 })
 SQLITE_SCORE_CLAUSES = SQLITE_SORT_CLAUSES.copy()
 
 MYSQL_SORT_CLAUSES = SORT_CLAUSES.copy()
 MYSQL_SORT_CLAUSES.update({
-    'date': 'sentry_groupedmessage.last_seen',
-    'new': 'sentry_groupedmessage.first_seen',
-})
-MYSQL_SCORE_CLAUSES = SCORE_CLAUSES.copy()
-MYSQL_SCORE_CLAUSES.update({
     'date': 'UNIX_TIMESTAMP(sentry_groupedmessage.last_seen)',
     'new': 'UNIX_TIMESTAMP(sentry_groupedmessage.first_seen)',
 })
+MYSQL_SCORE_CLAUSES = MYSQL_SORT_CLAUSES.copy()
 
 ORACLE_SORT_CLAUSES = SCORE_CLAUSES.copy()
 ORACLE_SORT_CLAUSES.update({
@@ -170,8 +182,57 @@ MAX_EXTRA_VARIABLE_SIZE = 2048
 # keys
 MAX_DICTIONARY_ITEMS = 50
 
+MAX_TAG_KEY_LENGTH = 32
+MAX_TAG_VALUE_LENGTH = 200
+MAX_CULPRIT_LENGTH = 200
+MAX_MESSAGE_LENGTH = 1024 * 10
+MAX_STACKTRACE_FRAMES = 50
+
 # Team slugs which may not be used. Generally these are top level URL patterns
 # which we don't want to worry about conflicts on.
 RESERVED_TEAM_SLUGS = (
     'admin', 'manage', 'login', 'account', 'register', 'api',
 )
+
+LOG_LEVELS = {
+    logging.DEBUG: 'debug',
+    logging.INFO: 'info',
+    logging.WARNING: 'warning',
+    logging.ERROR: 'error',
+    logging.FATAL: 'fatal',
+}
+DEFAULT_LOG_LEVEL = 'error'
+DEFAULT_LOGGER_NAME = 'root'
+
+# Default alerting threshold values
+DEFAULT_ALERT_PROJECT_THRESHOLD = (500, 100)  # 500%, 100 events
+DEFAULT_ALERT_GROUP_THRESHOLD = (1000, 100)  # 1000%, 100 events
+
+# The maximum number of events which can be requested as JSON
+MAX_JSON_RESULTS = 1000
+
+# Default paginator value
+EVENTS_PER_PAGE = 15
+
+# Default sort option for the group stream
+DEFAULT_SORT_OPTION = 'date'
+
+# Default sort option for the search results
+SEARCH_DEFAULT_SORT_OPTION = 'date'
+
+# Setup languages for only available locales
+LANGUAGE_MAP = dict(settings.LANGUAGES)
+LANGUAGES = [(k, LANGUAGE_MAP[k]) for k in get_all_languages() if k in LANGUAGE_MAP]
+
+# Timeout (in seconds) for fetching remote source files (e.g. JS)
+SOURCE_FETCH_TIMEOUT = 5
+
+# TODO(dcramer): We eventually want to make this user-editable
+TAG_LABELS = {
+    'sentry:user': _('User'),
+    'sentry:filename': _('File'),
+    'sentry:function': _('Function'),
+    'os': _('OS'),
+    'url': _('URL'),
+    'server_name': _('Server'),
+}

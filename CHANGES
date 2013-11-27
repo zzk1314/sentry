@@ -1,3 +1,68 @@
+Version 6.4.0
+-------------
+
+Some major backend changes are introduced in Sentry 6.3.0.
+
+Search
+======
+
+Search has been abstracted from the simple search manager, and now lives within
+``sentry.search``. Currently only the Django backend is supported, but some sample
+code for Solr Cloud integration is also available.
+
+Event Storage
+=============
+
+A new application called ``nodestore`` now manages the event blob data. By default it
+uses a Django-based backend (storing each node as a row in a table), however a Riak
+backend is included and fully supported.
+
+Additional Changes
+==================
+
+- Some initial support for time zones (user setting).
+- You can now choose which tag annotations are applied to the event stream via Project Settings -> Tags.
+- A new subsystem for handling email is available in ``sentry.utils.email``.
+- You can now receive email notifications for notes.
+- Charts now show tooltips describing the datapoint.
+- JavaScript sourcemaps now support embedded sources.
+- Stream annotations can now be customized to show any tags (not just number of users).
+
+Version 6.3.0
+-------------
+
+- Most of the db utilities were refactored into ``sentry.db``.
+- The user interface now accepts an ``ip_address`` attribute.
+- User tracking will now use the ip_address attribute if available.
+- ``time_spent`` is now expected to be sent as an integer in milliseconds.
+- A new Notes feature is available for leaving comments on an event.
+
+Version 6.2.0
+-------------
+
+- Added tracking to which users have seen which groups
+- The stream now reflects if you've viewed an event since it was created or regressed.
+- The group details page shows other users who have glanced at an event.
+- Streams which have recorded user data will now show the number of unique users
+  an event has happened to.
+- Various stream polling fixes and improvements.
+
+Version 6.1.1 (Security Release)
+--------------------------------
+
+Sentry 6.1.1 is a security release which patches a remote code execution exploit.
+
+This only affects servers hosted public clients (e.g. raven.js).
+
+The following commit demonstrates the exploit, as well as the patch:
+
+https://github.com/getsentry/sentry/commit/5793c6cac19aeb7d2e19f9a09f4421b771af4306
+
+Version 6.1.0
+-------------
+
+- Added Rate Limit controls.
+
 Version 6.0.0
 -------------
 
@@ -25,8 +90,16 @@ Incompatible Changes
 - Nearly all data within an event now has a fixed max size. See client
   developer documentation for details.
 - Project keys are no longer created for individuals by default
-- The Buffer API has been completely changed, and extensions will need to be
-  updated to reflect the changes.
+- sentry.conf.settings has been removed
+- LOG_LEVELS, DEFAULT_LOG_LEVEL, and DEFAULT_LOGGER_NAME are no longer configurable.
+- DEFAULT_ALERT_PROJECT_THRESHOLD and DEFAULT_ALERT_GROUP_THRESHOLD are no longer
+  configurable.
+- SENTRY_EMAIL_SUBJECT_PREFIX and SENTRY_SERVER_EMAIL are no longer used, and default to
+  the appropriate Django options.
+- SENTRY_CACHE_BACKEND is no longer configurable.
+- SENTRY_AUTH_PROVIDERS is now AUTH_PROVIDERS.
+- Existing account recovery tokens are no longer valid.
+- sentry.utils.router has been removed.
 
 Protocol Version 4
 ==================

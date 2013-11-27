@@ -21,13 +21,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
 from django.views.generic.base import View as BaseView
 
-from sentry.conf import settings
+from sentry import app
 from sentry.constants import (
-    MEMBER_USER, STATUS_MUTED, STATUS_UNRESOLVED, STATUS_RESOLVED)
+    MEMBER_USER, STATUS_MUTED, STATUS_UNRESOLVED, STATUS_RESOLVED,
+    EVENTS_PER_PAGE)
 from sentry.coreapi import (
     project_from_auth_vars, decode_and_decompress_data,
     safely_load_json_string, validate_data, insert_data_to_database, APIError,
-    APIForbidden, extract_auth_vars)
+    APIForbidden, APIRateLimited, extract_auth_vars, ensure_has_ip)
 from sentry.exceptions import InvalidData
 from sentry.models import (
     Group, GroupBookmark, Project, ProjectCountByMinute, TagValue, Activity,
@@ -68,11 +69,12 @@ def api(func):
 
 
 class Auth(object):
-    def __init__(self, auth_vars):
+    def __init__(self, auth_vars, is_public=False):
         self.client = auth_vars.get('sentry_client')
         self.version = int(float(auth_vars.get('sentry_version')))
         self.secret_key = auth_vars.get('sentry_secret')
         self.public_key = auth_vars.get('sentry_key')
+        self.is_public = is_public
 
 
 class APIView(BaseView):
@@ -193,7 +195,7 @@ class APIView(BaseView):
             elif project_ != project:
                 return HttpResponse('Project ID mismatch', content_type='text/plain', status=400)
 
-            auth = Auth(auth_vars)
+            auth = Auth(auth_vars, is_public=bool(origin))
 
             if auth.version >= 3:
                 # Version 3 enforces secret key for server side requests
@@ -264,14 +266,20 @@ class StoreView(APIView):
     @never_cache
     def get(self, request, project, auth, **kwargs):
         data = request.GET.get('sentry_data', '')
-        self.process(request, project, auth, data, **kwargs)
-        # We should return a simple 1x1 gif for browser so they don't throw a warning
-        return HttpResponse(PIXEL, 'image/gif')
+        response_or_event_id = self.process(request, project, auth, data, **kwargs)
+
+        # Return a simple 1x1 gif for browser so they don't throw a warning
+        response = HttpResponse(PIXEL, 'image/gif')
+        if not isinstance(response_or_event_id, HttpResponse):
+            response['X-Sentry-ID'] = response_or_event_id
+        return response
 
     def process(self, request, project, auth, data, **kwargs):
+        if safe_execute(app.quotas.is_rate_limited, project=project):
+            raise APIRateLimited
         for plugin in plugins.all():
             if safe_execute(plugin.is_rate_limited, project=project):
-                return HttpResponse('Creation of this event was denied due to rate limiting.', content_type='text/plain', status=405)
+                raise APIRateLimited
 
         result = plugins.first('has_perm', request.user, 'create_event', project)
         if result is False:
@@ -290,6 +298,10 @@ class StoreView(APIView):
         # mutates data
         Group.objects.normalize_event_data(data)
 
+        # insert IP address if not available
+        if auth.is_public:
+            ensure_has_ip(data, request.META['REMOTE_ADDR'])
+
         event_id = data['event_id']
 
         # mutates data (strips a lot of context if not queued)
@@ -306,7 +318,7 @@ class StoreView(APIView):
 @api
 def poll(request, team, project):
     offset = 0
-    limit = settings.MESSAGES_PER_PAGE
+    limit = EVENTS_PER_PAGE
 
     response = _get_group_list(
         request=request,

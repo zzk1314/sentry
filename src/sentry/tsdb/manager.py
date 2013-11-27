@@ -10,7 +10,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from sentry.manager import BaseManager
-from sentry.utils.models import create_or_update
+from sentry.db.models.query import create_or_update
 
 from .utils import Rollup, ROLLUPS
 

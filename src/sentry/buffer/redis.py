@@ -5,10 +5,19 @@ sentry.buffer.redis
 :copyright: (c) 2010-2013 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from __future__ import absolute_import
 
-from __future__ import with_statement
-
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.encoding import smart_str
+from hashlib import md5
+from nydus.db import create_cluster
+
+from django.db.models import F
+from django.db.models.expressions import ExpressionNode
+
+from sentry.buffer import Buffer
+from sentry.db.models.utils import resolve_simple_expression
 
 for package in ('nydus', 'redis'):
     try:
@@ -17,17 +26,6 @@ for package in ('nydus', 'redis'):
         raise ImproperlyConfigured(
             'Missing %r package, which is required for Redis buffers' % (
                 package,))
-
-from hashlib import md5
-from nydus.db import create_cluster
-
-from django.db.models import F
-from django.db.models.expressions import ExpressionNode
-from django.utils.encoding import smart_str
-
-from sentry.buffer import Buffer
-from sentry.conf import settings
-from sentry.utils.db import resolve_simple_expression
 
 
 def checksum(values):
@@ -43,7 +41,7 @@ class RedisBuffer(Buffer):
     def __init__(self, **options):
         if not options:
             # inherit default options from REDIS_OPTIONS
-            options = settings.REDIS_OPTIONS
+            options = settings.SENTRY_REDIS_OPTIONS
 
         super(RedisBuffer, self).__init__(**options)
         options.setdefault('hosts', {

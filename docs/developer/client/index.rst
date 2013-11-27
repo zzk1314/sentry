@@ -146,7 +146,7 @@ transports are available on top of HTTP:
 Building the JSON Packet
 ------------------------
 
-The body of the post is a string representation of a JSON object. It is also preferably gzipped encoding,
+The body of the post is a string representation of a JSON object. It is also preferably gzip encoded,
 which also means its expected to be base64-encoded.
 
 For example, with an included Exception event, a basic JSON body might resemble the following::
@@ -463,7 +463,7 @@ care of several key things:
 * Exponential backoff when Sentry fails (don't continue trying if the server is offline)
 * Failover to a standard logging module on errors.
 
-For example, the Python client will log any failed requests to the Sentry server to a named logger, ``sentry.errors``. 
+For example, the Python client will log any failed requests to the Sentry server to a named logger, ``sentry.errors``.
 It will also only retry every few seconds, based on how many consecutive failures its seen. The code for this is simple::
 
     def should_try(self):
@@ -556,7 +556,7 @@ Most arbitrary values in Sentry have their size restricted. This means any
 values that are sent as metadata (such as variables in a stacktrace) as well
 as things like extra data, or tags.
 
-- Mappings of values (such as HTTP data, extra data, etc) are limitd to 50
+- Mappings of values (such as HTTP data, extra data, etc) are limited to 50
   item pairs.
 - Event IDs are limited to 32 characters.
 - Tag keys are limited to 32 characters.
@@ -564,5 +564,6 @@ as things like extra data, or tags.
 - Culprits are limited to 200 characters.
 - Most contextual variables are limited to 512 characters.
 - Extra contextual data is limited to 2048 characters.
-- Messages are limited to 2048 characters.
+- Messages are limited to 1024 * 10 characters.
 - Http data (the body) is limited to 2048 characters.
+- Stacktrace's are limited to 50 frames. If more are sent, data will be removed from the middle of the stack.

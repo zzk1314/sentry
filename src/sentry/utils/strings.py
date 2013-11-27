@@ -8,6 +8,8 @@ sentry.utils.strings
 import base64
 import zlib
 
+from django.utils.encoding import smart_unicode
+
 
 def truncatechars(value, arg):
     """
@@ -34,3 +36,11 @@ def decompress(value):
 
 def gunzip(value):
     return zlib.decompress(value, 16 + zlib.MAX_WBITS)
+
+
+def strip(value):
+    if not value:
+        return ''
+    if not isinstance(value, basestring):
+        return smart_unicode(value)  # fuck it
+    return smart_unicode(value).strip()

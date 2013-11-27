@@ -19,7 +19,6 @@ from sentry.utils.settings import (
     validate_settings, ConfigurationError, import_string)
 
 
-
 DEPENDENCY_TEST_DATA = {
     "postgresql": ('DATABASES', 'psycopg2.extensions', "database engine", "django.db.backends.postgresql_psycopg2", {
         'default': {
@@ -212,7 +211,7 @@ class DepdendencyTest(TestCase):
             raise ImportError("No module named %s" % (package,))
         return callable
 
-    @mock.patch('sentry.conf.settings')
+    @mock.patch('django.conf.settings')
     @mock.patch('sentry.utils.settings.import_string')
     def validate_dependency(self, key, package, dependency_type, dependency,
                             setting_value, import_string, settings):

@@ -8,48 +8,41 @@ sentry.manager
 
 from __future__ import with_statement
 
-from collections import defaultdict
 import datetime
 import hashlib
-import itertools
 import logging
-import re
-import threading
 import time
 import warnings
-import weakref
 import uuid
 
 from celery.signals import task_postrun
-from django.conf import settings as dj_settings
+from django.conf import settings
 from django.contrib.auth.models import UserManager
 from django.core.signals import request_finished
 from django.db import models, transaction, IntegrityError
 from django.db.models import Sum, F
-from django.db.models.signals import post_save, post_delete, post_init, class_prepared
 from django.utils import timezone
 from django.utils.datastructures import SortedDict
-from django.utils.encoding import force_unicode
 
 from raven.utils.encoding import to_string
-from sentry.conf import settings
 from sentry.constants import (
     STATUS_RESOLVED, STATUS_UNRESOLVED, MINUTE_NORMALIZATION,
-    MAX_EXTRA_VARIABLE_SIZE)
+    MAX_EXTRA_VARIABLE_SIZE, LOG_LEVELS, DEFAULT_LOGGER_NAME,
+    MAX_CULPRIT_LENGTH)
+from sentry.db.models import BaseManager
 from sentry.processors.base import send_group_processors
 from sentry.signals import regression_signal
 from sentry.tasks.index import index_event
 from sentry.utils.cache import cache, memoize
 from sentry.utils.dates import get_sql_date_trunc, normalize_datetime
 from sentry.utils.db import get_db_engine, has_charts, attach_foreignkey
-from sentry.utils.models import create_or_update, make_key
-from sentry.utils.safe import safe_execute, trim, trim_dict
+from sentry.utils.safe import safe_execute, trim, trim_dict, trim_frames
+from sentry.utils.strings import strip
 
 logger = logging.getLogger('sentry.errors')
 
 UNSAVED = dict()
 MAX_TAG_LENGTH = 200
-LOG_LEVELS_DICT = dict(settings.LOG_LEVELS)
 
 
 def get_checksum_from_event(event):
@@ -62,184 +55,6 @@ def get_checksum_from_event(event):
                 hash.update(to_string(r))
             return hash.hexdigest()
     return hashlib.md5(to_string(event.message)).hexdigest()
-
-
-def buffered_update(model, kwargs, values):
-    create_or_update(model, values=values, **kwargs)
-
-
-class BaseManager(models.Manager):
-    lookup_handlers = {
-        'iexact': lambda x: x.upper(),
-    }
-    use_for_related_fields = True
-
-    def __init__(self, *args, **kwargs):
-        self.cache_fields = kwargs.pop('cache_fields', [])
-        self.cache_ttl = kwargs.pop('cache_ttl', 60 * 5)
-        self.__local_cache = threading.local()
-        super(BaseManager, self).__init__(*args, **kwargs)
-
-    def _get_cache(self):
-        if not hasattr(self.__local_cache, 'value'):
-            self.__local_cache.value = weakref.WeakKeyDictionary()
-        return self.__local_cache.value
-
-    def _set_cache(self, value):
-        self.__local_cache.value = value
-
-    __cache = property(_get_cache, _set_cache)
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        # we cant serialize weakrefs
-        d.pop('_BaseManager__cache', None)
-        d.pop('_BaseManager__local_cache', None)
-        return d
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.__local_cache = weakref.WeakKeyDictionary()
-
-    def __class_prepared(self, sender, **kwargs):
-        """
-        Given the cache is configured, connects the required signals for invalidation.
-        """
-        if not self.cache_fields:
-            return
-        post_init.connect(self.__post_init, sender=sender, weak=False)
-        post_save.connect(self.__post_save, sender=sender, weak=False)
-        post_delete.connect(self.__post_delete, sender=sender, weak=False)
-
-    def __cache_state(self, instance):
-        """
-        Updates the tracked state of an instance.
-        """
-        if instance.pk:
-            self.__cache[instance] = dict((f, getattr(instance, f)) for f in self.cache_fields)
-        else:
-            self.__cache[instance] = UNSAVED
-
-    def __post_init(self, instance, **kwargs):
-        """
-        Stores the initial state of an instance.
-        """
-        self.__cache_state(instance)
-
-    def __post_save(self, instance, **kwargs):
-        """
-        Pushes changes to an instance into the cache, and removes invalid (changed)
-        lookup values.
-        """
-        pk_name = instance._meta.pk.name
-        pk_names = ('pk', pk_name)
-        pk_val = instance.pk
-        for key in self.cache_fields:
-            if key in pk_names:
-                continue
-            # store pointers
-            cache.set(self.__get_lookup_cache_key(**{key: getattr(instance, key)}), pk_val, self.cache_ttl)  # 1 hour
-
-        # Ensure we don't serialize the database into the cache
-        db = instance._state.db
-        instance._state.db = None
-        # store actual object
-        try:
-            cache.set(self.__get_lookup_cache_key(**{pk_name: pk_val}), instance, self.cache_ttl)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-        instance._state.db = db
-
-        # Kill off any keys which are no longer valid
-        if instance in self.__cache:
-            for key in self.cache_fields:
-                if key not in self.__cache[instance]:
-                    continue
-                value = self.__cache[instance][key]
-                if value != getattr(instance, key):
-                    cache.delete(self.__get_lookup_cache_key(**{key: value}))
-
-        self.__cache_state(instance)
-
-    def __post_delete(self, instance, **kwargs):
-        """
-        Drops instance from all cache storages.
-        """
-        pk_name = instance._meta.pk.name
-        for key in self.cache_fields:
-            if key in ('pk', pk_name):
-                continue
-            # remove pointers
-            cache.delete(self.__get_lookup_cache_key(**{key: getattr(instance, key)}))
-        # remove actual object
-        cache.delete(self.__get_lookup_cache_key(**{pk_name: instance.pk}))
-
-    def __get_lookup_cache_key(self, **kwargs):
-        return make_key(self.model, 'modelcache', kwargs)
-
-    def contribute_to_class(self, model, name):
-        super(BaseManager, self).contribute_to_class(model, name)
-        class_prepared.connect(self.__class_prepared, sender=model)
-
-    def get_from_cache(self, **kwargs):
-        """
-        Wrapper around QuerySet.get which supports caching of the
-        intermediate value.  Callee is responsible for making sure
-        the cache key is cleared on save.
-        """
-        if not self.cache_fields or len(kwargs) > 1:
-            return self.get(**kwargs)
-
-        key, value = kwargs.items()[0]
-        pk_name = self.model._meta.pk.name
-        if key == 'pk':
-            key = pk_name
-
-        # Kill __exact since it's the default behavior
-        if key.endswith('__exact'):
-            key = key.split('__exact', 1)[0]
-
-        if key in self.cache_fields or key == pk_name:
-            cache_key = self.__get_lookup_cache_key(**{key: value})
-
-            retval = cache.get(cache_key)
-            if retval is None:
-                result = self.get(**kwargs)
-                # Ensure we're pushing it into the cache
-                self.__post_save(instance=result)
-                return result
-
-            # If we didn't look up by pk we need to hit the reffed
-            # key
-            if key != pk_name:
-                return self.get_from_cache(**{pk_name: retval})
-
-            if type(retval) != self.model:
-                if settings.DEBUG:
-                    raise ValueError('Unexpected value type returned from cache')
-                logger.error('Cache response returned invalid value %r', retval)
-                return self.get(**kwargs)
-
-            return retval
-        else:
-            return self.get(**kwargs)
-
-    def create_or_update(self, buffer=False, **kwargs):
-        values = kwargs.pop('defaults', kwargs.pop('values', {}))
-
-        if not buffer:
-            return create_or_update(self.model, values=values, **kwargs)
-
-        self.app.buffer.delay(
-            callback=buffered_update,
-            args=[self.model, kwargs],
-            values=values,
-        )
-
-    @memoize
-    def app(self):
-        from sentry import app
-        return app
 
 
 class ScoreClause(object):
@@ -268,17 +83,17 @@ class ScoreClause(object):
 def count_limit(count):
     # TODO: could we do something like num_to_store = max(math.sqrt(100*count)+59, 200) ?
     # ~ 150 * ((log(n) - 1.5) ^ 2 - 0.25)
-    for amount, sample_rate in settings.SAMPLE_RATES:
+    for amount, sample_rate in settings.SENTRY_SAMPLE_RATES:
         if count <= amount:
             return sample_rate
-    return settings.MAX_SAMPLE_RATE
+    return settings.SENTRY_MAX_SAMPLE_RATE
 
 
 def time_limit(silence):  # ~ 3600 per hour
-    for amount, sample_rate in settings.SAMPLE_TIMES:
+    for amount, sample_rate in settings.SENTRY_SAMPLE_TIMES:
         if silence >= amount:
             return sample_rate
-    return settings.MAX_SAMPLE_TIME
+    return settings.SENTRY_MAX_SAMPLE_TIME
 
 
 class UserManager(BaseManager, UserManager):
@@ -393,22 +208,20 @@ class GroupManager(BaseManager, ChartMixin):
     use_for_related_fields = True
 
     def normalize_event_data(self, data):
+        # TODO(dcramer): store http.env.REMOTE_ADDR as user.ip
         # First we pull out our top-level (non-data attr) kwargs
-        if not data.get('level') or data['level'] not in LOG_LEVELS_DICT:
+        if not data.get('level') or data['level'] not in LOG_LEVELS:
             data['level'] = logging.ERROR
         if not data.get('logger'):
-            data['logger'] = settings.DEFAULT_LOGGER_NAME
+            data['logger'] = DEFAULT_LOGGER_NAME
 
         timestamp = data.get('timestamp')
         if not timestamp:
             timestamp = timezone.now()
 
-        if not data.get('culprit'):
-            data['culprit'] = ''
-
         # We must convert date to local time so Django doesn't mess it up
         # based on TIME_ZONE
-        if dj_settings.TIME_ZONE:
+        if settings.TIME_ZONE:
             if not timezone.is_aware(timestamp):
                 timestamp = timestamp.replace(tzinfo=timezone.utc)
         elif timezone.is_aware(timestamp):
@@ -419,6 +232,7 @@ class GroupManager(BaseManager, ChartMixin):
             data['event_id'] = uuid.uuid4().hex
 
         data.setdefault('message', None)
+        data.setdefault('culprit', None)
         data.setdefault('time_spent', None)
         data.setdefault('server_name', None)
         data.setdefault('site', None)
@@ -439,6 +253,8 @@ class GroupManager(BaseManager, ChartMixin):
             tags = list(tags)
 
         data['tags'] = tags
+        data['message'] = strip(data['message'])
+        data['culprit'] = strip(data['culprit'])
 
         if not isinstance(data['extra'], dict):
             # throw it away
@@ -446,18 +262,32 @@ class GroupManager(BaseManager, ChartMixin):
 
         trim_dict(data['extra'], max_size=MAX_EXTRA_VARIABLE_SIZE)
 
-        # HACK: move this to interfaces code
+        if 'sentry.interfaces.Exception' in data:
+            if 'values' not in data['sentry.interfaces.Exception']:
+                data['sentry.interfaces.Exception'] = {
+                    'values': [data['sentry.interfaces.Exception']]
+                }
+
+            # convert stacktrace + exception into expanded exception
+            if 'sentry.interfaces.Stacktrace' in data:
+                data['sentry.interfaces.Exception']['values'][0]['stacktrace'] = data.pop('sentry.interfaces.Stacktrace')
+
+            for exc_data in data['sentry.interfaces.Exception']['values']:
+                for key in ('type', 'module', 'value'):
+                    value = exc_data.get(key)
+                    if value:
+                        exc_data[key] = trim(value)
+                if exc_data.get('stacktrace'):
+                    trim_frames(exc_data['stacktrace'])
+                    for frame in exc_data['stacktrace']['frames']:
+                        stack_vars = frame.get('vars', {})
+                        trim_dict(stack_vars)
+
         if 'sentry.interfaces.Stacktrace' in data:
+            trim_frames(data['sentry.interfaces.Stacktrace'])
             for frame in data['sentry.interfaces.Stacktrace']['frames']:
                 stack_vars = frame.get('vars', {})
                 trim_dict(stack_vars)
-
-        if 'sentry.interfaces.Exception' in data:
-            exc_data = data['sentry.interfaces.Exception']
-            for key in ('type', 'module', 'value'):
-                value = exc_data.get(key)
-                if value:
-                    exc_data[key] = trim(value)
 
         if 'sentry.interfaces.Message' in data:
             msg_data = data['sentry.interfaces.Message']
@@ -481,6 +311,10 @@ class GroupManager(BaseManager, ChartMixin):
             if value:
                 http_data['data'] = trim(value, 2048)
 
+            # default the culprit to the url
+            if not data['culprit']:
+                data['culprit'] = trim(strip(http_data.get('url')), MAX_CULPRIT_LENGTH)
+
         return data
 
     def from_kwargs(self, project, **kwargs):
@@ -489,7 +323,7 @@ class GroupManager(BaseManager, ChartMixin):
         return self.save_data(project, data)
 
     @transaction.commit_on_success
-    def save_data(self, project, data):
+    def save_data(self, project, data, raw=False):
         # TODO: this function is way too damn long and needs refactored
         # the inner imports also suck so let's try to move it away from
         # the objects manager
@@ -499,7 +333,7 @@ class GroupManager(BaseManager, ChartMixin):
         from sentry.plugins import plugins
         from sentry.models import Event, Project, EventMapping
 
-        project = Project.objects.get_from_cache(pk=project)
+        project = Project.objects.get_from_cache(id=project)
 
         # First we pull out our top-level (non-data attr) kwargs
         event_id = data.pop('event_id')
@@ -556,7 +390,7 @@ class GroupManager(BaseManager, ChartMixin):
         })
 
         tags = data['tags']
-        tags.append(('level', LOG_LEVELS_DICT[level]))
+        tags.append(('level', LOG_LEVELS[level]))
         if logger:
             tags.append(('logger', logger_name))
         if server_name:
@@ -607,24 +441,25 @@ class GroupManager(BaseManager, ChartMixin):
         transaction.savepoint_commit(sid, using=using)
         transaction.commit_unless_managed(using=using)
 
-        send_group_processors(
-            group=group,
-            event=event,
-            is_new=is_new,
-            is_sample=is_sample
-        )
+        if not raw:
+            send_group_processors(
+                group=group,
+                event=event,
+                is_new=is_new,
+                is_sample=is_sample
+            )
 
-        if settings.USE_SEARCH:
+        if getattr(settings, 'SENTRY_INDEX_SEARCH', settings.SENTRY_USE_SEARCH):
             index_event.delay(event)
 
         # TODO: move this to the queue
-        if is_new:
+        if is_new and not raw:
             regression_signal.send_robust(sender=self.model, instance=group)
 
         return event
 
     def should_sample(self, group, event):
-        if not settings.SAMPLE_DATA:
+        if not settings.SENTRY_SAMPLE_DATA:
             return False
 
         silence_timedelta = event.datetime - group.last_seen
@@ -690,7 +525,7 @@ class GroupManager(BaseManager, ChartMixin):
 
             self.create_or_update(
                 id=group.id,
-                defaults=update_kwargs,
+                values=update_kwargs,
                 buffer=True,
                 **extra
             )
@@ -717,14 +552,14 @@ class GroupManager(BaseManager, ChartMixin):
             group=group,
             project=project,
             date=normalized_datetime,
-            defaults=update_kwargs,
+            values=update_kwargs,
             buffer=True,
         )
 
         ProjectCountByMinute.objects.create_or_update(
             project=project,
             date=normalized_datetime,
-            defaults=update_kwargs,
+            values=update_kwargs,
             buffer=True,
         )
 
@@ -875,7 +710,8 @@ class RawQuerySet(object):
 
 
 class ProjectManager(BaseManager, ChartMixin):
-    def get_for_user(self, user=None, access=None, hidden=False, team=None):
+    def get_for_user(self, user=None, access=None, hidden=False, team=None,
+                     superuser=True):
         """
         Returns a SortedDict of all projects a user has some level of access to.
         """
@@ -893,11 +729,11 @@ class ProjectManager(BaseManager, ChartMixin):
         if team:
             base_qs = base_qs.filter(team=team)
 
-        if team and user.is_superuser:
+        if team and user.is_superuser and superuser:
             projects = set(base_qs)
         else:
             projects_qs = base_qs
-            if not settings.PUBLIC:
+            if not settings.SENTRY_PUBLIC:
                 # If the user is authenticated, include their memberships
                 teams = Team.objects.get_for_user(
                     user, access, access_groups=False).values()
@@ -915,7 +751,7 @@ class ProjectManager(BaseManager, ChartMixin):
 
         attach_foreignkey(projects, self.model.team)
 
-        return sorted(projects, key=lambda x: x.name)
+        return sorted(projects, key=lambda x: x.name.lower())
 
 
 class MetaManager(BaseManager):
@@ -1119,137 +955,6 @@ class UserOptionManager(BaseManager):
         self.__metadata = {}
 
 
-class SearchDocumentManager(BaseManager):
-    # Words which should not be indexed
-    STOP_WORDS = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it', 'you', 'that'])
-
-    # Do not index any words shorter than this
-    MIN_WORD_LENGTH = 3
-
-    # Consider these characters to be punctuation (they will be replaced with spaces prior to word extraction)
-    PUNCTUATION_CHARS = re.compile('[%s]' % re.escape(".,;:!?@$%^&*()-<>[]{}\\|/`~'\""))
-
-    def _tokenize(self, text):
-        """
-        Given a string, returns a list of tokens.
-        """
-        if not text:
-            return []
-
-        text = self.PUNCTUATION_CHARS.sub(' ', text)
-
-        words = [t[:128].lower() for t in text.split() if len(t) >= self.MIN_WORD_LENGTH and t.lower() not in self.STOP_WORDS]
-
-        return words
-
-    def search(self, project, query, sort_by='score', offset=0, limit=100):
-        tokens = self._tokenize(query)
-
-        if sort_by == 'score':
-            order_by = 'SUM(st.times_seen) / sd.total_events DESC'
-        elif sort_by == 'new':
-            order_by = 'sd.date_added DESC'
-        elif sort_by == 'date':
-            order_by = 'sd.date_changed DESC'
-        else:
-            raise ValueError('sort_by: %r' % sort_by)
-
-        if tokens:
-            token_sql = ' st.token IN (%s) AND ' % \
-                ', '.join('%s' for i in range(len(tokens)))
-        else:
-            token_sql = ' '
-
-        sql = """
-            SELECT sd.*,
-                   SUM(st.times_seen) / sd.total_events as score
-            FROM sentry_searchdocument as sd
-            INNER JOIN sentry_searchtoken as st
-                ON st.document_id = sd.id
-            WHERE %s
-                sd.project_id = %s
-            GROUP BY sd.id, sd.group_id, sd.total_events, sd.date_changed, sd.date_added, sd.project_id, sd.status
-            ORDER BY %s
-            LIMIT %d OFFSET %d
-        """ % (
-            token_sql,
-            project.id,
-            order_by,
-            limit,
-            offset,
-        )
-        params = tokens
-
-        return self.raw(sql, params)
-
-    def index(self, event):
-        from sentry.models import SearchToken
-
-        group = event.group
-        document, created = self.get_or_create(
-            project=event.project,
-            group=group,
-            defaults={
-                'status': group.status,
-                'total_events': 1,
-                'date_added': group.first_seen,
-                'date_changed': group.last_seen,
-            }
-        )
-        if not created:
-            self.create_or_update(
-                id=document.id,
-                values={
-                    'total_events': F('total_events') + 1,
-                    'date_changed': group.last_seen,
-                    'status': group.status,
-                },
-                buffer=True
-            )
-            document.total_events += 1
-            document.date_changed = group.last_seen
-            document.status = group.status
-
-        context = defaultdict(list)
-        for interface in event.interfaces.itervalues():
-            for k, v in interface.get_search_context(event).iteritems():
-                context[k].extend(v)
-
-        context['text'].extend([
-            event.message,
-            event.logger,
-            event.server_name,
-            event.culprit,
-        ])
-
-        token_counts = defaultdict(lambda: defaultdict(int))
-        for field, values in context.iteritems():
-            field = field.lower()
-            if field == 'text':
-                # we only tokenize the base text field
-                values = itertools.chain(*[self._tokenize(force_unicode(v)) for v in values])
-            else:
-                values = [v.lower() for v in values]
-            for value in values:
-                if not value:
-                    continue
-                token_counts[field][value] += 1
-
-        for field, tokens in token_counts.iteritems():
-            for token, count in tokens.iteritems():
-                SearchToken.objects.create_or_update(
-                    document=document,
-                    token=token,
-                    field=field,
-                    values={
-                        'times_seen': F('times_seen') + count,
-                    },
-                    buffer=True,
-                )
-
-        return document
-
-
 class TagKeyManager(BaseManager):
     def _get_cache_key(self, project_id):
         return 'filterkey:all:%s' % project_id
@@ -1279,8 +984,8 @@ class TeamManager(BaseManager):
         if not user.is_authenticated():
             return results
 
-        if settings.PUBLIC and access is None:
-            for team in self.order_by('name').iterator():
+        if settings.SENTRY_PUBLIC and access is None:
+            for team in sorted(self.iterator(), key=lambda x: x.name.lower()):
                 results[team.slug] = team
         else:
             all_teams = set()
@@ -1304,15 +1009,15 @@ class TeamManager(BaseManager):
                 for group in qs:
                     all_teams.add(group.team)
 
-            for team in sorted(all_teams, key=lambda x: x.name):
+            for team in sorted(all_teams, key=lambda x: x.name.lower()):
                 results[team.slug] = team
 
         if with_projects:
             # these kinds of queries make people sad :(
             new_results = SortedDict()
             for team in results.itervalues():
-                project_list = Project.objects.get_for_user(
-                    user, team=team)[:20]
+                project_list = list(Project.objects.get_for_user(
+                    user, team=team))
                 new_results[team.slug] = (team, project_list)
             results = new_results
 

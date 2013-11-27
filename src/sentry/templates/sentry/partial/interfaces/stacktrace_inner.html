@@ -6,17 +6,23 @@
         <li class="frame{% if not frame.in_app %} system-frame{% endif %} frame-{{ stack_id }}-{{ forloop.counter0 }}">
             <p>
                 {% if frame.filename %}
-                    {% if frame.is_url %}
-                        <a href="{{ frame.abs_path }}">
-                    {% endif %}
                     <code>{{ frame.filename }}</code>
+                    {% if frame.is_url %}
+                        <a href="{{ frame.abs_path }}" class="icon-share"></a>
+                    {% endif %}
                     {% if frame.sourcemap %}
                         <a class="annotation trigger-popover"
                             data-placement="right"
                             data-title="{% trans "Original Location" %}"
                             data-content="<dl>
                                 <dt>{% trans "Filename" %}</dt>
-                                <dd>{{ frame.orig_filename }}</dd>
+                                <dd>
+                                    {% if frame.orig_abs_path|is_url %}
+                                        <a href='{{ frame.orig_abs_path }}'>{{ frame.orig_filename }}</a>
+                                    {% else %}
+                                        {{ frame.orig_filename }}
+                                    {% endif %}
+                                </dd>
                                 <dt>{% trans "Line Number" %}</dt>
                                 <dd>{{ frame.orig_lineno|default_if_none:"n/a" }}</dd>
                                 <dt>{% trans "Column Number" %}</dt>
@@ -32,7 +38,13 @@
                             data-title="{% trans "Original Location" %}"
                             data-content="<dl>
                                 <dt>{% trans "Filename" %}</dt>
-                                <dd>{{ frame.abs_path }}</dd>
+                                <dd>
+                                    {% if frame.abs_path|is_url %}
+                                        <a href='{{ frame.abs_path }}'>{{ frame.abs_path }}</a>
+                                    {% else %}
+                                        {{ frame.abs_path }}
+                                    {% endif %}
+                                </dd>
                                 {% if not frame.lineno|is_none %}
                                     <dt>{% trans "Line Number" %}</dt>
                                     <dd>{{ frame.lineno }}</dd>
@@ -46,9 +58,6 @@
                                     <dd>{{ frame.function }}</dd>
                                 {% endif %}
                             </dl>">?</a>
-                    {% endif %}
-                    {% if frame.is_url %}
-                        </a>
                     {% endif %}
                 {% elif frame.module %}
                     <code>{{ frame.module }}</code>
@@ -88,5 +97,10 @@
                 </div>
             {% endif %}
         </li>
+        {% if forloop.counter == first_frame_omitted %}
+        <li class="frames-omitted">
+            Frames {{ first_frame_omitted }} until {{ last_frame_omitted }} were omitted and not available.
+        </li>
+        {% endif %}
     {% endfor %}
 </ul>

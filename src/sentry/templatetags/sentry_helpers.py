@@ -9,6 +9,8 @@ sentry.templatetags.sentry_helpers
 #      INSTALLED_APPS
 
 import datetime
+import os.path
+import pytz
 
 from collections import namedtuple
 from paging.helpers import paginate as paginate_func
@@ -16,16 +18,17 @@ from pkg_resources import parse_version as Version
 from urllib import quote
 
 from django import template
+from django.conf import settings
 from django.template import RequestContext
 from django.template.defaultfilters import stringfilter
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
-from sentry.conf import settings
-from sentry.constants import STATUS_MUTED
-from sentry.models import Group, Option
+from sentry.constants import STATUS_MUTED, EVENTS_PER_PAGE, MEMBER_OWNER
+from sentry.models import Team, Group, Option
 from sentry.web.helpers import group_is_public
 from sentry.utils import to_unicode
 from sentry.utils.avatar import get_gravatar_url
@@ -144,7 +147,6 @@ def get_sentry_version(context):
 @register.filter
 def timesince(value, now=None):
     from django.template.defaultfilters import timesince
-    from django.utils import timezone
     if now is None:
         now = timezone.now()
     if not value:
@@ -163,6 +165,8 @@ def timesince(value, now=None):
 def duration(value):
     if not value:
         return '0s'
+    # value is assumed to be in ms
+    value = value / 1000.0
     hours, minutes, seconds = 0, 0, 0
     if value > 3600:
         hours = value / 3600
@@ -189,7 +193,7 @@ def duration(value):
                 Constant('from'), Variable('request'),
                 Optional([Constant('as'), Name('asvar')]),
                 Optional([Constant('per_page'), Variable('per_page')])])
-def paginate(context, queryset_or_list, request, asvar=None, per_page=settings.MESSAGES_PER_PAGE):
+def paginate(context, queryset_or_list, request, asvar=None, per_page=EVENTS_PER_PAGE):
     """{% paginate queryset_or_list from request as foo[ per_page 25] %}"""
     result = paginate_func(request, queryset_or_list, per_page, endless=True)
 
@@ -208,7 +212,7 @@ def paginate(context, queryset_or_list, request, asvar=None, per_page=settings.M
                 Constant('from'), Variable('request'),
                 Optional([Constant('as'), Name('asvar')]),
                 Optional([Constant('per_page'), Variable('per_page')])])
-def paginator(context, queryset_or_list, request, asvar=None, per_page=settings.MESSAGES_PER_PAGE):
+def paginator(context, queryset_or_list, request, asvar=None, per_page=EVENTS_PER_PAGE):
     """{% paginator queryset_or_list from request as foo[ per_page 25] %}"""
     result = paginate_func(request, queryset_or_list, per_page, endless=True)
 
@@ -266,12 +270,11 @@ def is_bookmarked(group, user):
 
 
 @register.filter
-def date(datetime, arg=None):
+def date(dt, arg=None):
     from django.template.defaultfilters import date
-    from django.utils import timezone
-    if not timezone.is_aware(datetime):
-        datetime = datetime.replace(tzinfo=timezone.utc)
-    return date(datetime, arg)
+    if not timezone.is_aware(dt):
+        dt = dt.replace(tzinfo=timezone.utc)
+    return date(dt, arg)
 
 
 @tag(register, [Constant('for'), Variable('user'),
@@ -285,10 +288,10 @@ def get_project_dsn(context, user, project, asvar):
         return ''
 
     try:
-        key = ProjectKey.objects.get(user=user, project=project)
+        key = ProjectKey.objects.filter(user=None, project=project)[0]
     except ProjectKey.DoesNotExist:
         try:
-            key = ProjectKey.objects.filter(user=None, project=project)[0]
+            key = ProjectKey.objects.get(user=user, project=project)
         except IndexError:
             context[asvar] = None
         else:
@@ -460,3 +463,36 @@ def reorder_teams(team_list, team):
 @register.filter
 def urlquote(value, safe=''):
     return quote(value.encode('utf8'), safe)
+
+
+@register.filter
+def basename(value):
+    return os.path.basename(value)
+
+
+@register.filter
+def can_admin_team(user, team):
+    if user.is_superuser:
+        return True
+    if team.owner == user:
+        return True
+    if team.slug in Team.objects.get_for_user(user, access=MEMBER_OWNER):
+        return True
+    return False
+
+
+@register.filter
+def user_display_name(user):
+    return user.first_name or user.username
+
+
+@register.simple_tag(takes_context=True)
+def localized_datetime(context, dt, format='DATETIME_FORMAT'):
+    request = context['request']
+    timezone = getattr(request, 'timezone', None)
+    if not timezone:
+        timezone = pytz.timezone(settings.TIME_ZONE)
+
+    dt = dt.astimezone(timezone)
+
+    return date(dt, format)

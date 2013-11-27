@@ -7,31 +7,18 @@ sentry.plugins.sentry_mail.models
 """
 import sentry
 
-from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from sentry.conf import settings
 from sentry.models import User, UserOption
 from sentry.plugins import register
 from sentry.plugins.bases.notify import NotificationPlugin
 from sentry.utils.cache import cache
+from sentry.utils.email import MessageBuilder, group_id_to_email
 from sentry.utils.http import absolute_uri
 
-from pynliner import Pynliner
-
 NOTSET = object()
-
-
-class UnicodeSafePynliner(Pynliner):
-    def _get_output(self):
-        """
-        Generate Unicode string of `self.soup` and set it to `self.output`
-
-        Returns self.output
-        """
-        self.output = unicode(self.soup)
-        return self.output
 
 
 class MailPlugin(NotificationPlugin):
@@ -43,25 +30,25 @@ class MailPlugin(NotificationPlugin):
     author_url = "https://github.com/getsentry/sentry"
     project_default_enabled = True
     project_conf_form = None
-    can_disable = False
     subject_prefix = settings.EMAIL_SUBJECT_PREFIX
 
-    def _send_mail(self, subject, body, html_body=None, project=None, fail_silently=False, headers=None):
+    def _send_mail(self, subject, template=None, html_template=None, body=None,
+                   project=None, headers=None, context=None, fail_silently=False):
         send_to = self.get_send_to(project)
         if not send_to:
             return
 
         subject_prefix = self.get_option('subject_prefix', project) or self.subject_prefix
 
-        msg = EmailMultiAlternatives(
-            '%s%s' % (subject_prefix, subject),
-            body,
-            settings.SERVER_EMAIL,
-            send_to,
-            headers=headers)
-        if html_body:
-            msg.attach_alternative(html_body, "text/html")
-        msg.send(fail_silently=fail_silently)
+        msg = MessageBuilder(
+            subject='%s%s' % (subject_prefix, subject),
+            template=template,
+            html_template=html_template,
+            body=body,
+            headers=headers,
+            context=context,
+        )
+        msg.send(send_to, fail_silently=fail_silently)
 
     def send_test_mail(self, project=None):
         self._send_mail(
@@ -80,8 +67,14 @@ class MailPlugin(NotificationPlugin):
             project.name.encode('utf-8'),
             alert.message.encode('utf-8'),
         )
-        body = self.get_alert_plaintext_body(alert)
-        html_body = self.get_alert_html_body(alert)
+        template = 'sentry/emails/alert.txt'
+        html_template = 'sentry/emails/alert.html'
+
+        context = {
+            'alert': alert,
+            'link': alert.get_absolute_url(),
+            'settings_link': self.get_notification_settings_url(),
+        }
 
         headers = {
             'X-Sentry-Project': project.name,
@@ -89,25 +82,13 @@ class MailPlugin(NotificationPlugin):
 
         self._send_mail(
             subject=subject,
-            body=body,
-            html_body=html_body,
+            template=template,
+            html_template=html_template,
             project=project,
             fail_silently=False,
             headers=headers,
+            context=context,
         )
-
-    def get_alert_plaintext_body(self, alert):
-        return render_to_string('sentry/emails/alert.txt', {
-            'alert': alert,
-            'link': alert.get_absolute_url(),
-        })
-
-    def get_alert_html_body(self, alert):
-        return UnicodeSafePynliner().from_string(render_to_string('sentry/emails/alert.html', {
-            'alert': alert,
-            'link': alert.get_absolute_url(),
-            'settings_link': self.get_notification_settings_url(),
-        })).run()
 
     def get_emails_for_users(self, user_ids, project=None):
         email_list = set()
@@ -174,10 +155,10 @@ class MailPlugin(NotificationPlugin):
 
         interface_list = []
         for interface in event.interfaces.itervalues():
-            body = interface.to_string(event)
+            body = interface.to_email_html(event)
             if not body:
                 continue
-            interface_list.append((interface.get_title(), body))
+            interface_list.append((interface.get_title(), mark_safe(body)))
 
         subject = '[%s] %s: %s' % (
             project.name.encode('utf-8'),
@@ -186,42 +167,34 @@ class MailPlugin(NotificationPlugin):
 
         link = group.get_absolute_url()
 
-        body = self.get_plaintext_body(group, event, link, interface_list)
+        template = 'sentry/emails/error.txt'
+        html_template = 'sentry/emails/error.html'
 
-        html_body = self.get_html_body(group, event, link, interface_list)
+        context = {
+            'group': group,
+            'event': event,
+            'link': link,
+            'interfaces': interface_list,
+            'settings_link': self.get_notification_settings_url(),
+        }
 
         headers = {
             'X-Sentry-Logger': event.logger,
             'X-Sentry-Logger-Level': event.get_level_display(),
             'X-Sentry-Project': project.name,
             'X-Sentry-Server': event.server_name,
+            'X-Sentry-Reply-To': group_id_to_email(group.pk),
         }
 
         self._send_mail(
             subject=subject,
-            body=body,
-            html_body=html_body,
+            template=template,
+            html_template=html_template,
             project=project,
             fail_silently=fail_silently,
             headers=headers,
+            context=context,
         )
-
-    def get_plaintext_body(self, group, event, link, interface_list):
-        return render_to_string('sentry/emails/error.txt', {
-            'group': group,
-            'event': event,
-            'link': link,
-            'interfaces': interface_list,
-        })
-
-    def get_html_body(self, group, event, link, interface_list):
-        return UnicodeSafePynliner().from_string(render_to_string('sentry/emails/error.html', {
-            'group': group,
-            'event': event,
-            'link': link,
-            'interfaces': interface_list,
-            'settings_link': self.get_notification_settings_url(),
-        })).run()
 
 
 # Legacy compatibility

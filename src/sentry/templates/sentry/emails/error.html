@@ -40,14 +40,10 @@
         </tr>
     </table>
 
-    {% for label, text in interfaces %}
+    {% for int_id, label, text in interfaces %}
     <div class="interface">
         <div class="title">{{ label }}</div>
-					{% ifequal label "Exception" %}
-						<pre>{{ text|linebreaksbr }}</pre>
-					{% else %}
-						{{ text }}
-					{% endifequal %}
+		{{ text }}
     </div>
     {% endfor %}
 

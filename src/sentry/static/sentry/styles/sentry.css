@@ -5715,7 +5715,7 @@ a.badge:focus {
 
   zoom: 1;
   *display: inline;
-  vertical-align: top;
+  vertical-align: middle;
 }
 .select2-container .select2-choice {
   -webkit-border-radius: 3px;
@@ -5733,8 +5733,8 @@ a.badge:focus {
   overflow: hidden;
   white-space: nowrap;
   position: relative;
-  height: 35px;
-  line-height: 35px;
+  height: 32px;
+  line-height: 32px;
   padding: 0 0 0 14px;
   color: #757f87;
   text-decoration: none;
@@ -6584,7 +6584,6 @@ h3 {
   padding: 0 25px 0 10px;
   display: inline-block;
   cursor: pointer;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -6994,6 +6993,9 @@ h3 {
   padding: 25px 30px 10px;
   min-width: 786px;
 }
+#content section.body a {
+  word-break: break-all;
+}
 #content section.body .select2-drop {
   -webkit-box-shadow: 0 0 0 2px #c3c8ce;
   -moz-box-shadow: 0 0 0 2px #c3c8ce;
@@ -7051,7 +7053,7 @@ h3 {
   top: 5px;
 }
 #content section.body .event-toolbar h4 {
-  line-height: 30px;
+  line-height: 20px;
   font-weight: normal;
   color: #aaa;
 }
@@ -7330,7 +7332,7 @@ a.icon-share:hover {
 .progressbar {
   position: relative;
   border: 1px solid #c7def5;
-  height: 1.5em;
+  min-height: 1.5em;
   line-height: 1.5em;
 }
 .progressbar > a,
@@ -7344,6 +7346,10 @@ a.icon-share:hover {
 }
 .progressbar > a {
   left: 5px;
+  position: relative;
+  z-index: 1;
+  padding-right: 60px;
+  display: block;
 }
 .progressbar > a span {
   position: absolute;
@@ -7352,6 +7358,7 @@ a.icon-share:hover {
 .progressbar > div {
   background-color: #f2f8fd;
   text-indent: -100000em;
+  z-index: 0;
 }
 .sparkline {
   position: relative;
@@ -7440,9 +7447,13 @@ a.icon-share:hover {
 .events > li.with-sparkline .meta {
   right: 155px;
 }
-.group-list > li.unseen h3,
-.events > li.unseen h3 {
-  font-weight: bold;
+.group-list > li.seen h3,
+.events > li.seen h3 {
+  font-weight: normal;
+}
+.group-list > li.seen h3 a,
+.events > li.seen h3 a {
+  color: #898f98;
 }
 .group-list > li h3,
 .events > li h3 {
@@ -7500,7 +7511,7 @@ a.icon-share:hover {
 }
 .group-list > li .message,
 .events > li .message {
-  color: #777;
+  color: #898f98;
   margin-bottom: 0;
   font-size: 14px;
   padding-right: 24px;
@@ -7527,8 +7538,49 @@ a.icon-share:hover {
   color: #000;
 }
 .group-list > li .tag,
-.events > li .tag {
+.events > li .tag,
+.group-list > li .annotation,
+.events > li .annotation {
   margin-left: 10px;
+}
+.group-list > li .tag-users,
+.events > li .tag-users,
+.group-list > li .annotation,
+.events > li .annotation {
+  margin-right: 10px;
+  margin-left: 0;
+  position: relative;
+  background: #f9f9f9;
+  padding: 0 5px;
+  line-height: 20px;
+  height: 20px;
+  min-width: 20px;
+  text-align: right;
+  float: left;
+  display: block;
+  color: #666;
+  overflow: hidden;
+}
+.group-list > li .tag-users span,
+.events > li .tag-users span,
+.group-list > li .annotation span,
+.events > li .annotation span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 5px;
+  height: 100%;
+  text-align: center;
+  line-height: inherit;
+  display: block;
+}
+.group-list > li .tag-users i,
+.events > li .tag-users i,
+.group-list > li .annotation i,
+.events > li .annotation i {
+  padding-right: 25px;
+  font-style: normal;
+  color: #aaa;
 }
 .group-list > li .tag-project,
 .events > li .tag-project {
@@ -7799,6 +7851,13 @@ ul.traceback {
   left: 0;
   top: 12px;
 }
+.frames-omitted {
+  color: #999;
+  border: 1px dotted #ddd;
+  border-width: 1px 0;
+  padding: 5px;
+  margin-bottom: 11px;
+}
 .frame {
   overflow: hidden;
   position: relative;
@@ -7837,10 +7896,10 @@ ul.traceback {
   font-size: 0.9em;
   margin-left: 10px;
 }
-.frame table.vars {
+.frame > div > table.vars {
   margin-bottom: 5px;
 }
-.frame table.vars th {
+.frame > div > table.vars > tbody > tr > th {
   color: #465262;
   text-align: right;
 }
@@ -7939,7 +7998,6 @@ ol.context-line > li > span {
 }
 .mini-tag-list > li {
   display: inline-block;
-  min-width: 100px;
   background: #f9f9f9;
   -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
@@ -8055,39 +8113,6 @@ legend {
 }
 .modal-header small {
   font-size: 0.65em;
-}
-.btn-primary {
-  color: #ffffff;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-  background-color: #56afe8;
-  background-image: -moz-linear-gradient(top, #61c1ef, #4593de);
-  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#61c1ef), to(#4593de));
-  background-image: -webkit-linear-gradient(top, #61c1ef, #4593de);
-  background-image: -o-linear-gradient(top, #61c1ef, #4593de);
-  background-image: linear-gradient(to bottom, #61c1ef, #4593de);
-  background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff61c1ef', endColorstr='#ff4593de', GradientType=0);
-  border-color: #4593de #4593de #206db6;
-  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-  *background-color: #4593de;
-  /* Darken IE7 buttons by default so they stand out more given they won't have borders */
-
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
-  font-weight: bold;
-}
-.btn-primary:hover,
-.btn-primary:focus,
-.btn-primary:active,
-.btn-primary.active,
-.btn-primary.disabled,
-.btn-primary[disabled] {
-  color: #ffffff;
-  background-color: #4593de;
-  *background-color: #2f86da;
-}
-.btn-primary:active,
-.btn-primary.active {
-  background-color: #247acc \9;
 }
 section.body .page-header:first-child {
   margin-top: 0;
@@ -8465,6 +8490,15 @@ section.body .page-header:first-child {
   background: #49a9e6;
   border-color: #458fbc;
 }
+.btn.btn-danger {
+  background: #da4f49;
+  color: #fff;
+  border-color: #bd362f;
+}
+.btn.btn-danger:hover {
+  background: #d7433c;
+  border-color: #a9302a;
+}
 section.body textarea,
 section.body input[type="text"],
 section.body input[type="password"],
@@ -8500,8 +8534,8 @@ table.table td .select2-container {
 .btn.disabled,
 .btn[disabled] {
   background: #ecf0f4;
-  opacity: 0.55;
-  filter: alpha(opacity=55);
+  opacity: 0.35;
+  filter: alpha(opacity=35);
 }
 .navbar-inverse .nav .active > a,
 .navbar-inverse .nav .active > a:hover,
@@ -8666,16 +8700,19 @@ table.vars table.vars th {
   border-color: transparent;
 }
 .activity {
+  position: relative;
+}
+.activity > ul {
   list-style: none;
   margin: 0 0 20px;
 }
-.activity > li {
+.activity > ul > li {
   margin-bottom: 5px;
-  line-height: 26px;
+  line-height: 30px;
   position: relative;
   padding-left: 20px;
 }
-.activity > li .avatar {
+.activity > ul > li .avatar {
   position: absolute;
   left: 0;
   top: 4px;
@@ -8689,7 +8726,7 @@ table.vars table.vars th {
   -moz-border-radius: 16px;
   border-radius: 16px;
 }
-.activity > li .avatar img {
+.activity > ul > li .avatar img {
   width: 16px;
   height: 16px;
   display: block;
@@ -8697,13 +8734,109 @@ table.vars table.vars th {
   -moz-border-radius: 16px;
   border-radius: 16px;
 }
-.activity > li .avatar.sentry {
-  background-image: url('../images/favicon.png');
+.activity > ul > li .avatar.sentry {
+  background-image: url('../images/favicon.ico');
 }
-.activity > li .sep,
-.activity > li .time {
+.activity > ul > li .avatar p {
+  font-size: 12px;
+}
+.activity > ul > li .sep,
+.activity > ul > li .time {
   font-size: 12px;
   color: #aaa;
+}
+.activity .add-note-btn {
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: -0.1px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 2px 5px;
+  background: #eff3f7;
+  color: #666d73;
+  border: 1px solid #eff3f7;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
+.activity .add-note-btn .icon-comment {
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+}
+.activity .add-note-btn:hover.selected,
+.activity .add-note-btn.selected {
+  z-index: 1001;
+  border-color: #cdd9e6;
+  -webkit-border-radius: 4px 4px 0 0;
+  -moz-border-radius: 4px 4px 0 0;
+  border-radius: 4px 4px 0 0;
+  border-bottom-color: #eff3f7;
+}
+.activity form.add-note-form {
+  z-index: 1000;
+  position: absolute;
+  right: 0;
+  top: 25px;
+  background: #eff3f7;
+  padding: 10px;
+  border: 1px solid #cdd9e6;
+}
+.activity form.add-note-form > textarea {
+  font-size: 13px;
+  max-width: 600px;
+  background: #fff;
+  border: 1px solid #cdd9e6;
+  font-weight: 300;
+  height: 80px;
+  margin: 0;
+  right: 0;
+  left: 0;
+  margin-bottom: 10px;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+.activity form.add-note-form > textarea:-moz-placeholder {
+  color: #dddddd;
+}
+.activity form.add-note-form > textarea:-ms-input-placeholder {
+  color: #dddddd;
+}
+.activity form.add-note-form > textarea::-webkit-input-placeholder {
+  color: #dddddd;
+}
+.activity form.add-note-form .form-actions {
+  text-align: right;
+  padding: 0;
+  margin: 0;
+}
+.seen-by {
+  position: relative;
+  margin-left: 0;
+}
+.seen-by > li {
+  list-style: none;
+  display: inline-block;
+  height: 32px;
+  width: 32px;
+  line-height: 32px;
+  text-align: center;
+  -webkit-border-radius: 32px;
+  -moz-border-radius: 32px;
+  border-radius: 32px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  color: #aaa;
+}
+.seen-by > li img {
+  height: 100%;
+  width: 100%;
+  height: 32px;
+  width: 32px;
+  -webkit-border-radius: 32px;
+  -moz-border-radius: 32px;
+  border-radius: 32px;
 }
 .team-index #page-header {
   display: none;
@@ -8889,4 +9022,13 @@ table.vars table.vars th {
 .popover-title,
 .popover-content {
   padding: 4px 10px;
+}
+#flotTip {
+  background-color: #000000;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  max-width: 200px;
+  padding: 8px;
+  color: #ffffff;
 }

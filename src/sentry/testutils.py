@@ -9,13 +9,13 @@ sentry.testutils
 from __future__ import absolute_import
 
 import base64
+import pytest
+import os.path
+
 from exam import Exam, fixture, before  # NOQA
 from functools import wraps
 
-from sentry.conf import settings
-from sentry.utils import json
-
-from django.conf import settings as django_settings
+from django.conf import settings
 from django.contrib.auth import login
 from django.core.cache import cache
 from django.core.management import call_command
@@ -26,8 +26,10 @@ from django.test import TestCase, TransactionTestCase
 from django.test.client import Client
 from django.utils.importlib import import_module
 
+from sentry.constants import MODULE_ROOT
 from sentry.models import (
     Project, ProjectOption, Option, Team, Group, Event, User)
+from sentry.utils import json
 from sentry.utils.compat import pickle
 from sentry.utils.strings import decompress
 
@@ -72,24 +74,14 @@ class Settings(object):
     def __init__(self, **overrides):
         self.overrides = overrides
         self._orig = {}
-        self._orig_sentry = {}
 
     def __enter__(self):
         for k, v in self.overrides.iteritems():
-            self._orig[k] = getattr(django_settings, k, self.NotDefined)
-            setattr(django_settings, k, v)
-            if k.startswith('SENTRY_'):
-                nk = k.split('SENTRY_', 1)[1]
-                self._orig_sentry[nk] = getattr(settings, nk, self.NotDefined)
-                setattr(settings, nk, v)
+            self._orig[k] = getattr(settings, k, self.NotDefined)
+            setattr(settings, k, v)
 
     def __exit__(self, exc_type, exc_value, traceback):
         for k, v in self._orig.iteritems():
-            if v is self.NotDefined:
-                delattr(django_settings, k)
-            else:
-                setattr(django_settings, k, v)
-        for k, v in self._orig_sentry.iteritems():
             if v is self.NotDefined:
                 delattr(settings, k)
             else:
@@ -138,12 +130,18 @@ class BaseTestCase(Exam):
 
     @fixture
     def event(self):
+        return self.create_event(event_id='a' * 32)
+
+    def create_event(self, event_id, **kwargs):
+        if 'group' not in kwargs:
+            kwargs['group'] = self.group
+        kwargs.setdefault('project', kwargs['group'].project)
+        kwargs.setdefault('message', 'Foo bar')
+        kwargs.setdefault('data', LEGACY_DATA)
+
         return Event.objects.create(
-            event_id='a' * 32,
-            group=self.group,
-            message='Foo bar',
-            project=self.project,
-            data=LEGACY_DATA,
+            event_id=event_id,
+            **kwargs
         )
 
     def assertRequiresAuthentication(self, path, method='GET'):
@@ -152,9 +150,9 @@ class BaseTestCase(Exam):
         assert resp['Location'] == 'http://testserver' + reverse('sentry-login')
 
     def login_as(self, user):
-        user.backend = django_settings.AUTHENTICATION_BACKENDS[0]
+        user.backend = settings.AUTHENTICATION_BACKENDS[0]
 
-        engine = import_module(django_settings.SESSION_ENGINE)
+        engine = import_module(settings.SESSION_ENGINE)
 
         request = HttpRequest()
         if self.client.session:
@@ -168,19 +166,29 @@ class BaseTestCase(Exam):
         request.session.save()
 
         # Set the cookie to represent the session.
-        session_cookie = django_settings.SESSION_COOKIE_NAME
+        session_cookie = settings.SESSION_COOKIE_NAME
         self.client.cookies[session_cookie] = request.session.session_key
         cookie_data = {
             'max-age': None,
             'path': '/',
-            'domain': django_settings.SESSION_COOKIE_DOMAIN,
-            'secure': django_settings.SESSION_COOKIE_SECURE or None,
+            'domain': settings.SESSION_COOKIE_DOMAIN,
+            'secure': settings.SESSION_COOKIE_SECURE or None,
             'expires': None,
         }
         self.client.cookies[session_cookie].update(cookie_data)
 
     def login(self):
         self.login_as(self.user)
+
+    def load_fixture(self, filepath):
+        filepath = os.path.join(
+            MODULE_ROOT,
+            'tests',
+            'fixtures',
+            filepath,
+        )
+        with open(filepath, 'rb') as fp:
+            return fp.read()
 
     def _pre_setup(self):
         cache.clear()
@@ -194,7 +202,7 @@ class BaseTestCase(Exam):
     def _postWithKey(self, data, key=None):
         resp = self.client.post(reverse('sentry-api-store'), {
             'data': self._makeMessage(data),
-            'key': settings.KEY,
+            'key': settings.SENTRY_KEY,
         })
         return resp
 
@@ -204,7 +212,8 @@ class BaseTestCase(Exam):
             secret = self.projectkey.secret_key
 
         message = self._makeMessage(data)
-        resp = self.client.post(reverse('sentry-api-store'), message,
+        resp = self.client.post(
+            reverse('sentry-api-store'), message,
             content_type='application/octet-stream',
             HTTP_X_SENTRY_AUTH=get_auth_header('_postWithHeader', key, secret),
         )
@@ -283,3 +292,33 @@ def with_eager_tasks(func):
         finally:
             app.conf.CELERY_ALWAYS_EAGER = prev
     return wrapped
+
+
+def riak_is_available():
+    import socket
+    try:
+        socket.create_connection(('127.0.0.1', 8098), 1.0)
+    except socket.error:
+        return False
+    else:
+        return True
+
+
+requires_riak = pytest.mark.skipif(
+    lambda x: not riak_is_available(),
+    reason="requires riak server running")
+
+
+def cassandra_is_available():
+    import socket
+    try:
+        socket.create_connection(('127.0.0.1', 9042), 1.0)
+    except socket.error:
+        return False
+    else:
+        return True
+
+
+requires_cassandra = pytest.mark.skipif(
+    lambda x: not cassandra_is_available(),
+    reason="requires cassandra server running")

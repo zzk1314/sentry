@@ -4,9 +4,10 @@ from django.db import models
 
 from sentry.models import Option
 from sentry.testutils import TestCase
-from sentry.utils.models import (
+from sentry.db.models import (
     Model, BoundedIntegerField, BoundedBigIntegerField,
-    BoundedPositiveIntegerField, create_or_update)
+    BoundedPositiveIntegerField, create_or_update
+)
 
 
 # There's a good chance this model wont get created in the db, so avoid

@@ -9,7 +9,7 @@ sentry.tasks.post_process
 from celery.task import task
 from hashlib import md5
 
-from sentry.conf import settings
+from django.conf import settings
 from sentry.plugins import plugins
 from sentry.utils.safe import safe_execute
 
@@ -44,23 +44,22 @@ def plugin_post_process_group(plugin_slug, group, **kwargs):
 def record_affected_user(group, event, **kwargs):
     from sentry.models import Group
 
-    if not settings.ENABLE_EXPLORE_USERS:
-        return
-
-    data = event.data.get('sentry.interfaces.User')
-    if not data:
+    if not settings.SENTRY_ENABLE_EXPLORE_USERS:
         return
 
     user_ident = event.user_ident
     if not user_ident:
         return
 
+    user_data = event.data.get('sentry.interfaces.User', {})
+
     Group.objects.add_tags(group, [
         ('sentry:user', user_ident, {
-            'id': data.get('id'),
-            'email': data.get('email'),
-            'username': data.get('username'),
-            'data': data.get('data'),
+            'id': user_data.get('id'),
+            'email': user_data.get('email'),
+            'username': user_data.get('username'),
+            'data': user_data.get('data'),
+            'ip': event.ip_address,
         })
     ])
 
@@ -71,7 +70,7 @@ def record_affected_user(group, event, **kwargs):
 def record_affected_code(group, event, **kwargs):
     from sentry.models import Group
 
-    if not settings.ENABLE_EXPLORE_CODE:
+    if not settings.SENTRY_ENABLE_EXPLORE_CODE:
         return
 
     data = event.interfaces.get('sentry.interfaces.Exception')

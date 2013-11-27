@@ -8,8 +8,8 @@ import mock
 from sentry.models import Project, User
 from sentry.exceptions import InvalidTimestamp
 from sentry.coreapi import (
-    extract_auth_vars, project_from_auth_vars, APIUnauthorized, APIForbidden,
-    process_data_timestamp, validate_data, INTERFACE_ALIASES)
+    extract_auth_vars, project_from_auth_vars, APIForbidden, ensure_has_ip,
+    process_data_timestamp, validate_data, INTERFACE_ALIASES, get_interface)
 from sentry.testutils import TestCase
 
 
@@ -253,9 +253,16 @@ class ValidateDataTest(BaseAPITest):
     def test_tags_out_of_bounds(self):
         data = validate_data(self.project, {
             'message': 'foo',
-            'tags': {'f' * 33: 'value', 'foo': 'v' * 33, 'bar': 'value'},
+            'tags': {'f' * 33: 'value', 'foo': 'v' * 201, 'bar': 'value'},
         })
         assert data['tags'] == [('bar', 'value')]
+
+    def test_tags_as_invalid_pair(self):
+        data = validate_data(self.project, {
+            'message': 'foo',
+            'tags': [('foo', 'bar'), ('biz', 'baz', 'boz')],
+        })
+        assert data['tags'] == [('foo', 'bar')]
 
     def test_extra_as_string(self):
         data = validate_data(self.project, {
@@ -263,3 +270,54 @@ class ValidateDataTest(BaseAPITest):
             'extra': 'bar',
         })
         assert 'extra' not in data
+
+
+class GetInterfaceTest(TestCase):
+    def test_does_not_let_through_disallowed_name(self):
+        with self.assertRaises(ValueError):
+            get_interface('subprocess')
+
+    def test_allows_http(self):
+        from sentry.interfaces import Http
+        result = get_interface('sentry.interfaces.Http')
+        assert result is Http
+
+
+class EnsureHasIpTest(TestCase):
+    def test_with_remote_addr(self):
+        inp = {
+            'sentry.interfaces.Http': {
+                'env': {
+                    'REMOTE_ADDR': '192.168.0.1',
+                },
+            },
+        }
+        out = inp.copy()
+        ensure_has_ip(out, '127.0.0.1')
+        assert inp == out
+
+    def test_with_user_ip(self):
+        inp = {
+            'sentry.interfaces.User': {
+                'ip_address': '192.168.0.1',
+            },
+        }
+        out = inp.copy()
+        ensure_has_ip(out, '127.0.0.1')
+        assert inp == out
+
+    def test_without_ip_values(self):
+        out = {
+            'sentry.interfaces.User': {
+            },
+            'sentry.interfaces.Http': {
+                'env': {},
+            },
+        }
+        ensure_has_ip(out, '127.0.0.1')
+        assert out['sentry.interfaces.User']['ip_address'] == '127.0.0.1'
+
+    def test_without_any_values(self):
+        out = {}
+        ensure_has_ip(out, '127.0.0.1')
+        assert out['sentry.interfaces.User']['ip_address'] == '127.0.0.1'

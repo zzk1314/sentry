@@ -49,7 +49,7 @@ Get some datas:
 from django.db import models
 
 from sentry.models import Project, Group, TagValue
-from sentry.utils.models import Model
+from sentry.db.models import Model
 
 from .manager import PointManager
 

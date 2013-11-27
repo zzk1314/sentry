@@ -4,8 +4,8 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404
 
 from sentry.models import Project, Team, Group
-from sentry.web.helpers import render_to_response, \
-  get_login_url
+from sentry.web.helpers import (
+    render_to_response, get_login_url)
 
 
 def has_access(access_or_func=None, team=None, access=None):
@@ -62,15 +62,14 @@ def has_access(access_or_func=None, team=None, access=None):
 
             if project_id:
                 # Support project id's
-                if project_id.isdigit():
-                    lookup_kwargs = {'id': int(project_id)}
-                else:
-                    lookup_kwargs = {'slug': project_id}
-
-                if team:
-                    lookup_kwargs['team'] = team
-
                 if request.user.is_superuser:
+                    if project_id.isdigit():
+                        lookup_kwargs = {'id': int(project_id)}
+                    elif team:
+                        lookup_kwargs = {'slug': project_id, 'team': team}
+                    else:
+                        return HttpResponseRedirect(reverse('sentry'))
+
                     try:
                         project = Project.objects.get_from_cache(**lookup_kwargs)
                     except Project.DoesNotExist:
@@ -83,8 +82,16 @@ def has_access(access_or_func=None, team=None, access=None):
                         else:
                             return HttpResponseRedirect(reverse('sentry'))
                 else:
-                    key, value = lookup_kwargs.items()[0]
                     project_list = Project.objects.get_for_user(request.user, access, team=team)
+
+                    if project_id.isdigit():
+                        key = 'id'
+                        value = int(project_id)
+                    elif team:
+                        key = 'slug'
+                        value = project_id
+                    else:
+                        return HttpResponseRedirect(reverse('sentry'))
 
                     for p in project_list:
                         if getattr(p, key) == value:

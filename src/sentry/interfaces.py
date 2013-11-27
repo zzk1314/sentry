@@ -17,13 +17,16 @@ from pygments import highlight
 # from pygments.lexers import get_lexer_for_filename, TextLexer, ClassNotFound
 from pygments.lexers import TextLexer
 from pygments.formatters import HtmlFormatter
+from urllib import urlencode
 
 from django.http import QueryDict
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
 from sentry.app import env
 from sentry.models import UserOption
+from sentry.utils.strings import strip
 from sentry.web.helpers import render_to_string
 
 _Exception = Exception
@@ -152,6 +155,12 @@ class Interface(object):
 
     def to_string(self, event, is_public=False, **kwargs):
         return ''
+
+    def to_email_html(self, event, **kwargs):
+        body = self.to_string(event)
+        if not body:
+            return ''
+        return '<pre>%s</pre>' % (escape(body).replace('\n', '<br>'),)
 
     def get_slug(self):
         return type(self).__name__.lower()
@@ -288,6 +297,10 @@ class Frame(object):
         self.context_line = context_line
         self.pre_context = pre_context
         self.post_context = post_context
+        if isinstance(vars, (list, tuple)):
+            vars = dict(enumerate(vars))
+        if isinstance(data, (list, tuple)):
+            data = dict(enumerate(data))
         self.vars = vars or {}
         self.data = data or {}
 
@@ -352,6 +365,7 @@ class Frame(object):
             'function': self.function,
             'start_lineno': start_lineno,
             'lineno': self.lineno,
+            'colno': self.colno,
             'context': context,
             'context_line': self.context_line,
             'in_app': self.in_app,
@@ -364,10 +378,11 @@ class Frame(object):
             frame_data.update({
                 'sourcemap': self.data['sourcemap'].rsplit('/', 1)[-1],
                 'sourcemap_url': urlparse.urljoin(self.abs_path, self.data['sourcemap']),
-                'orig_function': self.data['orig_function'],
-                'orig_filename': self.data['orig_filename'],
-                'orig_lineno': self.data['orig_lineno'],
-                'orig_colno': self.data['orig_colno'],
+                'orig_function': self.data.get('orig_function', '?'),
+                'orig_abs_path': self.data.get('orig_abs_path', '?'),
+                'orig_filename': self.data.get('orig_filename', '?'),
+                'orig_lineno': self.data.get('orig_lineno', '?'),
+                'orig_colno': self.data.get('orig_colno', '?'),
             })
         return frame_data
 
@@ -398,9 +413,13 @@ class Stacktrace(Interface):
     describing the context of that frame. Frames should be sorted from oldest
     to newest.
 
-    The stacktrace contains one element, ``frames``, which is a list of hashes. Each
+    The stacktrace contains an element, ``frames``, which is a list of hashes. Each
     hash must contain **at least** the ``filename`` attribute. The rest of the values
     are optional, but recommended.
+
+    Additionally, if the list of frames is large, you can explicitly tell the
+    system that you've omitted a range of frames. The ``frames_omitted`` must
+    be a single tuple two values: start and end.
 
     The list of frames should be ordered by the oldest call first.
 
@@ -459,17 +478,19 @@ class Stacktrace(Interface):
     >>>             "line4",
     >>>             "line5"
     >>>         ],
-    >>>     }]
+    >>>     }],
+    >>>     "frames_omitted": [13, 56]
     >>> }
 
     .. note:: This interface can be passed as the 'stacktrace' key in addition
               to the full interface path.
     """
-    attrs = ('frames',)
+    attrs = ('frames', 'frames_omitted')
     score = 1000
 
     def __init__(self, frames, **kwargs):
         self.frames = [Frame(**f) for f in frames]
+        self.frames_omitted = kwargs.get('frames_omitted')
 
     def __iter__(self):
         return iter(self.frames)
@@ -478,6 +499,7 @@ class Stacktrace(Interface):
         for frame in self.frames:
             # ensure we've got the correct required values
             assert frame.is_valid()
+        assert self.frames_omitted is None or len(self.frames_omitted) == 2
 
     def serialize(self):
         frames = []
@@ -490,6 +512,7 @@ class Stacktrace(Interface):
 
         return {
             'frames': frames,
+            'frames_omitted': self.frames_omitted,
         }
 
     def has_app_frames(self):
@@ -497,6 +520,7 @@ class Stacktrace(Interface):
 
     def unserialize(self, data):
         data['frames'] = [Frame(**f) for f in data.pop('frames', [])]
+        data['frames_omitted'] = data.pop('frames_omitted', None)
         return data
 
     def get_composite_hash(self, interfaces):
@@ -538,6 +562,11 @@ class Stacktrace(Interface):
         if newest_first:
             frames = frames[::-1]
 
+        if self.frames_omitted:
+            first_frame_omitted, last_frame_omitted = self.frames_omitted
+        else:
+            first_frame_omitted, last_frame_omitted = None, None
+
         context = {
             'is_public': is_public,
             'newest_first': newest_first,
@@ -545,6 +574,8 @@ class Stacktrace(Interface):
             'event': event,
             'frames': frames,
             'stack_id': 'stacktrace_1',
+            'first_frame_omitted': first_frame_omitted,
+            'last_frame_omitted': last_frame_omitted,
         }
         if with_stacktrace:
             context['stacktrace'] = self.get_traceback(event, newest_first=newest_first)
@@ -667,9 +698,9 @@ class SingleException(Interface):
             stacktrace = None
 
         return {
-            'type': self.type,
-            'value': self.value,
-            'module': self.module,
+            'type': strip(self.type) or None,
+            'value': strip(self.value) or None,
+            'module': strip(self.module) or None,
             'stacktrace': stacktrace,
         }
 
@@ -696,17 +727,21 @@ class SingleException(Interface):
         if interface is not None and interface.frames:
             last_frame = interface.frames[-1]
 
+        e_module = strip(self.module)
+        e_type = strip(self.type) or 'Exception'
+        e_value = strip(self.value)
+
         if self.module:
-            fullname = '%s.%s' % (self.module, self.type)
+            fullname = '%s.%s' % (e_module, e_type)
         else:
-            fullname = self.type
+            fullname = e_type
 
         return {
             'is_public': is_public,
             'event': event,
-            'exception_value': self.value,
-            'exception_type': self.type,
-            'exception_module': self.module,
+            'exception_value': e_value or e_type or '<empty value>',
+            'exception_type': e_type,
+            'exception_module': e_module,
             'fullname': fullname,
             'last_frame': last_frame
         }
@@ -798,6 +833,7 @@ class Exception(Interface):
         }
 
         exceptions = []
+        last = len(self.values) - 1
         for num, e in enumerate(self.values):
             context = e.get_context(**context_kwargs)
             if e.stacktrace:
@@ -806,6 +842,7 @@ class Exception(Interface):
             else:
                 context['stacktrace'] = {}
             context['stack_id'] = 'exception_%d' % (num,)
+            context['is_root'] = num == last
             exceptions.append(context)
 
         if newest_first:
@@ -901,9 +938,15 @@ class Http(Interface):
             # remove '?' prefix
             query_string = query_string[1:]
 
+        if isinstance(data, (list, tuple)):
+            data = dict(enumerate(data))
+
         self.url = '%s://%s%s' % (urlparts.scheme, urlparts.netloc, urlparts.path)
         self.method = method
         self.data = data
+        # if querystring was a dict, convert it to a string
+        if isinstance(query_string, dict):
+            query_string = urlencode(query_string.items())
         self.query_string = query_string
         if cookies:
             self.cookies = cookies
@@ -936,8 +979,8 @@ class Http(Interface):
             'env': self.env,
         }
 
-    def to_string(self, event, is_public=False, **kwargs):
-        return render_to_string('sentry/partial/interfaces/http.txt', {
+    def to_email_html(self, event, **kwargs):
+        return render_to_string('sentry/partial/interfaces/http_email.html', {
             'event': event,
             'full_url': '?'.join(filter(bool, [self.url, self.query_string])),
             'url': self.url,
@@ -971,7 +1014,6 @@ class Http(Interface):
             'full_url': '?'.join(filter(bool, [self.url, self.query_string])),
             'url': self.url,
             'method': self.method,
-            'data': data,
             'query_string': self.query_string,
             'headers': self.headers,
         }
@@ -982,6 +1024,7 @@ class Http(Interface):
             context.update({
                 'cookies': cookies,
                 'env': self.env,
+                'data': data,
             })
 
         return render_to_string('sentry/partial/interfaces/http.html', context)
@@ -1104,21 +1147,25 @@ class User(Interface):
     """
     An interface which describes the authenticated User for a request.
 
-    All data is arbitrary and optional other than the ``id``
-    field which should be a string representing the user's unique identifier.
+    You should provide **at least** either an `id` (a unique identifier for
+    an authenticated user) or `ip_address` (their IP address).
+
+    All other data is.
 
     >>> {
     >>>     "id": "unique_id",
     >>>     "username": "my_user",
     >>>     "email": "foo@example.com"
+    >>>     "ip_address": "127.0.0.1"
     >>> }
     """
     attrs = ('id', 'email', 'username', 'data')
 
-    def __init__(self, id=None, email=None, username=None, **kwargs):
+    def __init__(self, id=None, email=None, username=None, ip_address=None, **kwargs):
         self.id = id
         self.email = email
         self.username = username
+        self.ip_address = ip_address
         self.data = kwargs
 
     def serialize(self):
@@ -1130,6 +1177,7 @@ class User(Interface):
             'id': self.id,
             'username': self.username,
             'email': self.email,
+            'ip_address': getattr(self, 'ip_address', None),
             'data': self.data,
         }
 
@@ -1137,9 +1185,12 @@ class User(Interface):
         return []
 
     def to_html(self, event, is_public=False, **kwargs):
+        if is_public:
+            return ''
         return render_to_string('sentry/partial/interfaces/user.html', {
             'is_public': is_public,
             'event': event,
+            'user_ip_address': self.ip_address,
             'user_id': self.id,
             'user_username': self.username,
             'user_email': self.email,
