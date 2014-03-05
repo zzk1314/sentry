@@ -1,0 +1,7 @@
+<div ui-view>
+    <ul>
+        <li ng-repeat="project in projectList">
+            <a ui-sref="project.stream({project_slug: project.slug})">{{project.name}}</a>
+        </li>
+    </ul>
+</div>

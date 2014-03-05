@@ -18,6 +18,11 @@ from sentry.web.helpers import render_to_response
 
 
 @login_required
+def index(request):
+    return render_to_response('sentry/index.html', request)
+
+
+@login_required
 def dashboard(request, template='dashboard.html'):
     team_list = Team.objects.get_for_user(request.user, with_projects=True)
     if not team_list:

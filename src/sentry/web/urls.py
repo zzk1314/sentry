@@ -63,6 +63,9 @@ urlpatterns += patterns('',
     url(r'^_static/(?P<module>[^/]+)/(?P<path>.*)$', generic.static_media,
         name='sentry-media'),
 
+    # API
+    url(r'^api/0/', include('sentry.api.urls')),
+
     # Account
     url(r'^login/$', accounts.login,
         name='sentry-login'),
@@ -274,7 +277,9 @@ urlpatterns += patterns('',
     url(r'^api/(?P<team_slug>[\w_-]+)/projects/search/$', api.search_projects,
         name='sentry-api-search-projects'),
 
-    url(r'^api/0/', include('sentry.api.urls')),
+    # Generic
+    url(r'^', generic.index,
+        name='sentry'),
 
     # TV dashboard
     url(r'^(?P<team_slug>[\w_-]+)/wall/$', groups.wall_display,

@@ -2,6 +2,9 @@
     "strict": true,
     "browser": true,
     "predef": [
-        "parseUri"
+        "parseUri",
+        "requirejs",
+        "require",
+        "define"
     ]
 }

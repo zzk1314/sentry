@@ -308,10 +308,10 @@ LOGGING = {
     'disable_existing_loggers': True,
     'handlers': {
         'console': {
-            'level': 'WARNING',
             'class': 'logging.StreamHandler'
         },
         'sentry': {
+            'level': 'ERROR',
             'class': 'raven.contrib.django.handlers.SentryHandler',
         }
     },
@@ -320,15 +320,12 @@ LOGGING = {
             'format': '%(name)s %(levelname)s %(project_slug)s/%(team_slug)s %(message)s'
         }
     },
+    'root': {
+        'level': 'WARNING',
+        'handlers': ['console', 'sentry'],
+    },
     'loggers': {
-        '()': {
-            'handlers': ['console', 'sentry'],
-        },
-        'root': {
-            'handlers': ['console', 'sentry'],
-        },
         'sentry': {
-            'level': 'ERROR',
             'handlers': ['console', 'sentry'],
             'propagate': False,
         },
@@ -340,6 +337,9 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'static_compiler': {
+            'level': 'INFO',
+        },
         'django.request': {
             'level': 'ERROR',
             'handlers': ['console'],
@@ -350,8 +350,70 @@ LOGGING = {
 
 NPM_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir, os.pardir, 'node_modules'))
 
+
+def gulp(root, pattern='*', exclude=[]):
+    from fnmatch import fnmatch
+    results = []
+    root = os.path.join(STATIC_ROOT, root)
+    for cur, _, files in os.walk(root):
+        for filename in files:
+            fullname = os.path.join(cur[len(root):], filename)
+            if any(fnmatch(filename, x) for x in exclude):
+                continue
+            if not fnmatch(filename, pattern):
+                continue
+            results.append(fullname)
+    return results
+
+
 SENTRY_STATIC_BUNDLES = {
     "packages": {
+        # new, ember.js
+        # "sentry/app/app.min.js": {
+        #     # TODO: support ** in static-compiler
+        #     "cwd": "sentry/app",
+        #     "src": gulp('sentry/app/', '*.js', exclude=['*.min.js']),
+        #     "postcompilers": {
+        #         "*.js": [
+        #             "cat {input} > {output}",
+        #         ],
+        #     },
+        #     "preprocessors": {
+        #         "*.js": [
+        #             "node_modules/.bin/compile-modules {input} --to compiled",
+        #             "cp -v compiled/{input} {output}",
+        #         ],
+        #     },
+        # },
+        # "sentry/app/templates.min.js": {
+        #     # TODO: support ** in static-compiler
+        #     "cwd": "sentry/app/templates",
+        #     "src": dict(
+        #         (k, k[:-4] + '.js')
+        #         for k in gulp('sentry/app/templates/', '*.hbs'),
+        #     ),
+        #     "postcompilers": {
+        #         "*.js": [
+        #             "cat {input} > {output}.tmp",
+        #             "script/bundle-hbs-template {input}.tmp > {output} && rm {input}.tmp",
+        #         ],
+        #     },
+        #     "preprocessors": {
+        #         "*.hbs": [
+        #             "script/compile-hbs-template {input} > {output}",
+        #             # "cp -v compiled/{input} {output}",
+        #         ],
+        #     },
+        # },
+        # "sentry/vendor.min.js": {
+        #     "src": [
+        #         "sentry/vendor/jquery/jquery.js",
+        #         "sentry/vendor/handlebars/handlebars.js",
+        #         "sentry/vendor/ember/ember.js",
+        #     ],
+        # },
+
+        # old
         "sentry/scripts/global.min.js": {
             "src": [
                 "sentry/scripts/core.js",
@@ -409,6 +471,11 @@ SENTRY_STATIC_BUNDLES = {
                 "sentry/scripts/lib/bootstrap-datepicker.js"
             ],
         },
+        "sentry/css/sentry-simple.min.css": {
+            "src": {
+                "sentry/less/sentry-simple.less": "sentry/css/sentry-simple.css",
+            },
+        },
         "sentry/styles/global.min.css": {
             "src": {
                 "sentry/less/sentry.less": "sentry/styles/sentry.css",
@@ -421,10 +488,12 @@ SENTRY_STATIC_BUNDLES = {
         },
     },
     "postcompilers": {
-        "*.js": ["node_modules/uglify-js/bin/uglifyjs {input} --source-map-root={relroot}/ --source-map-url={name}.map{ext} --source-map={relpath}/{name}.map{ext} -o {output}"],
+        "*.js": [
+            "node_modules/.bin/uglifyjs {input} --source-map-root={relroot}/ --source-map-url={name}.map{ext} --source-map={relpath}/{name}.map{ext} -o {output}"
+        ],
     },
     "preprocessors": {
-        "*.less": ["node_modules/less/bin/lessc {input} {output}"],
+        "*.less": ["node_modules/.bin/lessc {input} {output}"],
     },
 }
 

@@ -1,0 +1,5 @@
+<div ui-view>
+	<ul>
+		<li ng-repeat="team in teamList"><a ui-sref="team({team_slug: team.slug})">{{team.name}}</a></li>
+	</ul>
+</div>

@@ -1,0 +1,645 @@
+// Core variables and mixins
+@import "sentry-simple-variables.less";
+@import "../bootstrap3/mixins.less";
+
+// Reset
+@import "../bootstrap3/normalize.less";
+@import "../bootstrap3/print.less";
+
+// Core CSS
+@import "../bootstrap3/scaffolding.less";
+@import "../bootstrap3/type.less";
+@import "../bootstrap3/code.less";
+@import "../bootstrap3/grid.less";
+@import "../bootstrap3/tables.less";
+@import "../bootstrap3/forms.less";
+@import "../bootstrap3/buttons.less";
+
+// Components
+@import "../bootstrap3/component-animations.less";
+@import "../bootstrap3/glyphicons.less";
+@import "../bootstrap3/dropdowns.less";
+@import "../bootstrap3/button-groups.less";
+@import "../bootstrap3/input-groups.less";
+@import "../bootstrap3/navs.less";
+// @import "../bootstrap3/navbar.less";
+@import "../bootstrap3/breadcrumbs.less";
+@import "../bootstrap3/pagination.less";
+@import "../bootstrap3/pager.less";
+@import "../bootstrap3/labels.less";
+@import "../bootstrap3/badges.less";
+@import "../bootstrap3/jumbotron.less";
+@import "../bootstrap3/thumbnails.less";
+@import "../bootstrap3/alerts.less";
+@import "../bootstrap3/progress-bars.less";
+@import "../bootstrap3/media.less";
+@import "../bootstrap3/list-group.less";
+@import "../bootstrap3/panels.less";
+@import "../bootstrap3/wells.less";
+@import "../bootstrap3/close.less";
+
+// Components w/ JavaScript
+@import "../bootstrap3/modals.less";
+@import "../bootstrap3/tooltip.less";
+@import "../bootstrap3/popovers.less";
+@import "../bootstrap3/carousel.less";
+
+// Utility classes
+@import "../bootstrap3/utilities.less";
+@import "../bootstrap3/responsive-utilities.less";
+
+@import "ss-fonts.less";
+
+@import "selectize.less";
+
+@import "angular-loading-bar.less";
+
+// standardize icon size
+
+.icon-arrow-down, .icon-arrow-right, .icon-arrow-left {
+  font-size: 16px !important;
+  position: relative;
+  top: 3px;
+}
+
+.back-button.icon-arrow-left {
+  font-size: 48px !important;
+  position: absolute;
+  left: -60px;
+  top: 1px;
+}
+
+.btn-sm {
+  .icon-arrow-down, .icon-arrow-right, .icon-arrow-left {
+    font-size: 14px !important;
+    top: 2px;
+  }
+}
+
+.btn-white {
+  background: #fff;
+  border: 2px solid #f1f2f3;
+}
+
+// Sentry theme:
+
+body {
+  font-family: "Avenir Next", "Avenir", "Helvetica Neue", helvetica, sans-serif;
+  color: #454C50;
+}
+
+header {
+  background: #465262;
+  color: #fff;
+  padding: 16px 0;
+  margin: 0 0 22px;
+  a {
+    color: #fff;
+    &:hover {
+      color: #fff;
+      text-decoration: none;
+    }
+  }
+
+  .user-nav {
+    margin-top: 6px;
+    margin-bottom: 0;
+    .clearfix();
+    li {
+      list-style: none;
+      float: left;
+      margin-left: 30px;
+      a {
+        font-size: 15px;
+      }
+    }
+    [class^="icon-"], [class*=" icon-"] {
+      position: relative;
+      top: 1px;
+      margin-right: 4px;
+    }
+  }
+
+  .project-dropdown {
+    .team-name {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .project-name {
+      font-weight: 400;
+      color: #B5B9C0;
+    }
+
+    .icon-arrow-down {
+      top: 0;
+    }
+  }
+
+}
+
+.align-right {
+  text-align: right;
+}
+
+.container {
+  max-width: 1040px;
+  position: relative;
+}
+
+#sidebar {
+  h6 {
+    margin: 0 0 5px;
+  }
+}
+
+.project-nav {
+  margin: 0 0 20px;
+}
+
+.search {
+  position: relative;
+  width: 25%;
+  padding-left: 24px;
+  padding-top: 2px;
+  .icon-search {
+    position: absolute;
+    right: 0;
+    top: 10px;
+    .opacity(.4);
+  }
+  .form-control {
+    border: none;
+    box-shadow: none;
+    margin-right: 24px;
+    padding-left: 0;
+  }
+}
+
+.nav-stacked {
+  margin: 0 0 20px;
+  li {
+    margin: 0 0 6px;
+    > a, > a:hover {
+      background: #f7f7f7;
+      font-weight: 600;
+      padding: 8px 14px;
+    }
+
+    &.active a, &.active:hover a, &.active:focus a {
+      background: @brand-primary;
+    }
+  }
+}
+
+.stream-actions {
+  .clearfix();
+  margin: 0 0 18px;
+}
+
+.events {
+  .list-unstyled;
+  margin-bottom: 20px;
+  .event {
+    position: relative;
+    border-bottom: 3px solid #F8F9FA;
+    padding: 16px 10px 16px 32px;
+
+    &.level-alert:after {
+      position: absolute;
+      content: "";
+      top: -3px;
+      right: 0;
+      bottom: -3px;
+      left: 0;
+      width: 4px;
+      background: @sentry-orange;
+    }
+  }
+
+  .deploy {
+    background: lighten(#F8F9FA, 1.25);
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 3px solid #F8F9FA;
+    padding: 5px 0;
+  }
+
+  .row {
+    margin: 0;
+  }
+
+  .checkbox {
+    position: absolute;
+    left: -13px;
+    top: -10px;
+  }
+
+  .details {
+    h3 {
+      font-size: 16px;
+      line-height: 1.2;
+      letter-spacing: -0.25;
+      margin: 0 0 3px;
+      a {
+        color: inherit;
+      }
+    }
+
+    p {
+      line-height: 1.4;
+      color: #79858C;
+      margin-bottom: 0;
+    }
+
+    h3 a, p {
+      display: block;
+      max-width: 100%;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .meta {
+      color: lighten(#79858C, 10);
+    }
+  }
+
+  .graph {
+    figure {
+      height: 40px;
+      margin: 0;
+    }
+  }
+
+  .users, .occurrences {
+    span {
+      color: #949ea4;
+      font-size: 20px;
+      display: inline-block;
+      padding-top: 9px;
+    }
+  }
+
+  .event-header {
+    padding-top: 0;
+    padding-bottom: 20px;
+    border-color: darken(#F8F9FA, 2);
+    .checkbox {
+      top: -5px;
+    }
+
+    .icon-checkmark, .icon-pause {
+      position: relative;
+      top: 1px;
+    }
+
+    .icon-bookmark {
+      position: relative;
+      top: 2px;
+    }
+
+    .graph {
+      ul {
+        .list-unstyled;
+        .clearfix;
+        float: right;
+        li {
+          float: left;
+          margin: 0 0 0 10px;
+          &.active a {
+            font-weight: 500;
+            color: @gray-dark;
+          }
+        }
+
+        a {
+          color: #949ea4;
+        }
+      }
+    }
+
+    .graph, .occurrences, .users {
+      padding-top: 6px;
+    }
+
+    strong {
+      display: inline-block;
+      padding-top: 6px;
+    }
+  }
+}
+
+.group-detail {
+  margin-bottom: 24px;
+  h3 {
+    font-size: 22px;
+    letter-spacing: -0.25px;
+    margin-bottom: 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .count {
+    color: @gray-dark;
+    font-size: 22px;
+    font-weight: 500;
+    display: block;
+  }
+
+  .occurrences, .users {
+    color: #949ea4;
+  }
+
+  .meta {
+    margin: 0 0 12px;
+    color: #949ea4;
+  }
+
+  .group-actions {
+    .clearfix;
+  }
+}
+
+.seen-by {
+  color: #949ea4;
+  float: right;
+  ul {
+    .list-unstyled;
+    li:first-child {
+      padding-right: 4px;
+    }
+    li {
+      float: left;
+      margin-left: 4px;
+      line-height: 32px;
+      img {
+        border-radius: 3px;
+        width: 30px;
+        height: 30px;
+      }
+    }
+  }
+}
+
+.timeline {
+  .list-unstyled;
+  margin: 0;
+  position: relative;
+
+  &:before {
+    display: block;
+    content: "";
+    width: 4px;
+    background: lighten(#f1f2f3, 2.5);
+    position: absolute;
+    top: 0;
+    left: 32px;
+    bottom: 0;
+  }
+
+  .timeline-item {
+    // border-bottom: 1px solid lighten(#f1f2f3, 2.5);
+    padding: 14px 14px 10px 68px;
+    min-height: 92px;
+    position: relative;
+
+    .icon {
+      position: absolute;
+      // background: lighten(@gray, 20);
+      background: #fff;
+      border: 2px solid darken(#f1f2f3, 5);
+      .square(36px);
+      border-radius: 32px;
+      left: 16px;
+      top: 16px;
+    }
+
+    h4 {
+      font-size: 15px;
+      font-weight: bold;
+      margin: 0 0 6px;
+    }
+
+    p {
+      font-size: 13px;
+      margin: 0 0 4px;
+    }
+
+    strong {
+      font-weight: 500;
+      display: inline-block;
+      min-width: 80px;
+    }
+
+    time {
+      float: right;
+      color: #999
+    }
+
+    pre {
+      margin-top: 10px;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.box {
+  border: 2px solid #f1f2f3;
+  border-radius: 7px;
+  margin: 0 0 30px;
+  .box-header {
+    padding: 10px 14px;
+    border-bottom: 2px solid #f1f2f3;
+    background: lighten(#f1f2f3, 4.4);
+    border-radius: 4px 4px 0 0;
+    h3,h4,h5 {
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+  .box-content {
+    &.with-padding {
+      padding: 15px 15px 5px;
+    }
+  }
+}
+
+.table-no-padding {
+  tbody tr td {
+    padding: 5px 0;
+  }
+}
+
+.table-borderless {
+  tbody tr td {
+    border: 0;
+    border: 0;
+  }
+}
+.table .table {
+  margin: -8px 0 -8px -8px;
+  td, th {
+    border: none;
+  }
+}
+
+.table th {
+  font-weight: 600;
+}
+
+.tags {
+  .list-unstyled;
+  li {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    line-height: 30px;
+
+    strong {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 10px;
+      width: 33%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+.frame {
+  padding: 14px 14px 6px;
+  border-bottom: 2px solid #f8f8f9;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  .prettyprint ol li:not(.L6), .stack {
+    .transition(opacity .3s linear);
+    visibility: hidden;
+    .opacity(0);position: absolute;
+  }
+
+  &.expanded {
+    .prettyprint ol li, .stack {
+      visibility: visible;
+      .opacity(100);
+      position: static;
+    }
+  }
+
+  .context-toggle {
+    float: right;
+  }
+  pre {
+    margin-top: 10px;
+    background: transparent;
+    padding: 0;
+    border: 0;
+
+    .L6 {
+      background: #f8f8f8;
+    }
+  }
+  .stack {
+    pre {
+      padding: 0;
+      margin: 0;
+    }
+    > .table {
+      margin-bottom: 0;
+    }
+  }
+}
+
+
+#explore {
+  h2 {
+    margin: 0 0 10px;
+  }
+
+  .breadcrumb {
+    background: transparent;
+    margin: 0 0 20px;
+    padding: 0 0 20px;
+    border-bottom: 3px solid #F8F9FA;
+
+    a {
+      font-weight: 600;
+    }
+
+    li {
+      font-size: 18px;
+    }
+  }
+}
+
+.chart {
+  background: lighten(#f1f2f3, 1);
+
+  margin: 0 0 30px;
+  border-radius: 7px;
+}
+
+figure {
+  max-width: 100%;
+  height: 120px;
+  margin: 0 0 30px;
+  border-radius: 7px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: lighten(@gray, 46);
+}
+
+.bar:hover {
+  fill: @sentry-orange;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: @gray-dark;
+  color: #fff;
+  border-radius: 4px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: @gray-dark;
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}

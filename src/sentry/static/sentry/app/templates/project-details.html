@@ -1,0 +1,34 @@
+<header>
+    <div class="container">
+        <div class="pull-right">
+            <ul class="user-nav">
+                <li><a href="#"><span class="icon-settings"></span> Team Settings</a></li>
+                <li><a href="#"><span class="icon-envelope"></span> Support</a></li>
+                <li class="dropdown-toggle"><a href="#"><span class="icon-arrow-down"></span> </a></li>
+            </ul>
+        </div>
+        <div class="project-dropdown">
+            <a href="#" class="team-name">
+                {{selectedTeam.name}}
+                <span class="project-name" ng-if="selectedProject">{{selectedProject.name}}</span>
+                <span class="icon-arrow-down"></span>
+            </a>
+        </div>
+    </div>
+</header>
+<section id="content">
+    <div class="container">
+        <flash-messages></flash-messages>
+
+        <div ui-view></div>
+    </div>
+</section>
+<!-- <footer>
+    <div class="container">
+        <div class="pull-right">
+            <a href="#">Contribute</a>
+            <a href="#">Translate</a>
+        </div>
+        Sentry 7.0.0-DEV (9765530)
+    </div>
+</footer> -->

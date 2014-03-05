@@ -9,6 +9,6 @@ class GroupIndexTest(APITestCase):
 
         self.client.force_authenticate(user=self.user)
         url = reverse('sentry-api-0-group-list', kwargs={
-            'project_id': self.project.id, 'team_slug': self.team.slug})
+            'project_id': self.project.id})
         response = self.client.get(url, format='json')
         assert response.status_code == 200

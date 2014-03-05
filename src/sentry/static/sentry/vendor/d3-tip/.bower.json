@@ -1,0 +1,27 @@
+{
+  "name": "d3-tip",
+  "main": "index.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components",
+    "bower_components",
+    "examples",
+    "Makefile",
+    "docs"
+  ],
+  "dependencies": {
+    "d3": "3"
+  },
+  "homepage": "https://github.com/deciob/d3-tip",
+  "_release": "2a21c0b906",
+  "_resolution": {
+    "type": "branch",
+    "branch": "amd",
+    "commit": "2a21c0b9061fcc0a7ef0823e3a229bf388d005af"
+  },
+  "_source": "https://github.com/deciob/d3-tip.git",
+  "_target": "amd",
+  "_originalSource": "https://github.com/deciob/d3-tip.git",
+  "_direct": true
+}
