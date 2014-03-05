@@ -5,7 +5,13 @@ define(['app'], function(app) {
         parent: 'manage_team',
         url: 'members/',
         templateUrl: '/_static/sentry/app/templates/manage-team-members.html',
-        controller: function($scope){
+        controller: function($scope, memberList){
+            $scope.memberList = memberList.data;
+        },
+        resolve: {
+            memberList: function(selectedTeam, $http) {
+                return $http.get('/api/0/teams/' + selectedTeam.id + '/members/');
+            }
         }
     };
 });

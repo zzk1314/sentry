@@ -14,6 +14,7 @@ from .endpoints.group_stats import GroupStatsEndpoint
 from .endpoints.project_index import ProjectIndexEndpoint
 from .endpoints.team_index import TeamIndexEndpoint
 from .endpoints.team_project_index import TeamProjectIndexEndpoint
+from .endpoints.team_member_index import TeamMemberIndexEndpoint
 
 
 urlpatterns = patterns(
@@ -26,6 +27,9 @@ urlpatterns = patterns(
     url(r'^teams/(?P<team_id>\d+)/projects/$',
         TeamProjectIndexEndpoint.as_view(),
         name='sentry-api-0-team-project-index'),
+    url(r'^teams/(?P<team_id>\d+)/members/$',
+        TeamMemberIndexEndpoint.as_view(),
+        name='sentry-api-0-team-member-index'),
 
     # Projects
     url(r'^projects/$',
