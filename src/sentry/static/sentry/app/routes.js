@@ -2,6 +2,8 @@ define([
     'app',
     'routes/eventDetails',
     'routes/groupDetails',
+    'routes/help',
+    'routes/helpGuide',
     'routes/index',
     'routes/manageTeam',
     'routes/manageTeamAccessGroups',
@@ -18,6 +20,8 @@ define([
     app,
     EventDetailsRoute,
     GroupDetailsRoute,
+    HelpRoute,
+    HelpGuideRoute,
     IndexRoute,
     ManageTeamRoute,
     ManageTeamAccessGroupsRoute,
@@ -66,6 +70,8 @@ define([
         $stateProvider
             .state('event', EventDetailsRoute)
             .state('group', GroupDetailsRoute)
+            .state('help', HelpRoute)
+            .state('help.guide', HelpGuideRoute)
             .state('index', IndexRoute)
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
