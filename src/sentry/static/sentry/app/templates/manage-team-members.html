@@ -1,15 +1,18 @@
 <table class="table table-striped">
     <colgroup>
         <col/>
+        <col width="150px"/>
     </colgroup>
     <thead>
         <tr>
             <th>User</th>
+            <th style="text-align:center;">Access</th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="member in memberList">
-            <td>{{member.email}}</td>
+            <td>{{member.email}} <small ng-if="member.pending">Pending</small></td>
+            <td style="text-align:center">{{member.access}}</td>
         </tr>
     </tbody>
 </table>

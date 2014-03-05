@@ -9,6 +9,7 @@ class PendingTeamMemberSerializer(Serializer):
             'id': str(obj.id),
             'email': obj.email,
             'access': obj.get_type_display(),
+            'pending': True,
             'dateAdded': obj.date_added,
         }
         return d
