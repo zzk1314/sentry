@@ -7,7 +7,7 @@ define(['app', 'jquery'], function(app, $) {
         templateUrl: '/_static/sentry/app/templates/project-details.html',
         abstract: true,
         controller: function(selectedProject, $scope, $stateParams){
-            $scope.selectedProject = selectedProject;
+            $scope.$parent.selectedProject = selectedProject;
         },
         resolve: {
             selectedProject: function(projectList, $q, $stateParams) {

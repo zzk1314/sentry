@@ -188,10 +188,6 @@ urlpatterns += patterns('',
         sentry.web.frontend.projects.notifications.notification_settings,
         name='sentry-project-notifications'),
 
-    # Generic
-    url(r'^$', generic.dashboard,
-        name='sentry'),
-
     # Admin
     url(r'^manage/status/$', admin.status_env,
         name='sentry-admin-status'),

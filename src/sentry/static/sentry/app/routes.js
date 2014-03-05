@@ -3,6 +3,8 @@ define([
     'routes/eventDetails',
     'routes/groupDetails',
     'routes/index',
+    'routes/manageTeam',
+    'routes/manageTeamSettings',
     'routes/projectDetails',
     'routes/projectStream',
     'routes/teamDetails',
@@ -14,6 +16,8 @@ define([
     EventDetailsRoute,
     GroupDetailsRoute,
     IndexRoute,
+    ManageTeamRoute,
+    ManageTeamSettingsRoute,
     ProjectDetailsRoute,
     ProjectStreamRoute,
     TeamDetailsRoute
@@ -59,6 +63,8 @@ define([
             .state('index', IndexRoute)
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
-            .state('team', TeamDetailsRoute);
+            .state('team', TeamDetailsRoute)
+            .state('manage_team', ManageTeamRoute)
+            .state('manage_team.settings', ManageTeamSettingsRoute);
     });
 });
