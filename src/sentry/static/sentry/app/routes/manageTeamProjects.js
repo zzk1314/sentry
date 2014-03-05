@@ -5,7 +5,13 @@ define(['app'], function(app) {
         parent: 'manage_team',
         url: 'projects/',
         templateUrl: '/_static/sentry/app/templates/manage-team-projects.html',
-        controller: function($scope){
+        controller: function($scope, projectList){
+            $scope.projectList = projectList.data;
+        },
+        resolve: {
+            projectList: function(selectedTeam, $http) {
+                return $http.get('/api/0/teams/' + selectedTeam.id + '/projects/');
+            }
         }
     };
 });

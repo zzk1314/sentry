@@ -1,0 +1,25 @@
+<h2>Projects</h2>
+<table>
+<table class="table table-striped">
+    <colgroup>
+        <col/>
+        <col width="150px"/>
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Project</th>
+            <th style="text-align:center;">Date Added</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="project in projectList">
+            <td>
+                <a ui-sref="project.stream({project_slug: project.slug})">{{project.name}}</a><br>
+                 {{selectedTeam.slug}}/{{project.slug}}
+            </td>
+            <td style="text-align:center;">
+                {{project.dateAdded}}
+            </td>
+        </tr>
+    </tbody>
+</table>

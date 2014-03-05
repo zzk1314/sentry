@@ -9,5 +9,6 @@ class ProjectSerializer(Serializer):
             'id': str(obj.id),
             'slug': obj.slug,
             'name': obj.name,
+            'dateAdded': obj.date_added,
         }
         return d
