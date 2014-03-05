@@ -4,6 +4,9 @@ define([
     'routes/groupDetails',
     'routes/index',
     'routes/manageTeam',
+    'routes/manageTeamAccessGroups',
+    'routes/manageTeamMembers',
+    'routes/manageTeamProjects',
     'routes/manageTeamSettings',
     'routes/projectDetails',
     'routes/projectStream',
@@ -17,6 +20,9 @@ define([
     GroupDetailsRoute,
     IndexRoute,
     ManageTeamRoute,
+    ManageTeamAccessGroupsRoute,
+    ManageTeamMembersRoute,
+    ManageTeamProjectsRoute,
     ManageTeamSettingsRoute,
     ProjectDetailsRoute,
     ProjectStreamRoute,
@@ -65,6 +71,9 @@ define([
             .state('project.stream', ProjectStreamRoute)
             .state('team', TeamDetailsRoute)
             .state('manage_team', ManageTeamRoute)
+            .state('manage_team.access_groups', ManageTeamAccessGroupsRoute)
+            .state('manage_team.members', ManageTeamMembersRoute)
+            .state('manage_team.projects', ManageTeamProjectsRoute)
             .state('manage_team.settings', ManageTeamSettingsRoute);
     });
 });

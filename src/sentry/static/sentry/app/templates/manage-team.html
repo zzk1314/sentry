@@ -19,9 +19,19 @@
     <div class="container">
         <flash-messages></flash-messages>
 
-        <div ui-view>
+        <div class="row">
+            <div class="col-sm-9">
+                <div ui-view></div>
+            </div>
+            <div class="col-sm-3">
+                <ul class="nav nav-stacked">
+                    <li ui-sref-active="active"><a ui-sref="manage_team.settings()">Settings</a></li>
+                    <li ui-sref-active="active"><a ui-sref="manage_team.projects()">Projects</a></li>
+                    <li ui-sref-active="active"><a ui-sref="manage_team.members()">Members</a></li>
+                    <li ui-sref-active="active"><a ui-sref="manage_team.access_groups()">Access Groups</a></li>
+                </ul>
+            </div>
         </div>
-
     </div>
 </section>
 <!-- <footer>
