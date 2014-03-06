@@ -13,4 +13,4 @@ class TeamAccessGroupIndexEndpoint(Endpoint):
 
         data = sorted(AccessGroup.objects.filter(team=team), key=lambda x: x.name)
 
-        return Response(serialize(data))
+        return Response(serialize(data, request.user))

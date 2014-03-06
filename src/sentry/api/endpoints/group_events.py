@@ -20,5 +20,5 @@ class GroupEventsEndpoint(Endpoint):
             request=request,
             queryset=events,
             order_by='-datetime',
-            on_results=lambda x: serialize(x, request),
+            on_results=lambda x: serialize(x, request.user),
         )

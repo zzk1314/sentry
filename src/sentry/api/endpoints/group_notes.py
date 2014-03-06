@@ -31,7 +31,7 @@ class GroupNotesEndpoint(Endpoint):
             request=request,
             queryset=notes,
             order_by='-datetime',
-            on_results=lambda x: serialize(x, request=request),
+            on_results=lambda x: serialize(x, request.user),
         )
 
     def post(self, request, group_id):
@@ -65,4 +65,4 @@ class GroupNotesEndpoint(Endpoint):
         # TODO: move this into the queue
         activity.send_notification()
 
-        return Response(serialize(activity))
+        return Response(serialize(activity, request.user))

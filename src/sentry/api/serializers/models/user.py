@@ -4,7 +4,7 @@ from sentry.models import User
 
 @register(User)
 class UserSerializer(Serializer):
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         d = {
             'id': obj.id,
             'email': obj.email,

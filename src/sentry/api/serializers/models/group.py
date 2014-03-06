@@ -6,28 +6,27 @@ from sentry.constants import STATUS_RESOLVED, STATUS_MUTED, TAG_LABELS
 from sentry.models import (
     Group, GroupBookmark, GroupTagKey, GroupSeen, ProjectOption
 )
-from sentry.templatetags.sentry_plugins import get_tags
+# from sentry.templatetags.sentry_plugins import get_tags
+# from sentry.templatetags.sentry_plugins import handle_before_events
 from sentry.utils.db import attach_foreignkey
 from sentry.utils.http import absolute_uri
 
 
 @register(Group)
 class GroupSerializer(Serializer):
-    def attach_metadata(self, objects, request=None):
-        from sentry.templatetags.sentry_plugins import handle_before_events
-
+    def attach_metadata(self, objects, user):
         attach_foreignkey(objects, Group.project, ['team'])
 
-        if request and objects:
-            handle_before_events(request, objects)
+        # if request and objects:
+        #     handle_before_events(request, objects)
 
-        if request and request.user.is_authenticated() and objects:
+        if user.is_authenticated() and objects:
             bookmarks = set(GroupBookmark.objects.filter(
-                user=request.user,
+                user=user,
                 group__in=objects,
             ).values_list('group_id', flat=True))
             seen_groups = dict(GroupSeen.objects.filter(
-                user=request.user,
+                user=user,
                 group__in=objects,
             ).values_list('group_id', 'last_seen'))
         else:
@@ -68,7 +67,7 @@ class GroupSerializer(Serializer):
                         'count': value,
                     })
 
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         status = obj.get_status()
         if status == STATUS_RESOLVED:
             status_label = 'resolved'
@@ -83,10 +82,10 @@ class GroupSerializer(Serializer):
             'title': obj.message_short,
             'culprit': obj.culprit,
             'permalink': absolute_uri(reverse('sentry-group', args=[obj.team.slug, obj.project.slug, obj.id])),
-            'firstSeen': self.localize_datetime(obj.first_seen, request=request),
-            'lastSeen': self.localize_datetime(obj.last_seen, request=request),
+            'firstSeen': obj.first_seen,
+            'lastSeen': obj.last_seen,
             'timeSpent': obj.avg_time_spent,
-            'canResolve': request and request.user.is_authenticated(),
+            'canResolve': user.is_authenticated(),
             'status': {
                 'id': status,
                 'name': status_label,
@@ -107,6 +106,6 @@ class GroupSerializer(Serializer):
             d['historicalData'] = obj.historical_data
         if hasattr(obj, 'annotations'):
             d['annotations'] = obj.annotations
-        if request:
-            d['tags'] = list(get_tags(obj, request))
+        # if request:
+        #     d['tags'] = list(get_tags(obj, request))
         return d

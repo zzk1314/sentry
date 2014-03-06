@@ -1,17 +1,17 @@
-from sentry.app import env
-from sentry.utils import json
+from django.contrib.auth.models import AnonymousUser
 
 
 serializers = {}
 
 
-def serialize(objects, request=None):
-    if request is None:
-        request = getattr(env, 'request', None)
+def serialize(objects, user=None):
+    if user is None:
+        user = AnonymousUser()
+
     if not objects:
         return objects
     elif not isinstance(objects, (list, tuple)):
-        return serialize([objects], request=request)[0]
+        return serialize([objects], user=user)[0]
 
     # elif isinstance(obj, dict):
     #     return dict((k, serialize(v, request=request)) for k, v in obj.iteritems())
@@ -20,13 +20,8 @@ def serialize(objects, request=None):
     except KeyError:
         return objects
 
-    t.attach_metadata(objects, request=request)
-    return [t(o, request=request) for o in objects]
-
-
-def to_json(obj, request=None):
-    result = serialize(obj, request=request)
-    return json.dumps(result)
+    t.attach_metadata(objects, user=user)
+    return [t(o, user=user) for o in objects]
 
 
 def register(type):
@@ -37,18 +32,11 @@ def register(type):
 
 
 class Serializer(object):
-    def __call__(self, obj, request=None):
-        return self.serialize(obj, request)
+    def __call__(self, obj, user):
+        return self.serialize(obj, user)
 
-    def attach_metadata(self, objects, request=None):
+    def attach_metadata(self, objects, user):
         pass
 
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         return {}
-
-    def localize_datetime(self, dt, request=None):
-        if not request:
-            return dt.isoformat()
-        elif getattr(request, 'timezone', None):
-            return dt.astimezone(request.timezone).isoformat()
-        return dt.isoformat()

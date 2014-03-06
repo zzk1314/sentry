@@ -4,7 +4,7 @@ from sentry.models import Event
 
 @register(Event)
 class EventSerializer(Serializer):
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         d = {
             'id': str(obj.id),
             'eventID': str(obj.event_id),
@@ -17,7 +17,7 @@ class EventSerializer(Serializer):
             'culprit': obj.culprit,
             'checksum': obj.checksum,
             'platform': obj.platform,
-            'dateCreated': self.localize_datetime(obj.datetime, request=request),
+            'dateCreated': obj.datetime,
             'timeSpent': obj.time_spent,
         }
         return d

@@ -4,7 +4,7 @@ from sentry.models import Activity
 
 @register(Activity)
 class ActivitySerializer(Serializer):
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         d = {
             'id': str(obj.id),
             'user': serialize(obj.user),

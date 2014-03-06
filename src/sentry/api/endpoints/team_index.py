@@ -8,4 +8,4 @@ from rest_framework.response import Response
 class TeamIndexEndpoint(Endpoint):
     def get(self, request):
         teams = Team.objects.get_for_user(request.user).values()
-        return Response(serialize(teams))
+        return Response(serialize(teams, request.user))

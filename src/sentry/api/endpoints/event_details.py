@@ -27,7 +27,7 @@ class EventDetailsEndpoint(Endpoint):
         except Event.DoesNotExist:
             prev_event = None
 
-        data = serialize(event, request)
+        data = serialize(event, request.user)
 
         if next_event:
             data['nextEventID'] = str(next_event.id)

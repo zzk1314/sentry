@@ -7,4 +7,4 @@ from rest_framework.response import Response
 class ProjectIndexEndpoint(Endpoint):
     def get(self, request):
         projects = list(Project.objects.get_for_user(request.user))
-        return Response(serialize(projects))
+        return Response(serialize(projects, request.user))

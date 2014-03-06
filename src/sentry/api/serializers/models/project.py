@@ -4,11 +4,11 @@ from sentry.models import Project
 
 @register(Project)
 class ProjectSerializer(Serializer):
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         d = {
             'id': str(obj.id),
             'slug': obj.slug,
             'name': obj.name,
-            'dateAdded': obj.date_added,
+            'dateCreated': obj.date_added,
         }
         return d

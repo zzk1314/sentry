@@ -13,4 +13,4 @@ class TeamProjectIndexEndpoint(Endpoint):
 
         results = list(Project.objects.get_for_user(request.user, team=team))
 
-        return Response(serialize(results))
+        return Response(serialize(results, request.user))

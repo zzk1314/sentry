@@ -4,12 +4,12 @@ from sentry.models import AccessGroup
 
 @register(AccessGroup)
 class AccessGroupSerializer(Serializer):
-    def serialize(self, obj, request=None):
+    def serialize(self, obj, user):
         d = {
             'id': str(obj.id),
             'name': obj.name,
             'access': obj.get_type_display(),
             'managed': obj.managed,
-            'dateAdded': obj.date_added,
+            'dateCreated': obj.date_added,
         }
         return d

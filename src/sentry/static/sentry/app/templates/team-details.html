@@ -17,8 +17,9 @@
             </a>
             <ul class="dropdown-menu">
                 <li ng-repeat="team in teamList">
-                    <h6>{{team.name}}</h6>
+                    <a ui-sref="team({team_slug: team.slug})">{{team.name}}</a>
                     <ul>
+                        <li><a href="#">Project</a></li>
                     </ul>
                 </li>
             </ul>

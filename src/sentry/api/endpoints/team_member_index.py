@@ -11,8 +11,12 @@ class TeamMemberIndexEndpoint(Endpoint):
 
         assert_perm(team, request.user)
 
-        member_list = serialize(list(team.member_set.select_related('user')))
-        member_list.extend(serialize(list(team.pending_member_set.all())))
+        member_list = serialize(
+            list(team.member_set.select_related('user')),
+            request.user)
+        member_list.extend(serialize(
+            list(team.pending_member_set.all()),
+            request.user))
         member_list.sort(key=lambda x: x['email'])
 
         return Response(member_list)
