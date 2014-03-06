@@ -2895,7 +2895,7 @@ input[type="button"].btn-block {
 .dropdown-menu {
   color: #636e75;
   position: absolute;
-  top: 100%;
+  top: 120%;
   left: 0;
   z-index: 1000;
   display: none;
@@ -2918,7 +2918,7 @@ input[type="button"].btn-block {
 }
 .dropdown-menu .divider {
   height: 1px;
-  margin: 9px 0;
+  margin: 5px 0;
   overflow: hidden;
   background-color: #e5e5e5;
 }
@@ -3410,7 +3410,7 @@ textarea.input-group-sm > .input-group-btn > .btn {
 }
 .nav .nav-divider {
   height: 1px;
-  margin: 9px 0;
+  margin: 5px 0;
   overflow: hidden;
   background-color: #e5e5e5;
 }
@@ -5474,20 +5474,8 @@ td.visible-print {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-.icon-anchor:before {
-  content: "\e600";
-}
 .icon-search:before {
   content: "\e601";
-}
-.icon-add:before {
-  content: "\e602";
-}
-.icon-subtract:before {
-  content: "\e603";
-}
-.icon-forbid:before {
-  content: "\e604";
 }
 .icon-envelope:before {
   content: "\e605";
@@ -5524,6 +5512,15 @@ td.visible-print {
 }
 .icon-exclamation:before {
   content: "\e615";
+}
+.icon-book:before {
+  content: "\e600";
+}
+.icon-question:before {
+  content: "\e602";
+}
+.icon-forbid:before {
+  content: "\e604";
 }
 .icon-arrow-left:before {
   content: "\e60e";
