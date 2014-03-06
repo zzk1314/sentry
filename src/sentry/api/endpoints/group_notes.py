@@ -65,4 +65,4 @@ class GroupNotesEndpoint(Endpoint):
         # TODO: move this into the queue
         activity.send_notification()
 
-        return Response(serialize(activity, request.user))
+        return Response(serialize(activity, request.user), status=201)

@@ -42,7 +42,7 @@ class GroupNoteCreateTest(APITestCase):
         response = self.client.post(url, format='json', data={
             'text': 'hello world',
         })
-        assert response.status_code == 200, response.content
+        assert response.status_code == 201, response.content
 
         activity = Activity.objects.get(id=response.data['id'])
         assert activity.user == self.user
