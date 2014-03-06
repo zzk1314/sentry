@@ -2,7 +2,7 @@
     <div class="container">
         <div class="pull-right">
             <ul class="user-nav">
-                <li><a ui-sref="manage_team.settings({team_slug: selectedTeam.slug})">
+                <li ng-if="selectedTeam.permission.edit"><a ui-sref="manage_team.settings({team_slug: selectedTeam.slug})">
                     <span class="icon-settings"></span> Team Settings
                 </a></li>
                 <li><a href="#"><span class="icon-envelope"></span> Support</a></li>
