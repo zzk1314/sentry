@@ -1,10 +1,9 @@
-<form role="form" name="teamSettingsForm">
-    <div class="form-group">
+<form role="form" name="form">
+    <div class="form-group" ng-class="form.teamName.$invalid ? 'error' : ''">
         <label for="teamName">Name:</label>
         <input id="teamName"
                name="name"
                ng-model="teamData.name"
-               ng-blur="saveField($event)"
                class="form-control"
                type="text"
                placeholder="Team Name"
@@ -13,15 +12,20 @@
             <span ng-show="form.teamName.$error.required">Enter a valid team name.</span>
         </div>
     </div>
-    <div class="form-group">
+    <div class="form-group" ng-class="form.teamSlug.$invalid ? 'error' : ''">
         <label for="teamSlug">Slug:</label>
         <input id="teamSlug"
                name="slug"
                ng-model="teamData.slug"
-               ng-blur="saveField($event)"
                class="form-control"
                type="text"
                placeholder="Team Slug"
                required>
+        <div ng-show="form.teamSlug.$dirty && form.teamSlug.$invalid">Invalid:
+            <span ng-show="form.teamSlug.$error.required">Enter a valid team name.</span>
+        </div>
     </div>
+    <button class="btn btn-primary"
+            ng-click="saveForm()"
+            ng-disabled="form.$invalid || isUnchanged(teamData)">Save</button>
 </form>
