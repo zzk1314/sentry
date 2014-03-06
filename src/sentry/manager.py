@@ -30,7 +30,9 @@ from raven.utils.encoding import to_string
 from sentry import app
 from sentry.constants import (
     STATUS_RESOLVED, STATUS_UNRESOLVED, MINUTE_NORMALIZATION,
-    LOG_LEVELS, DEFAULT_LOGGER_NAME, MAX_CULPRIT_LENGTH)
+    LOG_LEVELS, DEFAULT_LOGGER_NAME, MAX_CULPRIT_LENGTH,
+    MEMBER_USER
+)
 from sentry.db.models import BaseManager
 from sentry.processors.base import send_group_processors
 from sentry.signals import regression_signal
@@ -1016,37 +1018,38 @@ class TeamManager(BaseManager):
         if not user.is_authenticated():
             return results
 
-        # TODO(dcramer): this case is no longer valid and doesnt support
-        # access_type
-        if settings.SENTRY_PUBLIC and access is None:
-            for team in sorted(self.iterator(), key=lambda x: x.name.lower()):
-                results[team.slug] = team
-        else:
-            all_teams = set()
+        all_teams = set()
 
-            qs = TeamMember.objects.filter(
-                user=user,
+        qs = TeamMember.objects.filter(
+            user=user,
+        ).select_related('team')
+        if access is not None:
+            qs = qs.filter(type__lte=access)
+
+        for tm in qs:
+            team = tm.team
+            team.access_type = tm.type
+            all_teams.add(team)
+
+        if access_groups:
+            qs = AccessGroup.objects.filter(
+                members=user,
             ).select_related('team')
             if access is not None:
                 qs = qs.filter(type__lte=access)
 
-            for tm in qs:
-                all_teams.add(tm.team)
-                tm.team.access_type = tm.type
+            for group in qs:
+                team = group.team
+                team.access_type = group.type
+                all_teams.add(team)
 
-            if access_groups:
-                qs = AccessGroup.objects.filter(
-                    members=user,
-                ).select_related('team')
-                if access is not None:
-                    qs = qs.filter(type__lte=access)
+        if settings.SENTRY_PUBLIC and access is None:
+            for team in self.iterator():
+                all_teams.add(team)
+                team.access_type = MEMBER_USER
 
-                for group in qs:
-                    all_teams.add(group.team)
-                    group.team.access_type = group.type
-
-            for team in sorted(all_teams, key=lambda x: x.name.lower()):
-                results[team.slug] = team
+        for team in sorted(all_teams, key=lambda x: x.name.lower()):
+            results[team.slug] = team
 
         if with_projects:
             # these kinds of queries make people sad :(
