@@ -5,11 +5,10 @@ define(['app'], function(app) {
         parent: 'project',
         url: 'group/:group_id/',
         templateUrl: 'partials/group-details.html',
-        controller: function($scope, $state, groupData, historicalGroupData, selectedEvent){
+        controller: function($scope, groupData, historicalGroupData, selectedEvent){
             $scope.selectedGroup = groupData.data;
             $scope.historicalGroupData = historicalGroupData.data;
             $scope.selectedEvent = selectedEvent.data;
-            // TODO: we want to render this inline instead of doing another fetch
         },
         resolve: {
             groupData: function($http, $stateParams) {

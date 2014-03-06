@@ -2,6 +2,7 @@ define([
     'app',
     'routes/eventDetails',
     'routes/groupDetails',
+    'routes/groupNotes',
     'routes/index',
     'routes/manageTeam',
     'routes/manageTeamAccessGroups',
@@ -18,6 +19,7 @@ define([
     app,
     EventDetailsRoute,
     GroupDetailsRoute,
+    GroupNotesRoute,
     IndexRoute,
     ManageTeamRoute,
     ManageTeamAccessGroupsRoute,
@@ -66,6 +68,7 @@ define([
         $stateProvider
             .state('event', EventDetailsRoute)
             .state('group', GroupDetailsRoute)
+            .state('group.notes', GroupNotesRoute)
             .state('index', IndexRoute)
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
