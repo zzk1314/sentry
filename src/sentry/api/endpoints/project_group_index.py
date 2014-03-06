@@ -7,7 +7,7 @@ from sentry.models import Project
 from sentry.web.frontend.groups import _get_group_list
 
 
-class GroupIndexEndpoint(Endpoint):
+class ProjectGroupIndexEndpoint(Endpoint):
     def get(self, request, project_id):
         offset = 0
         limit = 100

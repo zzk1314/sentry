@@ -1,7 +1,6 @@
 from django.conf.urls import patterns, url
 
 from .endpoints.event_details import EventDetailsEndpoint
-from .endpoints.group_index import GroupIndexEndpoint
 from .endpoints.group_details import GroupDetailsEndpoint
 from .endpoints.group_resolve import GroupResolveEndpoint
 from .endpoints.group_bookmark import GroupBookmarkEndpoint
@@ -12,6 +11,7 @@ from .endpoints.group_events_latest import GroupEventsLatestEndpoint
 from .endpoints.group_notes import GroupNotesEndpoint
 from .endpoints.group_stats import GroupStatsEndpoint
 from .endpoints.project_index import ProjectIndexEndpoint
+from .endpoints.project_group_index import ProjectGroupIndexEndpoint
 from .endpoints.team_index import TeamIndexEndpoint
 from .endpoints.team_access_group_index import TeamAccessGroupIndexEndpoint
 from .endpoints.team_project_index import TeamProjectIndexEndpoint
@@ -40,8 +40,8 @@ urlpatterns = patterns(
         ProjectIndexEndpoint.as_view(),
         name='sentry-api-0-project-index'),
     url(r'^projects/(?P<project_id>\d+)/groups/$',
-        GroupIndexEndpoint.as_view(),
-        name='sentry-api-0-group-list'),
+        ProjectGroupIndexEndpoint.as_view(),
+        name='sentry-api-0-project-group-index'),
 
     # Groups
     url(r'^groups/(?P<group_id>\d+)/$',
