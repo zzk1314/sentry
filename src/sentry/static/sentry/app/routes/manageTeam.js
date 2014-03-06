@@ -6,7 +6,11 @@ define(['app', 'jquery'], function(app, $) {
         parent: 'index',
         url: 'account/teams/:team_slug/',
         templateUrl: 'partials/manage-team.html',
-        controller: function($scope, selectedTeam){
+        controller: function($scope, $state, selectedTeam){
+            if (!selectedTeam.permission.edit) {
+                // TODO(dcramer): show error message
+                $state.go('index');
+            }
             $scope.selectedTeam = selectedTeam;
         },
         resolve: {
