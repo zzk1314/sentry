@@ -35,7 +35,7 @@ define([
         // use html5 location rather than hashes
         $locationProvider.html5Mode(true);
 
-        $urlRouterProvider.otherwise("/404");
+        $urlRouterProvider.otherwise("/");
 
         // revert to default scrolling behavior as autoscroll is broken
         $uiViewScrollProvider.useAnchorScroll();
