@@ -6181,6 +6181,13 @@ header .project-dropdown .icon-arrow-down {
 .group-detail .group-actions:after {
   clear: both;
 }
+.group-detail .group-actions .id-label {
+  background: #fff;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .seen-by {
   color: #949ea4;
   float: right;

@@ -21,7 +21,7 @@
         <a class="btn btn-sm btn-default"
            ng-class="selectedEvent.previousEventID === null ? 'disabled' : ''"
            ui-sref="event({event_id: selectedEvent.previousEventID})"><span class="icon-arrow-left"></span> Older</a>
-        <a class="btn btn-sm btn-default disabled" style="background: #fff">ID: {{selectedEvent.id}}</a>
+        <a class="btn btn-sm btn-default disabled id-label" time-since="selectedEvent.dateCreated"></a>
         <a class="btn btn-sm btn-default"
            ng-class="selectedEvent.nextEventID === null ? 'disabled' : ''"
            ui-sref="event({event_id: selectedEvent.nextEventID})">Newer <span class="icon-arrow-right"></span></a>
