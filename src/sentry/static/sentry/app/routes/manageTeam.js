@@ -5,7 +5,7 @@ define(['app', 'jquery'], function(app, $) {
         abstract: true,
         parent: 'index',
         url: 'account/teams/:team_slug/',
-        templateUrl: '/_static/sentry/app/templates/manage-team.html',
+        templateUrl: 'partials/manage-team.html',
         controller: function($scope, selectedTeam){
             $scope.selectedTeam = selectedTeam;
         },

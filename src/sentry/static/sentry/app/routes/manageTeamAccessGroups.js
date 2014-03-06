@@ -4,7 +4,7 @@ define(['app'], function(app) {
     return {
         parent: 'manage_team',
         url: 'access-groups/',
-        templateUrl: '/_static/sentry/app/templates/manage-team-access-groups.html',
+        templateUrl: 'partials/manage-team-access-groups.html',
         controller: function($scope, accessGroupList){
             $scope.accessGroupList = accessGroupList.data;
         },

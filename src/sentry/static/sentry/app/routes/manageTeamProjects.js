@@ -4,7 +4,7 @@ define(['app'], function(app) {
     return {
         parent: 'manage_team',
         url: 'projects/',
-        templateUrl: '/_static/sentry/app/templates/manage-team-projects.html',
+        templateUrl: 'partials/manage-team-projects.html',
         controller: function($scope, projectList){
             $scope.projectList = projectList.data;
         },

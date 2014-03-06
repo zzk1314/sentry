@@ -4,7 +4,7 @@ define(['app'], function() {
     return {
         parent: 'project',
         url: 'stream/',
-        templateUrl: '/_static/sentry/app/templates/project-stream.html',
+        templateUrl: 'partials/project-stream.html',
         controller: function($scope, groupList){
             $scope.groupList = groupList.data;
         },

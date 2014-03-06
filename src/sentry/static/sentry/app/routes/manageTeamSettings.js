@@ -4,7 +4,7 @@ define(['app'], function(app) {
     return {
         parent: 'manage_team',
         url: 'settings/',
-        templateUrl: '/_static/sentry/app/templates/manage-team-settings.html',
+        templateUrl: 'partials/manage-team-settings.html',
         controller: function($scope){
         }
     };

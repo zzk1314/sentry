@@ -3,7 +3,7 @@ define(['app'], function() {
 
     return {
         url: '/',
-        templateUrl: '/_static/sentry/app/templates/index.html',
+        templateUrl: 'partials/index.html',
         controller: function(teamList, $scope){
             $scope.teamList = teamList.data;
         },

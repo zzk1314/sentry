@@ -4,7 +4,7 @@ define(['app', 'jquery'], function(app, $) {
     return {
         parent: 'index',
         url: ':team_slug/',
-        templateUrl: '/_static/sentry/app/templates/team-details.html',
+        templateUrl: 'partials/team-details.html',
         controller: function(selectedTeam, projectList, $scope, $stateParams){
             $scope.selectedTeam = selectedTeam;
             $scope.projectList = projectList.data;
