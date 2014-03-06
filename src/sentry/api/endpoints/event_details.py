@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 
 from sentry.api.base import Endpoint
+from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
 from sentry.models import Event
 
@@ -10,6 +11,8 @@ class EventDetailsEndpoint(Endpoint):
         event = Event.objects.get(
             id=event_id
         )
+
+        assert_perm(event, request.user)
 
         base_qs = Event.objects.filter(
             group=event.group_id,
