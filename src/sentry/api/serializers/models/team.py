@@ -6,10 +6,10 @@ from sentry.models import Team
 @register(Team)
 class TeamSerializer(Serializer):
     def attach_metadata(self, objects, user):
-        team_list = Team.objects.get_for_user(user)
+        team_map = Team.objects.get_for_user(user)
         for team in objects:
             try:
-                team.access_type = team_list.get(team.slug).access_type
+                team.access_type = team_map.get(team.slug).access_type
             except KeyError:
                 team.access_type = None
 
