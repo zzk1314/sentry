@@ -4,7 +4,7 @@ define(['app'], function() {
     return {
         parent: 'group',
         url: 'event/:event_id/',
-        templateUrl: '/_static/sentry/app/templates/event-details.html',
+        templateUrl: 'partials/event-details.html',
         controller: function($scope, selectedEvent){
             $scope.$parent.selectedEvent = selectedEvent.data;
         },
