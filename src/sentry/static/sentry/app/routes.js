@@ -14,6 +14,7 @@ define([
     'routes/teamDetails',
 
     // registration via loader
+    'directives/timeSince',
     'filters/formatNumber'
 ], function(
     app,
