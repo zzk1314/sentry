@@ -1006,8 +1006,8 @@ class TeamManager(BaseManager):
         """
         Returns a SortedDict of all teams a user has some level of access to.
 
-        Each <Team> returned has a ``membership`` attribute which holds the
-        <TeamMember> instance.
+        Each <Team> returned has an ``access_type`` attribute which holds the
+        MEMBER_TYPE value.
         """
         from sentry.models import TeamMember, AccessGroup, Project
 
@@ -1016,6 +1016,8 @@ class TeamManager(BaseManager):
         if not user.is_authenticated():
             return results
 
+        # TODO(dcramer): this case is no longer valid and doesnt support
+        # access_type
         if settings.SENTRY_PUBLIC and access is None:
             for team in sorted(self.iterator(), key=lambda x: x.name.lower()):
                 results[team.slug] = team
@@ -1030,6 +1032,7 @@ class TeamManager(BaseManager):
 
             for tm in qs:
                 all_teams.add(tm.team)
+                tm.team.access_type = tm.type
 
             if access_groups:
                 qs = AccessGroup.objects.filter(
@@ -1040,6 +1043,7 @@ class TeamManager(BaseManager):
 
                 for group in qs:
                     all_teams.add(group.team)
+                    group.team.access_type = group.type
 
             for team in sorted(all_teams, key=lambda x: x.name.lower()):
                 results[team.slug] = team
