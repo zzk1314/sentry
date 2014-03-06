@@ -1,16 +1,33 @@
-{{selectedEvent.id}}
-
 <div class="box">
     <div class="box-header">
         <h4>Timeline</h4>
     </div>
     <div class="box-content">
         <ul class="timeline">
-            <li class="timeline-item">
+            <li class="timeline-item console">
+              <div class="icon"></div>
+              <time>2ms</time>
+              <h4>Console</h4>
+              <p><strong>Severity</strong> <span class="label label-default">info</span></p>
+              <p><strong>Message</strong> Application initialized</p>
+            </li>
+            <li class="timeline-item user">
+              <div class="icon"></div>
+              <time>4ms</time>
+              <h4>User click</h4>
+              <p><strong>Element</strong> <code>button</code></p>
+            </li>
+            <li class="timeline-item error">
+              <div class="icon"></div>
+              <time>9ms</time>
+              <h4>Error</h4>
+              <p><strong>Message</strong> Error message</p>
+              <pre>Exception</pre>
             </li>
         </ul>
     </div>
 </div>
+
 <div class="box">
     <div class="box-header">
         <a href="#" class="box-toggle"></a>
