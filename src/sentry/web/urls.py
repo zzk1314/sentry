@@ -63,6 +63,9 @@ urlpatterns += patterns('',
     url(r'^_static/(?P<module>[^/]+)/(?P<path>.*)$', generic.static_media,
         name='sentry-media'),
 
+    url(r'^partials/(?P<path>.*)$', generic.partial_static_media,
+        name='sentry-partial-media'),
+
     # API
     url(r'^api/0/', include('sentry.api.urls')),
 
