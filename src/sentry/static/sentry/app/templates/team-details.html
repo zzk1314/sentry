@@ -2,17 +2,26 @@
     <div class="container">
         <div class="pull-right">
             <ul class="user-nav">
-                <li><a ui-sref="manage_team.settings({team_slug: selectedTeam.slug})"><span class="icon-settings"></span> Team Settings</a></li>
+                <li><a ui-sref="manage_team.settings({team_slug: selectedTeam.slug})">
+                    <span class="icon-settings"></span> Team Settings
+                </a></li>
                 <li><a href="#"><span class="icon-envelope"></span> Support</a></li>
                 <li class="dropdown-toggle"><a href="#"><span class="icon-arrow-down"></span> </a></li>
             </ul>
         </div>
         <div class="project-dropdown">
-            <a href="#" class="team-name">
+            <a href="#" class="team-name" dropdown-toggle>
                 {{selectedTeam.name}}
                 <span class="project-name" ng-if="selectedProject">{{selectedProject.name}}</span>
                 <span class="icon-arrow-down"></span>
             </a>
+            <ul class="dropdown-menu">
+                <li ng-repeat="team in teamList">
+                    <h6>{{team.name}}</h6>
+                    <ul>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </header>
