@@ -102,7 +102,7 @@ header {
   }
 
   .user-nav {
-    margin-top: 6px;
+    margin-top: 4px;
     margin-bottom: 0;
     .clearfix();
     li {
@@ -121,10 +121,68 @@ header {
   }
 
   .project-dropdown {
+    float: left;
+
+    .dropdown-menu {
+      padding: 15px 15px 0;
+      left: -15px;
+      top: 41px;
+      border-radius: 0 0 4px 4px;
+      width: 540px;
+      max-height: 400px;
+      overflow: auto;
+
+      h5 {
+        margin-bottom: 10px;
+        a {
+          color: @gray;
+          &:hover {
+            color: @gray-dark;
+          }
+        }
+      }
+
+      ul {
+        .clearfix;
+        .list-unstyled;
+        padding-bottom: 5px;
+        li {
+          width: 31%;
+          float: left;
+          margin: 0 10px 10px 0;
+          min-height: 24px;
+          a {
+            display: block;
+            .text-overflow;
+          }
+          &.active {
+            a {
+              position: relative;
+              color: @gray;
+              background: rgba(0, 0, 0, 0.04);
+              border-radius: 5px;
+              padding: 2px 7px;
+              left: -5px;
+            }
+          }
+        }
+      }
+
+      a {
+        color: @link-color;
+        &:hover {
+          color: @link-hover-color;
+        }
+      }
+
+    }
     .team-name {
       font-size: 18px;
       font-weight: 600;
       letter-spacing: -0.5px;
+      z-index: 2;
+      position: relative;
+      line-height: 1.5;
     }
 
     .project-name {
@@ -135,8 +193,18 @@ header {
     .icon-arrow-down {
       top: 0;
     }
+    &.open:before {
+      z-index: 1;
+      display: block;
+      content: "";
+      background: rgba(0,0,0, .2);
+      position: absolute;
+      top: -16px;
+      left: -18px;
+      right: -18px;
+      bottom: -16px;
+    }
   }
-
 }
 
 .align-right {
