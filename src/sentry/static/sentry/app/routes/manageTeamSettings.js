@@ -26,7 +26,7 @@ define(['app', 'angular'], function(app, angular) {
                 $http.put('/api/0/teams/' + $scope.teamData.id + '/', $scope.teamData)
                     .success(function(data){
                         $scope.teamData = data;
-                        selectedTeam = data;
+                        angular.extend(selectedTeam, data);
                     });
             };
         }
