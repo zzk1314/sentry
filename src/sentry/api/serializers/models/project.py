@@ -23,6 +23,7 @@ class ProjectSerializer(Serializer):
             'dateCreated': obj.date_added,
             'permission': {
                 'edit': obj.access_type == MEMBER_OWNER,
+                'admin': obj.owner_id == user.id or user.is_superuser,
             }
         }
         return d
