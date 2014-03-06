@@ -1,13 +1,20 @@
-from sentry.models import Project
+from sentry.constants import MEMBER_USER
+from sentry.models import Team
 
-from rest_framework.permissions import BasePermission
+
+class PermissionError(Exception):
+    pass
 
 
-class HasProjectPermission(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if hasattr(obj, 'project'):
-            obj = obj.project
-        elif not isinstance(obj, Project):
-            raise NotImplementedError('Object does not support permissions')
+def has_perm(object, user, type=MEMBER_USER):
+    if user.is_superuser:
+        return True
+    # TODO: abstract this into a permission registry
+    if type(object) == Team:
+        return object.slug in Team.objects.get_for_user(user)
+    raise TypeError(type(object))
 
-        return obj in Project.objects.get_for_user(request.user)
+
+def assert_perm(*args, **kwargs):
+    if not has_perm(*args, **kwargs):
+        raise PermissionError

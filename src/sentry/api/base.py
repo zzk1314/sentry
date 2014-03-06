@@ -6,7 +6,6 @@ from urllib2 import quote
 
 from .authentication import KeyAuthentication
 from .paginator import Paginator
-from .permissions import HasProjectPermission
 
 
 LINK_HEADER = '<{uri}&cursor={cursor}>; rel="{name}"'
@@ -14,7 +13,6 @@ LINK_HEADER = '<{uri}&cursor={cursor}>; rel="{name}"'
 
 class Endpoint(APIView):
     authentication_classes = (KeyAuthentication, SessionAuthentication)
-    permission_classes = (HasProjectPermission,)
     parser_classes = (JSONParser,)
 
     def paginate(self, request, on_results=lambda x: x, **kwargs):
