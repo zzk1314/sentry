@@ -65,6 +65,10 @@ define([
         }];
         $httpProvider.responseInterceptors.push(logInUserOn401);
 
+        // add in Django csrf support
+        $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+        $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+
         // and now our routes
         $stateProvider
             .state('event', EventDetailsRoute)
