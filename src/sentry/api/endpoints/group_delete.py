@@ -1,4 +1,5 @@
 from sentry.api.base import Endpoint
+from sentry.api.permissions import assert_perm
 from sentry.models import Group
 
 from rest_framework.response import Response
@@ -9,6 +10,9 @@ class GroupDeleteEndpoint(Endpoint):
         group = Group.objects.get(
             id=group_id,
         )
+
+        assert_perm(group, request.user)
+
         group.delete()
 
         return Response()

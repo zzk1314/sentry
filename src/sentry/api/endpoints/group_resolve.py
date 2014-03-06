@@ -1,11 +1,11 @@
 from django.utils import timezone
+from rest_framework.response import Response
 
 from sentry.api.base import Endpoint
+from sentry.api.permissions import assert_perm
 from sentry.db.models import create_or_update
 from sentry.constants import STATUS_RESOLVED
 from sentry.models import Group, Activity
-
-from rest_framework.response import Response
 
 
 class GroupResolveEndpoint(Endpoint):
@@ -13,6 +13,9 @@ class GroupResolveEndpoint(Endpoint):
         group = Group.objects.get(
             id=group_id,
         )
+
+        assert_perm(group, request.user)
+
         now = timezone.now()
 
         group.resolved_at = now

@@ -1,4 +1,5 @@
 from sentry.api.base import Endpoint
+from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
 from sentry.models import Event, Group
 
@@ -8,6 +9,9 @@ class GroupEventsEndpoint(Endpoint):
         group = Group.objects.get(
             id=group_id,
         )
+
+        assert_perm(group, request.user)
+
         events = Event.objects.filter(
             group=group
         )
