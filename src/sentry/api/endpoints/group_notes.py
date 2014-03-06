@@ -1,9 +1,17 @@
+from datetime import timedelta
+from django import forms
+from django.utils import timezone
+from rest_framework import status
 from rest_framework.response import Response
 
 from sentry.api.base import Endpoint
 from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
-from sentry.models import Group
+from sentry.models import Group, Activity
+
+
+class NewNoteForm(forms.Form):
+    text = forms.CharField()
 
 
 class GroupNotesEndpoint(Endpoint):
@@ -14,4 +22,47 @@ class GroupNotesEndpoint(Endpoint):
 
         assert_perm(group, request.user)
 
-        return Response(serialize(group))
+        notes = Activity.objects.filter(
+            group=group,
+            type=Activity.NOTE,
+        ).select_related('user')
+
+        return self.paginate(
+            request=request,
+            queryset=notes,
+            order_by='-datetime',
+            on_results=lambda x: serialize(x, request=request),
+        )
+
+    def post(self, request, group_id):
+        group = Group.objects.get(
+            id=group_id,
+        )
+
+        assert_perm(group, request.user)
+
+        form = NewNoteForm(request.DATA)
+        if not form.is_valid():
+            return Response('{"error": "form"}', status=status.HTTP_400_BAD_REQUEST)
+
+        if Activity.objects.filter(
+            group=group,
+            type=Activity.NOTE,
+            user=request.user,
+            data=form.cleaned_data,
+            datetime__gte=timezone.now() - timedelta(hours=1)
+        ).exists():
+            return Response('{"error": "duplicate"}', status=status.HTTP_400_BAD_REQUEST)
+
+        activity = Activity.objects.create(
+            group=group,
+            project=group.project,
+            type=Activity.NOTE,
+            user=request.user,
+            data=form.cleaned_data,
+        )
+
+        # TODO: move this into the queue
+        activity.send_notification()
+
+        return Response(serialize(activity))
