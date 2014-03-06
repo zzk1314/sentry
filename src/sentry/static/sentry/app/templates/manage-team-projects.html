@@ -5,22 +5,26 @@
     <colgroup>
         <col/>
         <col width="150px"/>
+        <col width="150px"/>
     </colgroup>
     <thead>
         <tr>
             <th>Project</th>
             <th style="text-align:center;">Date Added</th>
+            <th colspan="2"></th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="project in projectList">
             <td>
-                <a ui-sref="project.stream({project_slug: project.slug})">{{project.name}}</a><br>
-                 {{selectedTeam.slug}}/{{project.slug}}
+                {{project.name}}<br>
+                {{selectedTeam.slug}}/{{project.slug}}
             </td>
             <td style="text-align:center;">
                 {{project.dateAdded}}
             </td>
+            <td><a ui-sref="manage_project.settings({team_slug: selectedTeam.slug, project_slug: project.slug})">Settings</a></td>
+            <td><a ui-sref="manage_project.delete({team_slug: selectedTeam.slug, project_slug: project.slug})">Delete</a></td>
         </tr>
     </tbody>
 </table>

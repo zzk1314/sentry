@@ -1,10 +1,17 @@
 define([
     'app',
+    'routes/deleteProject',
     'routes/deleteTeam',
     'routes/eventDetails',
     'routes/groupDetails',
     'routes/groupNotes',
     'routes/index',
+    'routes/manageProject',
+    'routes/manageProjectAPIKeys',
+    'routes/manageProjectNotifications',
+    'routes/manageProjectRateLimits',
+    'routes/manageProjectSettings',
+    'routes/manageProjectTags',
     'routes/manageTeam',
     'routes/manageTeamAccessGroups',
     'routes/manageTeamMembers',
@@ -20,11 +27,18 @@ define([
     'filters/formatNumber'
 ], function(
     app,
+    DeleteProjectRoute,
     DeleteTeamRoute,
     EventDetailsRoute,
     GroupDetailsRoute,
     GroupNotesRoute,
     IndexRoute,
+    ManageProjectRoute,
+    ManageProjectAPIKeysRoute,
+    ManageProjectNotificationsRoute,
+    ManageProjectRateLimitsRoute,
+    ManageProjectSettingsRoute,
+    ManageProjectTagsRoute,
     ManageTeamRoute,
     ManageTeamAccessGroupsRoute,
     ManageTeamMembersRoute,
@@ -82,6 +96,13 @@ define([
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
             .state('team', TeamDetailsRoute)
+            .state('manage_project', ManageProjectRoute)
+            .state('manage_project.api_keys', ManageProjectAPIKeysRoute)
+            .state('manage_project.delete', DeleteProjectRoute)
+            .state('manage_project.notifications', ManageProjectNotificationsRoute)
+            .state('manage_project.rate_limits', ManageProjectRateLimitsRoute)
+            .state('manage_project.tags', ManageProjectTagsRoute)
+            .state('manage_project.settings', ManageProjectSettingsRoute)
             .state('manage_team', ManageTeamRoute)
             .state('manage_team.access_groups', ManageTeamAccessGroupsRoute)
             .state('manage_team.delete', DeleteTeamRoute)
