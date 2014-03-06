@@ -1,0 +1,18 @@
+<table class="table table-striped">
+    <colgroup>
+        <col/>
+        <col width="150px"/>
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Group</th>
+            <th style="text-align:center;">Access</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="accessGroup in accessGroupList">
+            <td>{{accessGroup.name}} <small ng-if="accessGroup.managed">automatically managed</small></td>
+            <td style="text-align:center">{{accessGroup.access}}</td>
+        </tr>
+    </tbody>
+</table>

@@ -5,7 +5,13 @@ define(['app'], function(app) {
         parent: 'manage_team',
         url: 'access-groups/',
         templateUrl: '/_static/sentry/app/templates/manage-team-access-groups.html',
-        controller: function($scope){
+        controller: function($scope, accessGroupList){
+            $scope.accessGroupList = accessGroupList.data;
+        },
+        resolve: {
+            accessGroupList: function(selectedTeam, $http) {
+                return $http.get('/api/0/teams/' + selectedTeam.id + '/access-groups/');
+            }
         }
     };
 });
