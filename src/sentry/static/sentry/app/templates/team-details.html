@@ -9,7 +9,7 @@
                 <li class="dropdown-toggle"><a href="#"><span class="icon-arrow-down"></span> </a></li>
             </ul>
         </div>
-        <div class="project-dropdown">
+        <div class="project-dropdown dropdown">
             <a href="#" class="team-name" dropdown-toggle>
                 {{selectedTeam.name}}
                 <span class="project-name" ng-if="selectedProject">{{selectedProject.name}}</span>
@@ -17,9 +17,14 @@
             </a>
             <ul class="dropdown-menu">
                 <li ng-repeat="team in teamList">
-                    <a ui-sref="team({team_slug: team.slug})">{{team.name}}</a>
+                    <h5><a ui-sref="team({team_slug: team.slug})">{{team.name}}</a></h5>
                     <ul>
-                        <li><a href="#">Project</a></li>
+                        <li class="active"><a href="#">Sup</a></li>
+                        <li><a href="#">Sup</a></li>
+                        <li><a href="#">Sup</a></li>
+                        <li><a href="#">Sup</a></li>
+                        <li><a href="#">Sup</a></li>
+                        <li><a href="#">Sup</a></li>
                     </ul>
                 </li>
             </ul>
