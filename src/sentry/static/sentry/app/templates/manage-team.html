@@ -25,10 +25,10 @@
             <li ui-sref-active="active"><a ui-sref="manage_team.members()">Members</a></li>
             <li ui-sref-active="active"><a ui-sref="manage_team.access_groups()">Access Groups</a></li>
             <li class="pull-right" ng-if="selectedTeam.permission.admin">
-                <a href="#" class="btn btn-default btn-sm" dropdown-toggle>Admin <span class="icon-arrow-down"></span></a>
+                <a href="#" dropdown-toggle>Admin <span class="icon-arrow-down"></span></a>
                 <ul class="dropdown-menu">
-                    <li ui-sref-active="active"><a href="#">Transfer Ownership</a></li>
-                    <li ui-sref-active="active"><a href="#">Delete Team</a></li>
+                    <li ui-sref-active="active"><a ui-sref="manage_team.ownership()">Transfer Ownership</a></li>
+                    <li ui-sref-active="active"><a ui-sref="manage_team.delete()">Delete Team</a></li>
                 </ul>
             </li>
         </ul>

@@ -1,5 +1,6 @@
 define([
     'app',
+    'routes/deleteTeam',
     'routes/eventDetails',
     'routes/groupDetails',
     'routes/groupNotes',
@@ -7,6 +8,7 @@ define([
     'routes/manageTeam',
     'routes/manageTeamAccessGroups',
     'routes/manageTeamMembers',
+    'routes/manageTeamOwnership',
     'routes/manageTeamProjects',
     'routes/manageTeamSettings',
     'routes/projectDetails',
@@ -18,6 +20,7 @@ define([
     'filters/formatNumber'
 ], function(
     app,
+    DeleteTeamRoute,
     EventDetailsRoute,
     GroupDetailsRoute,
     GroupNotesRoute,
@@ -25,6 +28,7 @@ define([
     ManageTeamRoute,
     ManageTeamAccessGroupsRoute,
     ManageTeamMembersRoute,
+    ManageTeamOwnershipRoute,
     ManageTeamProjectsRoute,
     ManageTeamSettingsRoute,
     ProjectDetailsRoute,
@@ -80,7 +84,9 @@ define([
             .state('team', TeamDetailsRoute)
             .state('manage_team', ManageTeamRoute)
             .state('manage_team.access_groups', ManageTeamAccessGroupsRoute)
+            .state('manage_team.delete', DeleteTeamRoute)
             .state('manage_team.members', ManageTeamMembersRoute)
+            .state('manage_team.ownership', ManageTeamOwnershipRoute)
             .state('manage_team.projects', ManageTeamProjectsRoute)
             .state('manage_team.settings', ManageTeamSettingsRoute);
     });
