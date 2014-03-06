@@ -6028,6 +6028,20 @@ header .project-dropdown.open:before {
 .align-right {
   text-align: right;
 }
+.app-loading {
+  width: 400px;
+  height: 400px;
+  background: url(../images/sentry-logo-mark.svg) no-repeat;
+  background-size: 100% 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -200px;
+  margin-top: -225px;
+  opacity: 0.05;
+  filter: alpha(opacity=5);
+  text-indent: -9999em;
+}
 .container {
   max-width: 1040px;
   position: relative;
