@@ -221,17 +221,22 @@ def install_plugins(settings):
             register(plugin)
 
 
+def initialize_receivers():
+    # force signal registration
+    import sentry.receivers  # NOQA
+
+
 def initialize_gevent():
     from gevent import monkey
     monkey.patch_all()
 
-    from sentry.utils.gevent import make_psycopg_green
-    make_psycopg_green()
-
-
-def initialize_receivers():
-    # force signal registration
-    import sentry.receivers  # NOQA
+    try:
+        import psycopg2  # NOQA
+    except ImportError:
+        pass
+    else:
+        from sentry.utils.gevent import make_psycopg_green
+        make_psycopg_green()
 
 
 def initialize_app(config):
