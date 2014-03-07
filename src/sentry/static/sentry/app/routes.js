@@ -5,6 +5,8 @@ define([
     'routes/eventDetails',
     'routes/groupDetails',
     'routes/groupNotes',
+    'routes/help',
+    'routes/helpGuide',
     'routes/index',
     'routes/manageProject',
     'routes/manageProjectAPIKeys',
@@ -33,6 +35,8 @@ define([
     EventDetailsRoute,
     GroupDetailsRoute,
     GroupNotesRoute,
+    HelpRoute,
+    HelpGuideRoute,
     IndexRoute,
     ManageProjectRoute,
     ManageProjectAPIKeysRoute,
@@ -93,6 +97,8 @@ define([
             .state('event', EventDetailsRoute)
             .state('group', GroupDetailsRoute)
             .state('group.notes', GroupNotesRoute)
+            .state('help', HelpRoute)
+            .state('help.guide', HelpGuideRoute)
             .state('index', IndexRoute)
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
