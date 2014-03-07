@@ -76,12 +76,18 @@ class GroupSerializer(Serializer):
         else:
             status_label = 'unresolved'
 
+        if obj.team:
+            permalink = absolute_uri(reverse('sentry-group', args=[
+                obj.team.slug, obj.project.slug, obj.id]))
+        else:
+            permalink = None
+
         d = {
             'id': str(obj.id),
             'count': str(obj.times_seen),
             'title': obj.message_short,
             'culprit': obj.culprit,
-            'permalink': absolute_uri(reverse('sentry-group', args=[obj.team.slug, obj.project.slug, obj.id])),
+            'permalink': permalink,
             'firstSeen': obj.first_seen,
             'lastSeen': obj.last_seen,
             'timeSpent': obj.avg_time_spent,
