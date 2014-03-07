@@ -4,9 +4,12 @@ define(['app'], function() {
     return {
         url: '/',
         templateUrl: 'partials/index.html',
-        controller: function(userData, teamList, $scope){
+        controller: function(userData, teamList, $state, $scope){
             $scope.userData = userData.data;
             $scope.teamList = teamList.data;
+            if ($scope.teamList.length == 1) {
+                $state.go('team', {team_slug: $scope.teamList[0].slug});
+            }
         },
         resolve: {
             userData: function($http) {
