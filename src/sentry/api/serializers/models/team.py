@@ -9,7 +9,7 @@ class TeamSerializer(Serializer):
         team_map = Team.objects.get_for_user(user)
         for team in objects:
             try:
-                team.access_type = team_map.get(team.slug).access_type
+                team.access_type = team_map[team.slug].access_type
             except KeyError:
                 team.access_type = None
 
@@ -20,7 +20,7 @@ class TeamSerializer(Serializer):
             'name': obj.name,
             'dateCreated': obj.date_added,
             'permission': {
-                'edit': obj.access_type == MEMBER_OWNER,
+                'edit': obj.access_type == MEMBER_OWNER or user.is_superuser,
                 'admin': obj.owner_id == user.id or user.is_superuser,
             }
         }
