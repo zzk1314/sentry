@@ -221,12 +221,17 @@ def install_plugins(settings):
             register(plugin)
 
 
-def init_gevent():
+def initialize_gevent():
     from gevent import monkey
     monkey.patch_all()
 
     from sentry.utils.gevent import make_psycopg_green
     make_psycopg_green()
+
+
+def initialize_receivers():
+    # force signal registration
+    import sentry.receivers  # NOQA
 
 
 def initialize_app(config):
@@ -248,6 +253,8 @@ def initialize_app(config):
         config['settings'], 'social_auth', 'social_auth_association')
 
     apply_legacy_settings(config)
+
+    initialize_receivers()
 
 
 def apply_legacy_settings(config):
@@ -319,7 +326,7 @@ def configure():
 def main():
     if USE_GEVENT:
         print "Configuring Sentry with gevent bindings"
-        init_gevent()
+        initialize_gevent()
 
     run_app(
         project='sentry',

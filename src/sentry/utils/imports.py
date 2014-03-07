@@ -43,4 +43,5 @@ def import_submodules(context, root_module, path):
         for k, v in vars(module).iteritems():
             if not k.startswith('_'):
                 context[k] = v
+        context[module_name] = module
         sys.modules['{0}.{1}'.format(root_module, module_name)] = module
