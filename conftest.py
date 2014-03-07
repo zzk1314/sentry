@@ -79,3 +79,6 @@ def pytest_configure(config):
     # networking isnt stable
     patcher = mock.patch('socket.getfqdn', return_value='localhost')
     patcher.start()
+
+    from sentry.utils.runner import initialize_receivers
+    initialize_receivers()
