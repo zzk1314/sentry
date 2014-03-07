@@ -14,7 +14,7 @@
             <ul class="events">
                 <li class="event event-header">
                     <div class="row">
-                        <div class="col-xs-6 details">
+                        <div class="col-xs-8 details">
                             <div class="checkbox">
                                 <input type="checkbox">
                             </div>
@@ -61,8 +61,8 @@
                                 <li><a href="#">1m</a></li>
                             </ul>
                         </div>
-                        <div class="col-xs-2 occurrences align-right">occurrences</div>
-                        <div class="col-xs-2 users align-right">users</div>
+                        <div class="col-xs-1 occurrences align-right">occurrences</div>
+                        <div class="col-xs-1 users align-right">users</div>
                     </div>
                 </li>
                 <li class="deploy">
@@ -70,7 +70,7 @@
                 </li>
                 <li class="event" ng-repeat="group in groupList">
                     <div class="row">
-                        <div class="col-xs-6 details">
+                        <div class="col-xs-8 details">
                             <div class="checkbox">
                                 <input type="checkbox">
                             </div>
@@ -81,10 +81,10 @@
                             </div>
                         </div>
                         <div class="col-xs-2 graph align-right">
-
+                            <barchart ng-model="group.historicalData" width="100%" height="60" style="display:block"></barchart>
                         </div>
-                        <div class="col-xs-2 occurrences align-right"><span>{{group.count|formatNumber}}</span></div>
-                        <div class="col-xs-2 users align-right"><span>209</span></div>
+                        <div class="col-xs-1 occurrences align-right"><span>{{group.count|formatNumber}}</span></div>
+                        <div class="col-xs-1 users align-right"><span>209</span></div>
                     </div>
                 </li>
             </ul>
