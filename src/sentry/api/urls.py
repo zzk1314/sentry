@@ -18,10 +18,16 @@ from .endpoints.team_index import TeamIndexEndpoint
 from .endpoints.team_access_group_index import TeamAccessGroupIndexEndpoint
 from .endpoints.team_project_index import TeamProjectIndexEndpoint
 from .endpoints.team_member_index import TeamMemberIndexEndpoint
+from .endpoints.user_details import UserDetailsEndpoint
 
 
 urlpatterns = patterns(
     '',
+
+    # Users
+    url(r'^users/(?P<user_id>[^\/]+)/$',
+        UserDetailsEndpoint.as_view(),
+        name='sentry-api-0-user-details'),
 
     # Teams
     url(r'^teams/$',

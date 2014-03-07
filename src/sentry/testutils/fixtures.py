@@ -5,6 +5,7 @@ sentry.testutils.fixtures
 :copyright: (c) 2010-2014 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+from django.utils.text import slugify
 from exam import fixture
 from sentry.models import Activity, Event, Group, Project, Team, User
 from sentry.utils.compat import pickle
@@ -49,16 +50,16 @@ class Fixtures(object):
         )
 
     def create_team(self, **kwargs):
-        kwargs.setdefault('name', 'foo')
-        kwargs.setdefault('slug', 'foo')
+        kwargs.setdefault('name', u'foo')
+        kwargs.setdefault('slug', slugify(unicode(kwargs['name'])))
         if not kwargs.get('owner'):
             kwargs['owner'] = self.user
 
         return Team.objects.create(**kwargs)
 
     def create_project(self, **kwargs):
-        kwargs.setdefault('name', 'Bar')
-        kwargs.setdefault('slug', 'bar')
+        kwargs.setdefault('name', u'Bar')
+        kwargs.setdefault('slug', slugify(unicode(kwargs['name'])))
         if not kwargs.get('team'):
             kwargs['team'] = self.team
         if not kwargs.get('owner'):
