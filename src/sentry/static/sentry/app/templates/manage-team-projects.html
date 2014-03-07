@@ -10,7 +10,7 @@
     <thead>
         <tr>
             <th>Project</th>
-            <th style="text-align:center;">Date Added</th>
+            <th style="text-align:center;">Created</th>
             <th colspan="2"></th>
         </tr>
     </thead>
@@ -20,8 +20,7 @@
                 {{project.name}}<br>
                 {{selectedTeam.slug}}/{{project.slug}}
             </td>
-            <td style="text-align:center;">
-                {{project.dateAdded}}
+            <td style="text-align:center;" time-since="project.dateCreated">
             </td>
             <td><a ui-sref="manage_project.settings({team_slug: selectedTeam.slug, project_slug: project.slug})">Settings</a></td>
             <td><a ui-sref="manage_project.delete({team_slug: selectedTeam.slug, project_slug: project.slug})">Delete</a></td>
