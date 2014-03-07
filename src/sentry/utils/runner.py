@@ -15,6 +15,8 @@ import os
 import pkg_resources
 import warnings
 
+USE_GEVENT = os.environ.get('USE_GEVENT') != '0'
+
 KEY_LENGTH = 40
 
 CONFIG_TEMPLATE = """
@@ -231,7 +233,7 @@ def initialize_app(config):
     from django.utils import timezone
     from sentry.app import env
 
-    if os.environ.get('USE_GEVENT'):
+    if USE_GEVENT:
         from django.db import connections
         connections['default'].allow_thread_sharing = True
 
@@ -315,7 +317,7 @@ def configure():
 
 
 def main():
-    if os.environ.get('USE_GEVENT'):
+    if USE_GEVENT:
         print "Configuring Sentry with gevent bindings"
         init_gevent()
 
