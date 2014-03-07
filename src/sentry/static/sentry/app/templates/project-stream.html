@@ -76,7 +76,7 @@
                             </div>
                             <h3><a ui-sref="group({group_id: group.id})">{{group.title}}</a></h3>
                             <div class="meta">
-                                <time>3 days ago</time> &middot;
+                                <time time-since="group.lastSeen"></time> &middot;
                                 <span class="message">{{group.culprit}}</span>
                             </div>
                         </div>
