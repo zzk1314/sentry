@@ -1,4 +1,3 @@
-import json
 import logging
 import gevent
 import redis
@@ -6,6 +5,7 @@ import redis
 from collections import defaultdict
 from gevent.pool import Pool
 from fnmatch import fnmatch
+from sentry.utils import json
 
 
 class PubSub(object):
