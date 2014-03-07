@@ -150,6 +150,7 @@ define([
         restrict: 'E',
         link: function(scope, elem, attrs) {
           function render(data, attrs){
+            $(elem).empty();
             new BarChart(elem, data, attrs);
           }
 

@@ -147,7 +147,7 @@ class ChartMixin(object):
         # and not have ~inaccurate data for up to MINUTE_NORMALIZATION
         today -= datetime.timedelta(minutes=MINUTE_NORMALIZATION)
 
-        if max_days >= 30:
+        if max_days >= 14:
             g_type = 'date'
             d_type = 'days'
             points = max_days
