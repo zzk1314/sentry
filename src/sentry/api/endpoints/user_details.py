@@ -9,9 +9,9 @@ from sentry.models import Team, User
 class UserDetailsEndpoint(Endpoint):
     def get(self, request, user_id):
         if user_id == 'me':
-            user = request.user
-        else:
-            user = User.objects.get(id=user_id)
+            user_id = request.user.id
+
+        user = User.objects.get(id=user_id)
 
         assert_perm(user, request.user)
 
