@@ -620,6 +620,10 @@ SENTRY_BUFFER_OPTIONS = {}
 SENTRY_QUOTAS = 'sentry.quotas.Quota'
 SENTRY_QUOTA_OPTIONS = {}
 
+SENTRY_PUBSUB_OPTIONS = {
+    'redis_url': 'redis://localhost/0',
+}
+
 # The default value for project-level quotas
 SENTRY_DEFAULT_MAX_EVENTS_PER_MINUTE = '90%'
 
