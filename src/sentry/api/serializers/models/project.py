@@ -12,8 +12,9 @@ class ProjectSerializer(Serializer):
         )
         for project in objects:
             try:
-                project.access_type = team_map.get(project.team_id).access_type
-                project.team = team_map.get(project.team_id)
+                team = team_map[project.team_id]
+                project.access_type = team.access_type
+                project.team = team
             except KeyError:
                 project.access_type = None
 
@@ -27,8 +28,10 @@ class ProjectSerializer(Serializer):
             'dateCreated': obj.date_added,
             'permission': {
                 'edit': obj.access_type == MEMBER_OWNER,
-                # TODO(dcramer): this should rely on team owner
-                'admin': obj.team.owner_id == user.id or user.is_superuser,
-            }
+            },
         }
+        if obj.team:
+            d['permission']['admin'] = obj.team.owner_id == user.id or user.is_superuser
+        else:
+            d['permission']['admin'] = user.is_superuser
         return d
