@@ -18,12 +18,9 @@
             <li ng-repeat="team in teamList">
                 <h5><a ui-sref="team({team_slug: team.slug})">{{team.name}}</a></h5>
                 <ul>
-                    <li class="active"><a href="#">Sup</a></li>
-                    <li><a href="#">Sup</a></li>
-                    <li><a href="#">Sup</a></li>
-                    <li><a href="#">Sup</a></li>
-                    <li><a href="#">Sup</a></li>
-                    <li><a href="#">Sup</a></li>
+                    <li ng-repeat="project in team.projects">
+                        <a ui-sref="project.stream({team_slug: team.slug, project_slug: project.slug})">{{project.name}}</a>
+                    </li>
                 </ul>
             </li>
         </ul>
