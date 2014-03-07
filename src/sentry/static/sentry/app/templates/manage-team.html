@@ -1,19 +1,5 @@
-<header>
-    <div class="container">
-        <div class="pull-right">
-            <ul class="user-nav">
-                <li><a ui-sref="manage_team.settings()"><span class="icon-settings"></span> Team Settings</a></li>
-                <li><a href="#"><span class="icon-envelope"></span> Support</a></li>
-                <li class="dropdown-toggle"><a href="#"><span class="icon-arrow-down"></span> </a></li>
-            </ul>
-        </div>
-        <div class="project-dropdown">
-            <a href="#" class="team-name">
-                {{selectedTeam.name}}
-                <span class="icon-arrow-down"></span>
-            </a>
-        </div>
-    </div>
+<header ng-controller="TeamHeaderCtrl">
+    <div ng-include="'partials/team-header.html'"></div>
 </header>
 <section id="content">
     <div class="container">

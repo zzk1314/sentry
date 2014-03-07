@@ -1,35 +1,5 @@
-<header>
-    <div class="container">
-        <div class="pull-right">
-            <ul class="user-nav">
-                <li ng-if="selectedTeam.permission.edit"><a ui-sref="manage_team.settings({team_slug: selectedTeam.slug})">
-                    <span class="icon-settings"></span> Team Settings
-                </a></li>
-                <li><a href="#"><span class="icon-question"></span> Help</a></li>
-                <li class="dropdown-toggle"><a href="#"><span class="icon-arrow-down"></span> </a></li>
-            </ul>
-        </div>
-        <div class="project-dropdown dropdown">
-            <a href="#" class="team-name" dropdown-toggle>
-                {{selectedTeam.name}}
-                <span class="project-name" ng-if="selectedProject">{{selectedProject.name}}</span>
-                <span class="icon-arrow-down"></span>
-            </a>
-            <ul class="dropdown-menu">
-                <li ng-repeat="team in teamList">
-                    <h5><a ui-sref="team({team_slug: team.slug})">{{team.name}}</a></h5>
-                    <ul>
-                        <li class="active"><a href="#">Sup</a></li>
-                        <li><a href="#">Sup</a></li>
-                        <li><a href="#">Sup</a></li>
-                        <li><a href="#">Sup</a></li>
-                        <li><a href="#">Sup</a></li>
-                        <li><a href="#">Sup</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
+<header ng-controller="TeamHeaderCtrl">
+    <div ng-include="'partials/team-header.html'"></div>
 </header>
 <section id="content">
     <div class="container">
@@ -45,13 +15,3 @@
 
     </div>
 </section>
-<!-- <footer>
-    <div class="container">
-        <div class="pull-right">
-            <a href="#">Contribute</a>
-            <a href="#">Translate</a>
-        </div>
-        Sentry 7.0.0-DEV (9765530)
-    </div>
-</footer> -->
-
