@@ -9,6 +9,7 @@ class PermissionError(Exception):
 def has_perm(object, user, access=MEMBER_USER):
     if user.is_superuser:
         return True
+
     # TODO: abstract this into a permission registry
     if type(object) == Team:
         return object.slug in Team.objects.get_for_user(user, access=access)

@@ -5,7 +5,7 @@ define(['app', 'angular'], function(app, angular) {
         parent: 'manage_team',
         url: 'settings/',
         templateUrl: 'partials/manage-team-settings.html',
-        controller: function($scope, $http, selectedTeam){
+        controller: function($scope, $http, $state, selectedTeam){
             $scope.teamData = angular.copy(selectedTeam);
 
             // $scope.saveField = function($event) {
@@ -23,8 +23,14 @@ define(['app', 'angular'], function(app, angular) {
             };
 
             $scope.saveForm = function() {
-                $http.put('/api/0/teams/' + $scope.teamData.id + '/', $scope.teamData)
+                $http.put('/api/0/teams/' + selectedTeam.id + '/', $scope.teamData)
                     .success(function(data){
+                        if (selectedTeam.slug !== data.slug) {
+                            return $state.go('manage_team.settings', {
+                                team_slug: data.slug
+                            });
+                        }
+
                         $scope.teamData = data;
                         angular.extend(selectedTeam, data);
                     });

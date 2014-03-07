@@ -1,4 +1,4 @@
-define(['app', 'jquery'], function(app, $) {
+define(['app', 'angular', 'jquery'], function(app, angular, $) {
     'use strict';
 
     return {
@@ -14,12 +14,28 @@ define(['app', 'jquery'], function(app, $) {
             $scope.selectedTeam = selectedTeam;
         },
         resolve: {
-            selectedTeam: function(teamList, $q, $stateParams) {
+            selectedTeam: function(teamList, $http, $q, $state, $stateParams) {
                 var deferred = $q.defer();
                 var selected = $.grep(teamList.data, function(node){
                     return node.slug == $stateParams.team_slug;
                 })[0];
-                deferred.resolve(selected);
+                if (!selected) {
+                    // TODO(dcramer): show error message
+                    deferred.reject();
+                    $state.go('index');
+                } else {
+                    // refresh the team data to attempt correctness
+                    $http.get('/api/0/teams/' + selected.id + '/')
+                        .success(function(data){
+                            angular.extend(selected, data);
+                            deferred.resolve(data);
+                        })
+                        .error(function(){
+                            // TODO(dcramer): show error message
+                            deferred.reject();
+                            $state.go('index');
+                        });
+                }
                 return deferred.promise;
             }
         }

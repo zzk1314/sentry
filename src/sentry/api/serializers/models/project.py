@@ -1,6 +1,7 @@
 from sentry.api.serializers import Serializer, register
 from sentry.constants import MEMBER_OWNER
 from sentry.models import Project, Team
+from sentry.utils.db import attach_foreignkey
 
 
 @register(Project)
@@ -12,8 +13,11 @@ class ProjectSerializer(Serializer):
         for project in objects:
             try:
                 project.access_type = team_map.get(project.team_id).access_type
+                project.team = team_map.get(project.team_id)
             except KeyError:
                 project.access_type = None
+
+        attach_foreignkey(objects, Project.team)
 
     def serialize(self, obj, user):
         d = {
@@ -23,7 +27,8 @@ class ProjectSerializer(Serializer):
             'dateCreated': obj.date_added,
             'permission': {
                 'edit': obj.access_type == MEMBER_OWNER,
-                'admin': obj.owner_id == user.id or user.is_superuser,
+                # TODO(dcramer): this should rely on team owner
+                'admin': obj.team.owner_id == user.id or user.is_superuser,
             }
         }
         return d

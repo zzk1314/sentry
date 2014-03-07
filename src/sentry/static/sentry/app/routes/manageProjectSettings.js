@@ -5,7 +5,7 @@ define(['app', 'angular'], function(app, angular) {
         parent: 'manage_project',
         url: 'settings/',
         templateUrl: 'partials/manage-project-settings.html',
-        controller: function($scope, $http, selectedProject){
+        controller: function($scope, $http, $state, selectedProject, selectedTeam){
             $scope.projectData = angular.copy(selectedProject);
 
             $scope.isUnchanged = function(data) {
@@ -13,8 +13,14 @@ define(['app', 'angular'], function(app, angular) {
             };
 
             $scope.saveForm = function() {
-                $http.put('/api/0/projects/' + $scope.projectData.id + '/', $scope.projectData)
+                $http.put('/api/0/projects/' + selectedTeam.id + '/', $scope.projectData)
                     .success(function(data){
+                        if (selectedProject.slug !== data.slug) {
+                            return $state.go('manage_project.settings', {
+                                team_slug: selectedTeam.slug,
+                                project_slug: data.slug
+                            });
+                        }
                         $scope.projectData = data;
                         angular.extend(selectedProject, data);
                     });
