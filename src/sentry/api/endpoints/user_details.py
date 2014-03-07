@@ -1,8 +1,9 @@
 from rest_framework.response import Response
 
 from sentry.api.base import Endpoint
+from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
-from sentry.models import Team
+from sentry.models import Team, User
 
 
 class UserDetailsEndpoint(Endpoint):
@@ -10,7 +11,9 @@ class UserDetailsEndpoint(Endpoint):
         if user_id == 'me':
             user = request.user
         else:
-            return Response(status=403)
+            user = User.objects.get(id=user_id)
+
+        assert_perm(user, request.user)
 
         teams = Team.objects.get_for_user(user, with_projects=True)
 
