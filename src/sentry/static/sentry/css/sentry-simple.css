@@ -6148,6 +6148,11 @@ header .project-dropdown.open:before {
 .events .details h3 a {
   color: inherit;
 }
+.events .details .message {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .events .details p {
   line-height: 1.4;
   color: #79858C;
