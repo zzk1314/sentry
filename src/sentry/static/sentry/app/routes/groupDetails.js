@@ -15,7 +15,7 @@ define(['app'], function(app) {
                 return $http.get('/api/0/groups/' + $stateParams.group_id + '/');
             },
             historicalGroupData: function($http, $stateParams) {
-                return $http.get('/api/0/groups/' + $stateParams.group_id + '/stats/');
+                return $http.get('/api/0/groups/' + $stateParams.group_id + '/stats/?days=1');
             },
             selectedEvent: function($http, $stateParams) {
                 return $http.get('/api/0/groups/' + $stateParams.group_id + '/events/latest/');

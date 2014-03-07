@@ -15,7 +15,7 @@ class GroupStatsEndpoint(Endpoint):
 
         data = Group.objects.get_chart_data_for_group(
             instances=[group],
-            max_days=3,
+            max_days=min(int(request.GET.get('days', 1)), 30),
         )
 
         return Response(data)
