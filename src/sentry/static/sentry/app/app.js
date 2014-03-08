@@ -5,7 +5,8 @@ define([
   'ngRoute',
   'ngRouter',
   'ngSanitize',
-  'modules/barChart'
+  'modules/barChart',
+  'modules/simpleSlider'
   ], function (angular) {
     'use strict';
 
@@ -14,6 +15,7 @@ define([
       'ngRoute',
       'ngSanitize',
       'sentry.barchart',
+      'sentry.slider',
       'ui.bootstrap',
       'ui.router'
     ]);

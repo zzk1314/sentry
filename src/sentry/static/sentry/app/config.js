@@ -11,7 +11,8 @@ requirejs.config({
     'd3-tip': '../vendor/d3-tip/index',
     'jquery': '../vendor/jquery/jquery.min',
     'moment': '../vendor/moment/moment',
-    'requirejs': '../vendor/requirejs/requirejs'
+    'requirejs': '../vendor/requirejs/requirejs',
+    'simple-slider': '../vendor/simple-slider/simple-slider'
   },
   shim: {
     'angular': {
@@ -26,6 +27,9 @@ requirejs.config({
     'ngRouter': ['angular'],
     'jquery': {
       exports: 'jquery'
+    },
+    'simple-slider': {
+      deps: ['jquery']
     }
   }
 });
