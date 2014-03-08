@@ -22,7 +22,13 @@ class ProjectDetailsEndpoint(Endpoint):
 
         assert_perm(project, request.user)
 
-        return Response(serialize(project, request.user))
+        data = serialize(project, request.user)
+        data['options'] = {
+            'sentry:origins': project.get_option('sentry:origins', None) or [],
+            'sentry:resolve_age': int(project.get_option('sentry:resolve_age', 0)),
+        }
+
+        return Response(data)
 
     def put(self, request, project_id):
         project = Project.objects.get(id=project_id)
