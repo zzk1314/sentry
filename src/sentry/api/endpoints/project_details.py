@@ -24,7 +24,7 @@ class ProjectDetailsEndpoint(Endpoint):
 
         data = serialize(project, request.user)
         data['options'] = {
-            'sentry:origins': project.get_option('sentry:origins', None) or [],
+            'sentry:origins': '\n'.join(project.get_option('sentry:origins', None) or []),
             'sentry:resolve_age': int(project.get_option('sentry:resolve_age', 0)),
         }
 
@@ -39,7 +39,19 @@ class ProjectDetailsEndpoint(Endpoint):
 
         if serializer.is_valid():
             project = serializer.save()
-            return Response(serialize(project, request.user))
+
+            options = request.DATA.get('options', {})
+            if 'sentry:origins' in options:
+                project.update_option('sentry:origins', options['sentry:origins'].split('\n'))
+            if 'sentry:resolve_age' in options:
+                project.update_option('sentry:resolve_age', int(options['sentry:resolve_age']))
+
+            data = serialize(project, request.user)
+            data['options'] = {
+                'sentry:origins': '\n'.join(project.get_option('sentry:origins', None) or []),
+                'sentry:resolve_age': int(project.get_option('sentry:resolve_age', 0)),
+            }
+            return Response(data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
