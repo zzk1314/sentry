@@ -17,7 +17,7 @@ define([
         return val + ' hour' + (val != 1 ? 's' : '');
     };
 
-    function SimpleSlider(el) {
+    var SimpleSlider = function(el) {
         var $el = $(el),
             min = parseInt($el.attr('min'), 10),
             max = parseInt($el.attr('max'), 10),
@@ -47,20 +47,25 @@ define([
             $value.html(formatHours(data.value));
         }).on("slider:changed", function sliderchanged(event, data) {
             $value.html(formatHours(data.value));
-        }).simpleSlider({
+        }).val($el.val()).simpleSlider({
             range: [min, max],
             step: step,
             allowedValues: values,
             snap: true
         });
-    }
+
+        this.$el = $el;
+
+        return this;
+    };
 
     angular.module('sentry.slider', [])
-        .directive('slider', function($window, $timeout) {
+        .directive('slider', function() {
             return {
                 restrict: 'A',
                 link: function(scope, element, attr, ctrl) {
-                    new SimpleSlider(element);
+                    var slider = new SimpleSlider(element);
+                    slider.$el.simpleSlider('setValue', scope.$eval(attr.ngModel));
                 }
             };
         });

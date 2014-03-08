@@ -6,7 +6,6 @@
     <div class="form-group" ng-class="form.projectName.$invalid ? 'error' : ''">
         <label for="projectName">Name:</label>
         <input id="projectName"
-               name="name"
                ng-model="projectData.name"
                class="form-control"
                type="text"
@@ -19,7 +18,6 @@
     <div class="form-group" ng-class="form.projectSlug.$invalid ? 'error' : ''">
         <label for="projectSlug">Slug:</label>
         <input id="projectSlug"
-               name="slug"
                ng-model="projectData.slug"
                class="form-control"
                type="text"
@@ -31,9 +29,8 @@
     </div>
     <fieldset>
         <div><legend>Event Settings</legend></div>
-        <label for="sentry:resolve_age">Automtic Resolve Age:</label>
-        <input id="sentry:resolve_age"
-               name="sentry:resolve_age"
+        <label for="eventResolveAge">Automtic Resolve Age:</label>
+        <input id="eventResolveAge"
                ng-model="projectData.options['sentry:resolve_age']"
                class="form-control"
                type="range"
@@ -47,13 +44,11 @@
         <div><legend>Client Security</legend></div>
         <p>Configure origin URLs which Sentry should accept events from. This is used for communication with clients like <a href="https://github.com/getsentry/raven-js">raven-js</a>.
         <p>This will restrict requests based on the <code>Origin</code> and <code>Referer</code> headers.</p>
-        <textarea id="sentry:origins"
-                  name="sentry:origins"
+        <textarea id="eventOrigins"
                   ng-model="projectData.options['sentry:origins']"
                   class="form-control"
                   placeholder="e.g. *.example.com or https://example.com"></textarea>
         <div class="help-block">Enter one pattern per line.</div>
-    </fieldset>
     </fieldset>
     <button class="btn btn-primary"
             ng-click="saveForm()"
