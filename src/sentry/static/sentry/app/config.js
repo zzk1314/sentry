@@ -1,4 +1,6 @@
 requirejs.config({
+  // TODO: we dont want this in prod
+  urlArgs: "_=" + (new Date()).getTime(),
   paths: {
     'angular': '../vendor/angular/angular.min',
     'ngBootstrap': '../vendor/angular-bootstrap/ui-bootstrap-tpls',
