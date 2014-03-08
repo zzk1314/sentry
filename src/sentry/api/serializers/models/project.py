@@ -25,6 +25,7 @@ class ProjectSerializer(Serializer):
             'id': str(obj.id),
             'slug': obj.slug,
             'name': obj.name,
+            'isPublic': obj.public,
             'dateCreated': obj.date_added,
             'permission': {
                 'edit': obj.access_type == MEMBER_OWNER or user.is_superuser,
