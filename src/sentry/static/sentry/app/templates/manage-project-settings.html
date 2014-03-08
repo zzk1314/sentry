@@ -29,6 +29,31 @@
             <span ng-show="form.projectSlug.$error.required">Enter a valid project name.</span>
         </div>
     </div>
+    <fieldset id="events">
+        <div><legend>Event Settings</legend></div>
+        <label for="sentry:resolve_age">Resolve Age:</label>
+        <input id="sentry:resolve_age"
+               name="sentry:resolve_age"
+               ng-model="projectData.options['sentry:resolve_age']"
+               class="form-control"
+               type="range"
+               min="0"
+               max="168"
+               step="1">
+        <div class="help-block">Treat an event as resolved if it hasn't been seen for this amount of time.</div>
+    </fieldset>
+    <fieldset id="client-security">
+        <div><legend>Client Security</legend></div>
+        <p>Configure origin URLs which Sentry should accept events from. This is used for communication with clients like <a href="https://github.com/getsentry/raven-js">raven-js</a>.
+        <p>This will restrict requests based on the <code>Origin</code> and <code>Referer</code> headers.</p>
+        <textarea id="sentry:origins"
+                  name="sentry:origins"
+                  ng-model="projectData.options['sentry:origins']"
+                  class="form-control"
+                  placeholder="e.g. *.example.com or https://example.com"></textarea>
+        <div class="help-block">Enter one pattern per line.</div>
+    </fieldset>
+    </fieldset>
     <button class="btn btn-primary"
             ng-click="saveForm()"
             ng-disabled="form.$invalid || isUnchanged(projectData)">Save</button>
