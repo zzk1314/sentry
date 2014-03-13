@@ -5905,7 +5905,7 @@ td.visible-print {
   font-size: 48px !important;
   position: absolute;
   left: -60px;
-  top: 1px;
+  top: -1px;
 }
 .btn-sm .icon-arrow-down,
 .btn-sm .icon-arrow-right,
@@ -5924,8 +5924,8 @@ body {
 header {
   background: #465262;
   color: #fff;
-  padding: 16px 0;
-  margin: 0 0 22px;
+  padding: 20px 0;
+  margin: 0 0 30px;
 }
 header a {
   color: #fff;
@@ -6087,7 +6087,7 @@ header .project-dropdown.open:before {
   margin: 0 0 5px;
 }
 .project-nav {
-  margin: 0 0 20px;
+  margin: -10px 0 20px;
 }
 .search {
   position: relative;
@@ -6279,7 +6279,7 @@ header .project-dropdown.open:before {
   padding-top: 6px;
 }
 .group-detail {
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 .group-detail h3 {
   font-size: 22px;
@@ -6326,9 +6326,8 @@ header .project-dropdown.open:before {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.seen-by {
-  color: #949ea4;
-  float: right;
+.seen-by h5 {
+  margin: 0 0 14px;
 }
 .seen-by ul {
   padding-left: 0;
@@ -6410,7 +6409,7 @@ header .project-dropdown.open:before {
 }
 .timeline .timeline-item time {
   float: right;
-  color: #999999;
+  color: #949ea4;
 }
 .timeline .timeline-item .stacktrace {
   border: 0;
@@ -6429,12 +6428,12 @@ header .project-dropdown.open:before {
   width: 40px;
   margin-right: 5px;
   display: inline-block;
-  color: #999;
+  color: #949ea4;
   text-align: right;
 }
 .timeline .timeline-item .stacktrace li .function {
   float: right;
-  color: #999;
+  color: #949ea4;
 }
 .timeline .timeline-item .stacktrace li:first-child {
   border-radius: 4px 4px 0 0;
