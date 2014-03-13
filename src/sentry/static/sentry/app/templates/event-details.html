@@ -1,56 +1,64 @@
-<div class="box-content">
-    <ul class="timeline">
-        <li class="timeline-item request">
-          <div class="icon"></div>
-          <h4>GET /login</h4>
-        </li>
-        <li class="timeline-item message">
-          <div class="icon"></div>
-          <h4><code>WARNING</code> Rejected authentication attempt using expired password</h4>
-        </li>
-        <li class="timeline-item error significant">
-          <div class="icon">E</div>
-          <h4>URLError</h4>
-          <p>urlopen error [Errno 111] Connection refused</p>
-          <ol class="stacktrace">
-            <li>
-              <span class="lineno">19.</span>
-              <span class="location">sentry/utils/safe.py</span>
-              <span class="function">safe_execute</span>
-            </li>
-            <li>
-              <span class="lineno">109.</span>
-              <span class="location">sentry_webhooks/plugin.py</span>
-              <span class="function">send_webhook</span>
-            </li>
-            <li>
-              <span class="lineno">400.</span>
-              <span class="location">urllib2.py</span>
-              <span class="function">open</span>
-            </li>
-            <li>
-              <span class="lineno">418.</span>
-              <span class="location">urllib2.py</span>
-              <span class="function">_open</span>
-            </li>
-            <li>
-              <span class="lineno">378.</span>
-              <span class="location">urllib2.py</span>
-               <span class="function">_call_chain</span>
-            </li>
-            <li>
-              <span class="lineno">1215.</span>
-              <span class="location">urllib2.py</span>
-              <span class="function">https_open</span>
-            </li>
-            <li>
-              <span class="lineno">1177.</span>
-              <span class="location">urllib2.py</span>
-              <span class="function">do_open</span>
-            </li>
-          </ol>
-        </li>
-    </ul>
+<div class="box">
+  <div class="box-header">
+    <h4>Timeline</h4>
+  </div>
+  <div class="box-content with-padding">
+      <ul class="timeline">
+          <li class="timeline-item request">
+            <div class="icon"></div>
+            <time>2s</time>
+            <h4>GET /login</h4>
+          </li>
+          <li class="timeline-item message">
+            <div class="icon"></div>
+            <time>16s</time>
+            <h4><code>WARNING</code> Rejected authentication attempt using expired password</h4>
+          </li>
+          <li class="timeline-item error significant">
+            <div class="icon"></div>
+            <time>16s</time>
+            <h4>URLError</h4>
+            <p>urlopen error [Errno 111] Connection refused</p>
+            <ol class="stacktrace">
+              <li>
+                <span class="lineno">19.</span>
+                <span class="location">sentry/utils/safe.py</span>
+                <span class="function">safe_execute</span>
+              </li>
+              <li>
+                <span class="lineno">109.</span>
+                <span class="location">sentry_webhooks/plugin.py</span>
+                <span class="function">send_webhook</span>
+              </li>
+              <li>
+                <span class="lineno">400.</span>
+                <span class="location">urllib2.py</span>
+                <span class="function">open</span>
+              </li>
+              <li>
+                <span class="lineno">418.</span>
+                <span class="location">urllib2.py</span>
+                <span class="function">_open</span>
+              </li>
+              <li>
+                <span class="lineno">378.</span>
+                <span class="location">urllib2.py</span>
+                 <span class="function">_call_chain</span>
+              </li>
+              <li>
+                <span class="lineno">1215.</span>
+                <span class="location">urllib2.py</span>
+                <span class="function">https_open</span>
+              </li>
+              <li>
+                <span class="lineno">1177.</span>
+                <span class="location">urllib2.py</span>
+                <span class="function">do_open</span>
+              </li>
+            </ol>
+          </li>
+      </ul>
+  </div>
 </div>
 
 <div class="box">
