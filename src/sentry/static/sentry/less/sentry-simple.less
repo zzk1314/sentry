@@ -459,10 +459,35 @@ header {
   }
 }
 
-.seen-by {
+.event-browser {
+  text-align: center;
   h5 {
-    margin: 0 0 14px;
+    margin: 15px 0 4px;
   }
+  p {
+    padding-top: 7px;
+    margin: 0;
+  }
+
+  .event-controls {
+    .clearfix;
+    margin: -3px -3px;
+    .older {
+      float: left;
+      border-radius: 5px 0 0 5px;
+    }
+    .newer {
+      float: right;
+      border-radius: 0 5px 5px 0;
+    }
+    .btn {
+      border-width: 3px;
+    }
+  }
+}
+
+.seen-by {
+  float: right;
   ul {
     .list-unstyled;
     li:first-child {

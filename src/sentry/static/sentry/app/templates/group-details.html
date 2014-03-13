@@ -15,18 +15,15 @@
         </div>
       </div>
   </div>
+  <div class="seen-by">
+    <ul>
+      <li>Seen by</li>
+      <li><a href="#"><img src="http://github.com/ckj.png" /></a></li>
+      <li><a href="#"><img src="http://github.com/dcramer.png" /></a></li>
+      <li><a href="#"><img src="http://github.com/mattrobenolt.png" /></a></li>
+    </ul>
+  </div>
   <div class="group-actions">
-    <div class="pull-right">
-      <div class="btn-group">
-        <a class="btn btn-sm btn-default"
-           ng-class="selectedEvent.previousEventID === null ? 'disabled' : ''"
-           ui-sref="event({event_id: selectedEvent.previousEventID})"><span class="icon-arrow-left"></span> Older</a>
-        <a class="btn btn-sm btn-default disabled id-label" time-since="selectedEvent.dateCreated"></a>
-        <a class="btn btn-sm btn-default"
-           ng-class="selectedEvent.nextEventID === null ? 'disabled' : ''"
-           ui-sref="event({event_id: selectedEvent.nextEventID})">Newer <span class="icon-arrow-right"></span></a>
-      </div>
-    </div>
     <div class="btn-group">
       <a href="#" class="btn btn-default btn-sm"><span class="icon-checkmark"></span></a>
       <a href="#" class="btn btn-default btn-sm"><span class="icon-bookmark"></span></a>
@@ -63,14 +60,5 @@
             <li><a href="#">Tags</a></li>
             <li><a href="#">Similar events</a></li>
         </ul>
-
-        <div class="seen-by">
-          <h5>Seen by</h5>
-          <ul>
-            <li><a href="#"><img src="http://github.com/ckj.png" /></a></li>
-            <li><a href="#"><img src="http://github.com/dcramer.png" /></a></li>
-            <li><a href="#"><img src="http://github.com/mattrobenolt.png" /></a></li>
-          </ul>
-        </div>
     </div>
 </div>

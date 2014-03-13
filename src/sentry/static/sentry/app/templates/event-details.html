@@ -1,3 +1,15 @@
+<div class="box event-browser">
+  <div class="event-controls">
+    <a class="btn btn-sm btn-default older"
+       ng-class="selectedEvent.previousEventID === null ? 'disabled' : ''"
+       ui-sref="event({event_id: selectedEvent.previousEventID})"><span class="icon-arrow-left"></span> Older</a>
+     <a class="btn btn-sm btn-default newer"
+       ng-class="selectedEvent.nextEventID === null ? 'disabled' : ''"
+       ui-sref="event({event_id: selectedEvent.nextEventID})">Newer <span class="icon-arrow-right"></span></a>
+       <p>Event id <strong>rGrPTNxMUDwf6r6B</strong> occurred <time time-since="selectedEvent.dateCreated"></time></p></span>
+  </div>
+</div>
+
 <div class="box">
   <div class="box-header">
     <h4>Timeline</h4>

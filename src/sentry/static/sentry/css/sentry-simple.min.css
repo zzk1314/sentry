@@ -6326,8 +6326,48 @@ header .project-dropdown.open:before {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.seen-by h5 {
-  margin: 0 0 14px;
+.event-browser {
+  text-align: center;
+}
+.event-browser h5 {
+  margin: 15px 0 4px;
+}
+.event-browser p {
+  padding-top: 7px;
+  margin: 0;
+}
+.event-browser .event-controls {
+  margin: -3px -3px;
+}
+.event-browser .event-controls:before,
+.event-browser .event-controls:after {
+  content: " ";
+  display: table;
+}
+.event-browser .event-controls:after {
+  clear: both;
+}
+.event-browser .event-controls:before,
+.event-browser .event-controls:after {
+  content: " ";
+  display: table;
+}
+.event-browser .event-controls:after {
+  clear: both;
+}
+.event-browser .event-controls .older {
+  float: left;
+  border-radius: 5px 0 0 5px;
+}
+.event-browser .event-controls .newer {
+  float: right;
+  border-radius: 0 5px 5px 0;
+}
+.event-browser .event-controls .btn {
+  border-width: 3px;
+}
+.seen-by {
+  float: right;
 }
 .seen-by ul {
   padding-left: 0;
