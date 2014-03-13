@@ -1,31 +1,56 @@
-<div class="box">
-    <div class="box-header">
-        <h4>Timeline</h4>
-    </div>
-    <div class="box-content">
-        <ul class="timeline">
-            <li class="timeline-item console">
-              <div class="icon"></div>
-              <time>2ms</time>
-              <h4>Console</h4>
-              <p><strong>Severity</strong> <span class="label label-default">info</span></p>
-              <p><strong>Message</strong> Application initialized</p>
+<div class="box-content">
+    <ul class="timeline">
+        <li class="timeline-item request">
+          <div class="icon"></div>
+          <h4>GET /login</h4>
+        </li>
+        <li class="timeline-item message">
+          <div class="icon"></div>
+          <h4><code>WARNING</code> Rejected authentication attempt using expired password</h4>
+        </li>
+        <li class="timeline-item error significant">
+          <div class="icon">E</div>
+          <h4>URLError</h4>
+          <p>urlopen error [Errno 111] Connection refused</p>
+          <ol class="stacktrace">
+            <li>
+              <span class="lineno">19.</span>
+              <span class="location">sentry/utils/safe.py</span>
+              <span class="function">safe_execute</span>
             </li>
-            <li class="timeline-item user">
-              <div class="icon"></div>
-              <time>4ms</time>
-              <h4>User click</h4>
-              <p><strong>Element</strong> <code>button</code></p>
+            <li>
+              <span class="lineno">109.</span>
+              <span class="location">sentry_webhooks/plugin.py</span>
+              <span class="function">send_webhook</span>
             </li>
-            <li class="timeline-item error">
-              <div class="icon"></div>
-              <time>9ms</time>
-              <h4>Error</h4>
-              <p><strong>Message</strong> Error message</p>
-              <pre>Exception</pre>
+            <li>
+              <span class="lineno">400.</span>
+              <span class="location">urllib2.py</span>
+              <span class="function">open</span>
             </li>
-        </ul>
-    </div>
+            <li>
+              <span class="lineno">418.</span>
+              <span class="location">urllib2.py</span>
+              <span class="function">_open</span>
+            </li>
+            <li>
+              <span class="lineno">378.</span>
+              <span class="location">urllib2.py</span>
+               <span class="function">_call_chain</span>
+            </li>
+            <li>
+              <span class="lineno">1215.</span>
+              <span class="location">urllib2.py</span>
+              <span class="function">https_open</span>
+            </li>
+            <li>
+              <span class="lineno">1177.</span>
+              <span class="location">urllib2.py</span>
+              <span class="function">do_open</span>
+            </li>
+          </ol>
+        </li>
+    </ul>
 </div>
 
 <div class="box">

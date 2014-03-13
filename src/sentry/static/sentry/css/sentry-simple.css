@@ -6353,7 +6353,11 @@ header .project-dropdown.open:before {
   margin: 0;
   position: relative;
 }
-.timeline:before {
+.timeline .timeline-item {
+  padding: 14px 14px 10px 68px;
+  position: relative;
+}
+.timeline .timeline-item:before {
   display: block;
   content: "";
   width: 4px;
@@ -6363,24 +6367,43 @@ header .project-dropdown.open:before {
   left: 32px;
   bottom: 0;
 }
-.timeline .timeline-item {
-  padding: 14px 14px 10px 68px;
-  min-height: 92px;
-  position: relative;
+.timeline .timeline-item:first-child:before {
+  margin-top: 28px;
+}
+.timeline .timeline-item:last-child:before {
+  height: 28px;
+}
+.timeline .timeline-item.significant .icon {
+  background: #e3e5e7;
+  width: 36px;
+  height: 36px;
+  border-radius: 32px;
+  left: 16px;
+  line-height: 32px;
+  font-size: 14px;
+  top: 16px;
+}
+.timeline .timeline-item.significant h4 {
+  font-size: 15px;
+  font-weight: bold;
 }
 .timeline .timeline-item .icon {
   position: absolute;
   background: #fff;
   border: 2px solid #e3e5e7;
-  width: 36px;
-  height: 36px;
-  border-radius: 32px;
-  left: 16px;
+  width: 16px;
+  height: 16px;
+  font-weight: bold;
+  border-radius: 16px;
+  font-size: 9px;
+  line-height: 14px;
+  text-align: center;
+  left: 26px;
   top: 16px;
 }
 .timeline .timeline-item h4 {
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 300;
   margin: 0 0 6px;
 }
 .timeline .timeline-item p {
@@ -6396,8 +6419,30 @@ header .project-dropdown.open:before {
   float: right;
   color: #999999;
 }
-.timeline .timeline-item pre {
-  margin-top: 10px;
+.timeline .timeline-item .stacktrace {
+  border: 0;
+  background: #f8f8f9;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 1px solid #e9e9e9;
+  border-bottom: 0;
+  border-radius: 4px;
+}
+.timeline .timeline-item .stacktrace li {
+  padding: 5px 10px;
+  border-bottom: 1px solid #e9e9e9;
+}
+.timeline .timeline-item .stacktrace li .lineno {
+  width: 45px;
+  margin-right: 5px;
+  display: inline-block;
+  color: #999;
+  text-align: right;
+}
+.timeline .timeline-item .stacktrace li .function {
+  float: right;
+  color: #999;
 }
 .timeline .timeline-item:last-child {
   border-bottom: none;
