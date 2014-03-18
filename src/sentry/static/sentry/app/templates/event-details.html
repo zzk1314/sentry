@@ -16,6 +16,12 @@
   </div>
   <div class="box-content with-padding">
       <ul class="timeline">
+          <li ng-repeat="transactionEvent in transactionEventList"
+              class="timeline-item">
+              <div class="icon"></div>
+              <div render-event="transactionEvent"></div>
+          </li>
+
           <li class="timeline-item request">
             <div class="icon"></div>
             <time>2s</time>

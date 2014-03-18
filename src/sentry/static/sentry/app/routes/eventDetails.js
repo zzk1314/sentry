@@ -7,6 +7,15 @@ define(['app'], function() {
         templateUrl: 'partials/event-details.html',
         controller: function($scope, selectedEvent){
             $scope.$parent.selectedEvent = selectedEvent.data;
+
+            $scope.transactionEventList = [{
+                type: 'http_request'
+            }, {
+                type: 'http_request'
+            }, {
+                type: 'http_request'
+            }];
+
         },
         resolve: {
             selectedEvent: function($http, $stateParams) {

@@ -5,7 +5,9 @@ define([
   'ngRoute',
   'ngRouter',
   'ngSanitize',
+  'event_types/httpRequest',
   'modules/barChart',
+  'modules/eventManager',
   'modules/simpleSlider'
   ], function (angular) {
     'use strict';
@@ -15,6 +17,8 @@ define([
       'ngRoute',
       'ngSanitize',
       'sentry.barchart',
+      'sentry.eventManager',
+      'sentry.eventTypes.httpRequest',
       'sentry.slider',
       'ui.bootstrap',
       'ui.router'
