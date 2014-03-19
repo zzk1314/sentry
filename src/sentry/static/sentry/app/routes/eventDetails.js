@@ -11,9 +11,9 @@ define(['app'], function() {
             $scope.transactionEventList = [{
                 type: 'http_request'
             }, {
-                type: 'http_request'
+                message: 'Hello world!'
             }, {
-                type: 'http_request'
+                type: 'exception'
             }];
 
         },

@@ -3,12 +3,10 @@ define([
 ], function(angular) {
   'use strict';
 
-  angular.module('sentry.eventTypes.httpRequest', ['sentry.eventManager'])
+  angular.module('sentry.eventHandlers.httpRequest', ['sentry.eventManager'])
     .run(function(EventManager){
       EventManager.registerType('http_request', {
-        render: function(event) {
-          return 'HTTP GET';
-        }
+        templateUrl: 'partials/event_handlers/http_request.html'
       });
     });
 });

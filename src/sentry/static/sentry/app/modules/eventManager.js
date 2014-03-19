@@ -1,5 +1,5 @@
 /**
-angular.module('extension.types.http_request', ['sentry.eventManager'])
+angular.module('extension.event_handlers.http_request', ['sentry.eventManager'])
   .run(function(EventManager){
     var HttpRequestType = function(){
       return {
@@ -17,25 +17,27 @@ define([
 ], function(angular) {
   'use strict';
 
-  var EventManager = function($compile, $http){
+  var EventManager = function($http){
     var _registry = {};
 
     var EventHandler = function(options) {
+      var self = this;
+
+      this.loading = true;
+
       if (options.templateUrl) {
-        $http.get(options.templateUrl, {cache: true}).then(function(response){
-          this.template = $compile(response.data);
+        $http.get(options.templateUrl, {cache: true}).success(function(data){
+          self.template = data;
+          self.loading = false;
         });
       } else {
-        this.template = $compile(options.template);
+        this.template = options.template;
+        this.loading = false;
       }
 
       if (options.render) {
         this.render = options.render;
       }
-    };
-
-    EventHandler.prototype.render = function(event) {
-      return this.template({event: event});
     };
 
     return {
@@ -46,23 +48,27 @@ define([
 
         return this;
       },
-      renderEvent: function(event) {
-        if (_registry[event.type] === undefined) {
-          throw new Error('No event renderer found for type: ' + event.type);
+      getTemplate: function(event) {
+        var eventType = event.type || 'default';
+
+        if (_registry[eventType] === undefined) {
+          throw new Error('No event renderer found for type: ' + eventType);
         }
-        return _registry[event.type].render(event);
+
+        return _registry[eventType].template;
       }
     };
   };
 
   angular.module('sentry.eventManager', [])
     .factory('EventManager', EventManager)
-    .directive('renderEvent', function(EventManager){
+    .directive('renderEvent', function($compile, EventManager){
       return {
         restrict: 'AE',
         link: function(scope, element, attrs, ctrl) {
-          var evt = scope.$eval(attrs.renderEvent);
-          element.html(EventManager.renderEvent(evt));
+          scope.event = scope.$eval(attrs.renderEvent);
+          element.html(EventManager.getTemplate(scope.event));
+          $compile(element.contents())(scope);
         }
       };
     });

@@ -5,7 +5,9 @@ define([
   'ngRoute',
   'ngRouter',
   'ngSanitize',
-  'event_types/httpRequest',
+  'event_handlers/default',
+  'event_handlers/exception',
+  'event_handlers/httpRequest',
   'modules/barChart',
   'modules/eventManager',
   'modules/simpleSlider'
@@ -18,7 +20,9 @@ define([
       'ngSanitize',
       'sentry.barchart',
       'sentry.eventManager',
-      'sentry.eventTypes.httpRequest',
+      'sentry.eventHandlers.default',
+      'sentry.eventHandlers.exception',
+      'sentry.eventHandlers.httpRequest',
       'sentry.slider',
       'ui.bootstrap',
       'ui.router'
