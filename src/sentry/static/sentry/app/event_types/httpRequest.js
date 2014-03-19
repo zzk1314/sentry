@@ -5,13 +5,10 @@ define([
 
   angular.module('sentry.eventTypes.httpRequest', ['sentry.eventManager'])
     .run(function(EventManager){
-      var HttpRequestEvent = function(event){
-        return {
-          render: function() {
-            return 'HTTP GET';
-          }
-        };
-      };
-      EventManager.registerType('http_request', HttpRequestEvent);
+      EventManager.registerType('http_request', {
+        render: function(event) {
+          return 'HTTP GET';
+        }
+      });
     });
 });

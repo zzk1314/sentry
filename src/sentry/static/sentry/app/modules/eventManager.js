@@ -17,12 +17,32 @@ define([
 ], function(angular) {
   'use strict';
 
-  var EventManager = function(){
+  var EventManager = function($compile, $http){
     var _registry = {};
 
+    var EventHandler = function(options) {
+      if (options.templateUrl) {
+        $http.get(options.templateUrl, {cache: true}).then(function(response){
+          this.template = $compile(response.data);
+        });
+      } else {
+        this.template = $compile(options.template);
+      }
+
+      if (options.render) {
+        this.render = options.render;
+      }
+    };
+
+    EventHandler.prototype.render = function(event) {
+      return this.template({event: event});
+    };
+
     return {
-      registerType: function(type, object) {
-        _registry[type] = object;
+      registerType: function(type, options) {
+        var eventHandler = new EventHandler(options);
+
+        _registry[type] = eventHandler;
 
         return this;
       },
@@ -30,7 +50,7 @@ define([
         if (_registry[event.type] === undefined) {
           throw new Error('No event renderer found for type: ' + event.type);
         }
-        return _registry[event.type](event).render();
+        return _registry[event.type].render(event);
       }
     };
   };
