@@ -1,4 +1,5 @@
 from django.core.urlresolvers import reverse
+
 from sentry.constants import MEMBER_ADMIN
 from sentry.models import Team
 from sentry.testutils import APITestCase
@@ -61,13 +62,28 @@ class TeamUpdateTest(APITestCase):
 
 class TeamDeleteTest(APITestCase):
     def test_simple(self):
-        team = self.team  # force creation
+        team = self.create_team()
+        project = self.create_project(team=team)  # NOQA
 
         self.login_as(user=self.user)
 
         url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
 
-        response = self.client.delete(url)
+        with self.settings(SENTRY_PROJECT=0):
+            response = self.client.delete(url)
 
         assert response.status_code == 204
         assert not Team.objects.filter(id=team.id).exists()
+
+    def test_internal_project(self):
+        team = self.create_team()
+        project = self.create_project(team=team)
+
+        self.login_as(user=self.user)
+
+        url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
+
+        with self.settings(SENTRY_PROJECT=project.id):
+            response = self.client.delete(url)
+
+        assert response.status_code == 403

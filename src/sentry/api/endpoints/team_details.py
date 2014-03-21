@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
@@ -62,6 +63,10 @@ class TeamDetailsEndpoint(Endpoint):
     @sudo_required
     def delete(self, request, team_id):
         team = Team.objects.get(id=team_id)
+
+        if team.project_set.filter(id=settings.SENTRY_PROJECT).exists():
+            return Response('{"error": "Cannot remove team containing default project."}',
+                            status=status.HTTP_403_FORBIDDEN)
 
         if not (request.user.is_superuser or team.owner_id == request.user.id):
             return Response('{"error": "form"}', status=status.HTTP_403_FORBIDDEN)
