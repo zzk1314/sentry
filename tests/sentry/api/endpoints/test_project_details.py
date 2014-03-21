@@ -41,3 +41,15 @@ class ProjectDeleteTest(APITestCase):
 
         assert response.status_code == 204
         assert not Project.objects.filter(id=project.id).exists()
+
+    def test_internal_project(self):
+        project = self.create_project()
+
+        self.login_as(user=self.user)
+
+        url = reverse('sentry-api-0-project-details', kwargs={'project_id': project.id})
+
+        with self.settings(SENTRY_PROJECT=project.id):
+            response = self.client.delete(url)
+
+        assert response.status_code == 403

@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
@@ -60,6 +61,10 @@ class ProjectDetailsEndpoint(Endpoint):
     @sudo_required
     def delete(self, request, project_id):
         project = Project.objects.get(id=project_id)
+
+        if project.id == settings.SENTRY_PROJECT:
+            return Response('{"error": "Cannot remove default project."}',
+                            status=status.HTTP_403_FORBIDDEN)
 
         if not (request.user.is_superuser or project.team.owner_id == request.user.id):
             return Response('{"error": "form"}', status=status.HTTP_403_FORBIDDEN)
