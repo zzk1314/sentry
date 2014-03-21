@@ -9,7 +9,7 @@ class TeamMemberIndexTest(APITestCase):
         team = self.create_team(slug='baz', owner=user_1)
         PendingTeamMember.objects.create(email='bar@localhost', team=team)
 
-        self.client.force_authenticate(user=user_1)
+        self.login_as(user=user_1)
 
         url = reverse('sentry-api-0-team-member-index', kwargs={
             'team_id': team.id,

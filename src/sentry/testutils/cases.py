@@ -201,4 +201,6 @@ class TransactionTestCase(BaseTestCase, TransactionTestCase):
 
 
 class APITestCase(BaseTestCase, BaseAPITestCase):
-    pass
+    def login_as(self, user):
+        super(APITestCase, self).login_as(user)
+        self.client.force_authenticate(user)

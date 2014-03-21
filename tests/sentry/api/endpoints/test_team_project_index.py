@@ -5,7 +5,7 @@ from sentry.testutils import APITestCase
 
 class TeamProjectIndexTest(APITestCase):
     def test_simple(self):
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         team = self.create_team(slug='baz')
         project_1 = self.create_project(team=team, slug='fiz')
         project_2 = self.create_project(team=team, slug='buzz')
@@ -24,7 +24,7 @@ class TeamProjectIndexTest(APITestCase):
 
 class TeamProjectCreateTest(APITestCase):
     def test_simple(self):
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         team = self.create_team(slug='baz')
         url = reverse('sentry-api-0-team-project-index', kwargs={
             'team_id': team.id,

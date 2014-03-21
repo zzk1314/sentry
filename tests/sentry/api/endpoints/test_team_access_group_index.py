@@ -9,7 +9,7 @@ class TeamAccessGroupIndexTest(APITestCase):
         group_1 = AccessGroup.objects.create(team=team, name='bar')
         group_2 = AccessGroup.objects.create(team=team, name='foo')
 
-        self.client.force_authenticate(user=team.owner)
+        self.login_as(user=team.owner)
 
         url = reverse('sentry-api-0-team-access-group-index', kwargs={
             'team_id': team.id,

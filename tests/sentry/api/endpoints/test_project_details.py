@@ -6,7 +6,7 @@ from sentry.testutils import APITestCase
 class ProjectDetailsTest(APITestCase):
     def test_simple(self):
         project = self.project  # force creation
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         url = reverse('sentry-api-0-project-details', kwargs={'project_id': project.id})
         response = self.client.get(url)
         assert response.status_code == 200
@@ -16,7 +16,7 @@ class ProjectDetailsTest(APITestCase):
 class ProjectUpdateTest(APITestCase):
     def test_simple(self):
         project = self.project  # force creation
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         url = reverse('sentry-api-0-project-details', kwargs={'project_id': project.id})
         resp = self.client.put(url, data={
             'name': 'hello world',
@@ -30,13 +30,14 @@ class ProjectUpdateTest(APITestCase):
 
 class ProjectDeleteTest(APITestCase):
     def test_simple(self):
-        project = self.project  # force creation
+        project = self.create_project()
 
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
 
         url = reverse('sentry-api-0-project-details', kwargs={'project_id': project.id})
 
-        response = self.client.delete(url)
+        with self.settings(SENTRY_PROJECT=0):
+            response = self.client.delete(url)
 
         assert response.status_code == 204
         assert not Project.objects.filter(id=project.id).exists()

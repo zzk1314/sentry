@@ -5,7 +5,7 @@ from sentry.testutils import APITestCase
 class GroupStatsTest(APITestCase):
     def test_simple(self):
         # TODO: ensure this test checks data
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
 
         group = self.create_group()
 

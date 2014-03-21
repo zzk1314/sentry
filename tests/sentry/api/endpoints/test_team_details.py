@@ -7,7 +7,7 @@ from sentry.testutils import APITestCase
 class TeamDetailsTest(APITestCase):
     def test_simple(self):
         team = self.team  # force creation
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
         response = self.client.get(url)
         assert response.status_code == 200
@@ -17,7 +17,7 @@ class TeamDetailsTest(APITestCase):
 class TeamUpdateTest(APITestCase):
     def test_simple(self):
         team = self.team  # force creation
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
         resp = self.client.put(url, data={
             'name': 'hello world',
@@ -35,7 +35,7 @@ class TeamUpdateTest(APITestCase):
 
         url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
 
-        self.client.force_authenticate(user=user)
+        self.login_as(user=user)
 
         resp = self.client.put(url, {
             'name': 'Test Team',
@@ -63,7 +63,7 @@ class TeamDeleteTest(APITestCase):
     def test_simple(self):
         team = self.team  # force creation
 
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
 
         url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
 

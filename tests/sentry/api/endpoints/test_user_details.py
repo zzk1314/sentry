@@ -10,7 +10,7 @@ class UserDetailsTest(APITestCase):
         team_2 = self.create_team(owner=user, name='b')
         project_2 = self.create_project(team=team_2)
 
-        self.client.force_authenticate(user=user)
+        self.login_as(user=user)
 
         url = reverse('sentry-api-0-user-details', kwargs={
             'user_id': 'me',

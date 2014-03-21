@@ -6,7 +6,7 @@ from sentry.testutils import APITestCase
 class TeamIndexTest(APITestCase):
     def test_simple(self):
         team = self.team  # force creation
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         url = reverse('sentry-api-0-team-index')
         response = self.client.get(url)
         assert response.status_code == 200
@@ -16,7 +16,7 @@ class TeamIndexTest(APITestCase):
 
 class TeamCreateTest(APITestCase):
     def test_simple(self):
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
         url = reverse('sentry-api-0-team-index')
         resp = self.client.post(url, data={
             'name': 'hello world',

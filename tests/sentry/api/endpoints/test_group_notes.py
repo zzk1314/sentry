@@ -15,7 +15,7 @@ class GroupNoteTest(APITestCase):
             data={'text': 'hello world'},
         )
 
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
 
         url = reverse('sentry-api-0-group-notes', kwargs={
             'group_id': self.group.id,
@@ -30,7 +30,7 @@ class GroupNoteCreateTest(APITestCase):
     def test_simple(self):
         group = self.group
 
-        self.client.force_authenticate(user=self.user)
+        self.login_as(user=self.user)
 
         url = reverse('sentry-api-0-group-notes', kwargs={
             'group_id': self.group.id,
