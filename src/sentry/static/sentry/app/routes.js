@@ -9,6 +9,8 @@ define([
     'routes/help',
     'routes/helpGuide',
     'routes/index',
+    'routes/manageAccount',
+    'routes/manageAccountSettings',
     'routes/manageProject',
     'routes/manageProjectAPIKeys',
     'routes/manageProjectNotifications',
@@ -39,6 +41,8 @@ define([
     HelpRoute,
     HelpGuideRoute,
     IndexRoute,
+    ManageAccountRoute,
+    ManageAccountSettingsRoute,
     ManageProjectRoute,
     ManageProjectAPIKeysRoute,
     ManageProjectNotificationsRoute,
@@ -105,6 +109,8 @@ define([
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
             .state('team', TeamDetailsRoute)
+            .state('manage_account', ManageAccountRoute)
+            .state('manage_account.settings', ManageAccountSettingsRoute)
             .state('manage_project', ManageProjectRoute)
             .state('manage_project.api_keys', ManageProjectAPIKeysRoute)
             .state('manage_project.delete', DeleteProjectRoute)

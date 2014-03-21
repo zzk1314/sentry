@@ -1,0 +1,22 @@
+<div class="page-header">
+  <h3>Account Details</h3>
+</div>
+
+<form role="form" name="form">
+    <div class="form-group" ng-class="form.teamName.$invalid ? 'error' : ''">
+        <label for="userEmail">Email Address:</label>
+        <input id="userEmail"
+               name="email"
+               ng-model="userData.email"
+               class="form-control"
+               type="email"
+               placeholder="Email Address"
+               required>
+        <div ng-show="form.userEmail.$dirty && form.userEmail.$invalid">Invalid:
+            <span ng-show="form.userEmail.$error.required">Enter a valid email address.</span>
+        </div>
+    </div>
+    <button class="btn btn-primary"
+            ng-click="saveForm()"
+            ng-disabled="form.$invalid || isUnchanged(userData)">Save</button>
+</form>

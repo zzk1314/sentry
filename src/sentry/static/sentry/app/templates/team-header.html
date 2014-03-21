@@ -5,12 +5,18 @@
                 <span class="icon-settings"></span> Team Settings
             </a></li>
             <li><a ui-sref="help()"><span class="icon-question"></span> Help</a></li>
-            <li class="dropdown-toggle"><a href="#"><span class="icon-arrow-down"></span> </a></li>
+            <li class="dropdown">
+                <a dropdown-toggle><span class="icon-arrow-down"></span> </a>
+                <ul class="dropdown-menu">
+                    <li><a ui-sref="manage_account.settings()">Account Settings</a></li>
+                    <li><a href="/logout/" target="_self">Logout</a></li>
+                </ul>
+            </li>
         </ul>
     </div>
-    <div class="project-dropdown dropdown">
+    <div class="project-dropdown dropdown" ng-if="selectedTeam">
         <a href="#" class="team-name" dropdown-toggle>
-            {{selectedTeam.name}}
+            <span>{{selectedTeam.name}}</span>
             <span class="project-name" ng-if="selectedProject">{{selectedProject.name}}</span>
             <span class="icon-arrow-down"></span>
         </a>
