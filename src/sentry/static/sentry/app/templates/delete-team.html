@@ -1,0 +1,17 @@
+<div class="page-header">
+  <h3>Delete Team</h3>
+</div>
+
+<form role="form" name="form">
+    <p><strong>Deleting this team is permanent</strong> and once the process begins it cannot be stopped.</p>
+    <section ng-if="projectList">
+      <p>The following projects will also be deleted as part of this process:</p>
+      <ul>
+        <li ng-repeat="project in projectList">{{project.name}}</li>
+      </ul>
+    </section>
+    <p><label><input ng-model="confirmDelete" type="checkbox" value="1" required> I understand and want to delete this team.</label></p>
+    <button class="btn btn-primary"
+            ng-click="saveForm()"
+            ng-disabled="form.$invalid">Delete</button>
+</form>
