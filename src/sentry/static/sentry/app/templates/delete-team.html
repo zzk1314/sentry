@@ -10,7 +10,7 @@
         <li ng-repeat="project in projectList">{{project.name}}</li>
       </ul>
     </section>
-    <p><label><input ng-model="type" type="checkbox" value="1" required> I understand and want to delete this team.</label></p>
+    <p><label><input ng-model="confirm" type="checkbox" value="1" required> I understand and want to delete this team.</label></p>
     <button class="btn btn-danger"
             ng-click="saveForm()"
             ng-disabled="form.$invalid">Delete</button>
