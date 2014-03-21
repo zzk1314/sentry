@@ -3,7 +3,21 @@
 </div>
 
 <form role="form" name="form">
-    <div class="form-group" ng-class="form.teamName.$invalid ? 'error' : ''">
+    <div class="form-group" ng-class="form.userName.$invalid ? 'error' : ''">
+        <label for="userName">Name:</label>
+        <input id="userName"
+               name="name"
+               ng-model="userData.name"
+               class="form-control"
+               type="text"
+               placeholder="e.g. Walter White"
+               required>
+        <div ng-show="form.userName.$dirty && form.userName.$invalid">Invalid:
+            <span ng-show="form.userName.$error.required">Enter a valid name.</span>
+        </div>
+    </div>
+
+    <div class="form-group" ng-class="form.userEmail.$invalid ? 'error' : ''">
         <label for="userEmail">Email Address:</label>
         <input id="userEmail"
                name="email"

@@ -13,7 +13,7 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
             };
 
             $scope.saveForm = function() {
-                $http.put('/api/0/teams/' + selectedUser.id + '/', $scope.userData)
+                $http.put('/api/0/users/' + selectedUser.id + '/', $scope.userData)
                     .success(function(data){
                         $scope.userData = data;
                         angular.extend(selectedUser, data);

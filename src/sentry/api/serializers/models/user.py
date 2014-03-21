@@ -7,6 +7,7 @@ class UserSerializer(Serializer):
     def serialize(self, obj, user):
         d = {
             'id': str(obj.id),
+            'name': obj.get_full_name(),
             'email': obj.email,
         }
         return d
