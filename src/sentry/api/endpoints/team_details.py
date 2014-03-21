@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from sentry.api.base import Endpoint
 from sentry.constants import MEMBER_ADMIN
-from sentry.api.permissions import assert_perm
+from sentry.api.permissions import assert_perm, assert_sudo
 from sentry.api.serializers import serialize
 from sentry.models import Team, TeamMember
 
@@ -33,6 +33,8 @@ class TeamDetailsEndpoint(Endpoint):
         return Response(serialize(team, request.user))
 
     def put(self, request, team_id):
+        assert_sudo(request)
+
         team = Team.objects.get(id=team_id)
 
         assert_perm(team, request.user, access=MEMBER_ADMIN)
@@ -58,6 +60,8 @@ class TeamDetailsEndpoint(Endpoint):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, team_id):
+        assert_sudo(request)
+
         team = Team.objects.get(id=team_id)
 
         if not (request.user.is_superuser or team.owner_id == request.user.id):

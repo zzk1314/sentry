@@ -1,5 +1,11 @@
+from django_sudo.utils import has_sudo_privileges
+
 from sentry.constants import MEMBER_USER
 from sentry.models import Team, Project, User
+
+
+class ElevatedAuthenticationRequired(Exception):
+    pass
 
 
 class PermissionError(Exception):
@@ -29,3 +35,10 @@ def has_perm(object, user, access=MEMBER_USER):
 def assert_perm(*args, **kwargs):
     if not has_perm(*args, **kwargs):
         raise PermissionError
+
+
+def assert_sudo(request):
+    # TODO(dcramer): what should this do when its called via an API token?
+    # should it just not be usable?
+    if not has_sudo_privileges(request):
+        raise ElevatedAuthenticationRequired
