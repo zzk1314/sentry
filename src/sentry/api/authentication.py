@@ -1,7 +1,7 @@
-from sentry.models import ProjectKey
-
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+
+from sentry.models import ProjectKey
 
 
 class KeyAuthentication(BasicAuthentication):
