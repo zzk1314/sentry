@@ -6,7 +6,7 @@ define(['app'], function(app) {
         url: 'group/:group_id/',
         templateUrl: 'partials/group-details.html',
         controller: function($http, $scope, $state, $stateParams, groupData){
-            $scope.selectedGroup = groupData.data;
+            $scope.selectedGroup = groupData;
             $scope.selectedEvent = null;
 
             $scope.chartNumDays = 1;
@@ -23,7 +23,9 @@ define(['app'], function(app) {
         },
         resolve: {
             groupData: function($http, $stateParams) {
-                return $http.get('/api/0/groups/' + $stateParams.group_id + '/');
+                return $http.get('/api/0/groups/' + $stateParams.group_id + '/').then(function(response){
+                    return response.data;
+                });
             }
         }
     };

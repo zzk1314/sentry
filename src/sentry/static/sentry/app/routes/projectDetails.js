@@ -12,7 +12,7 @@ define(['app', 'jquery'], function(app, $) {
         resolve: {
             selectedProject: function(projectList, $q, $stateParams) {
                 var deferred = $q.defer();
-                var selected = $.grep(projectList.data, function(node){
+                var selected = $.grep(projectList, function(node){
                     return node.slug == $stateParams.project_slug;
                 })[0];
                 deferred.resolve(selected);

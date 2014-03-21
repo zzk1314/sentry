@@ -10,7 +10,9 @@ define(['app'], function(app) {
         },
         resolve: {
             noteList: function($http, $stateParams) {
-                return $http.get('/api/0/groups/' + $stateParams.group_id + '/notes/');
+                return $http.get('/api/0/groups/' + $stateParams.group_id + '/notes/').then(function(response){
+                    return response.data;
+                });
             }
         }
     };

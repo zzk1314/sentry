@@ -16,7 +16,7 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
         resolve: {
             selectedTeam: function(teamList, $http, $q, $state, $stateParams) {
                 var deferred = $q.defer();
-                var selected = $.grep(teamList.data, function(node){
+                var selected = $.grep(teamList, function(node){
                     return node.slug == $stateParams.team_slug;
                 })[0];
                 if (!selected) {

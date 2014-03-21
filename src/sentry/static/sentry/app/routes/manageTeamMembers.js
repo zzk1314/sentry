@@ -6,11 +6,13 @@ define(['app'], function(app) {
         url: 'members/',
         templateUrl: 'partials/manage-team-members.html',
         controller: function($scope, memberList){
-            $scope.memberList = memberList.data;
+            $scope.memberList = memberList;
         },
         resolve: {
             memberList: function(selectedTeam, $http) {
-                return $http.get('/api/0/teams/' + selectedTeam.id + '/members/');
+                return $http.get('/api/0/teams/' + selectedTeam.id + '/members/').then(function(response){
+                    return response.data;
+                });
             }
         }
     };

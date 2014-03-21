@@ -1,5 +1,6 @@
 define([
     'app',
+    'routes/createProject',
     'routes/deleteProject',
     'routes/deleteTeam',
     'routes/eventDetails',
@@ -30,6 +31,7 @@ define([
     'filters/formatNumber'
 ], function(
     app,
+    CreateProjectRoute,
     DeleteProjectRoute,
     DeleteTeamRoute,
     EventDetailsRoute,
@@ -94,6 +96,7 @@ define([
 
         // and now our routes
         $stateProvider
+            .state('create_project', CreateProjectRoute)
             .state('event', EventDetailsRoute)
             .state('group', GroupDetailsRoute)
             .state('group.notes', GroupNotesRoute)

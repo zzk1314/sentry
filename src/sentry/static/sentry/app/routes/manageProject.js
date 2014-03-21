@@ -17,7 +17,7 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
         resolve: {
             selectedTeam: function(teamList, $q, $state, $stateParams) {
                 var deferred = $q.defer();
-                var selected = $.grep(teamList.data, function(node){
+                var selected = $.grep(teamList, function(node){
                     return node.slug == $stateParams.team_slug;
                 })[0];
                 if (!selected) {
@@ -30,11 +30,13 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
                 return deferred.promise;
             },
             projectList: function(selectedTeam, $http) {
-                return $http.get('/api/0/teams/' + selectedTeam.id + '/projects/');
+                return $http.get('/api/0/teams/' + selectedTeam.id + '/projects/').then(function(response){
+                    return response.data;
+                });
             },
             selectedProject: function(projectList, $http, $q, $state, $stateParams) {
                 var deferred = $q.defer();
-                var selected = $.grep(projectList.data, function(node){
+                var selected = $.grep(projectList, function(node){
                     return node.slug == $stateParams.project_slug;
                 })[0];
                 if (!selected) {
