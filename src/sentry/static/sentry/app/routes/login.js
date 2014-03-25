@@ -2,7 +2,7 @@ define(['angular', 'app'], function(angular, app) {
     'use strict';
 
     return {
-        parent: 'layout',
+        parent: 'index',
         url: 'login/',
         templateUrl: 'partials/login.html',
         controller: function($scope, $http, $state, userData){
@@ -24,7 +24,7 @@ define(['angular', 'app'], function(angular, app) {
                 }).success(function(data){
                     angular.extend(userData, data);
                     // TODO(dcramer): redirect somewhere useful
-                    $state.go('manage_account');
+                    $state.go('manage_account.settings');
                 });
             };
         }
