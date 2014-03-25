@@ -1,6 +1,7 @@
 define([
     'app',
     'routes/createProject',
+    'routes/createTeam',
     'routes/deleteProject',
     'routes/deleteTeam',
     'routes/eventDetails',
@@ -11,6 +12,7 @@ define([
     'routes/index',
     'routes/manageAccount',
     'routes/manageAccountSettings',
+    'routes/manageAccountTeams',
     'routes/manageProject',
     'routes/manageProjectAPIKeys',
     'routes/manageProjectNotifications',
@@ -33,6 +35,7 @@ define([
 ], function(
     app,
     CreateProjectRoute,
+    CreateTeamRoute,
     DeleteProjectRoute,
     DeleteTeamRoute,
     EventDetailsRoute,
@@ -43,6 +46,7 @@ define([
     IndexRoute,
     ManageAccountRoute,
     ManageAccountSettingsRoute,
+    ManageAccountTeamsRoute,
     ManageProjectRoute,
     ManageProjectAPIKeysRoute,
     ManageProjectNotificationsRoute,
@@ -100,6 +104,7 @@ define([
         // and now our routes
         $stateProvider
             .state('create_project', CreateProjectRoute)
+            .state('create_team', CreateTeamRoute)
             .state('event', EventDetailsRoute)
             .state('group', GroupDetailsRoute)
             .state('group.notes', GroupNotesRoute)
@@ -111,6 +116,7 @@ define([
             .state('team', TeamDetailsRoute)
             .state('manage_account', ManageAccountRoute)
             .state('manage_account.settings', ManageAccountSettingsRoute)
+            .state('manage_account.teams', ManageAccountTeamsRoute)
             .state('manage_project', ManageProjectRoute)
             .state('manage_project.api_keys', ManageProjectAPIKeysRoute)
             .state('manage_project.delete', DeleteProjectRoute)
