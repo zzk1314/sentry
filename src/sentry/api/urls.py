@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, url
 
+from .endpoints.auth_index import AuthIndexEndpoint
 from .endpoints.event_details import EventDetailsEndpoint
 from .endpoints.group_details import GroupDetailsEndpoint
 from .endpoints.group_resolve import GroupResolveEndpoint
@@ -25,6 +26,11 @@ from .endpoints.user_details import UserDetailsEndpoint
 
 urlpatterns = patterns(
     '',
+
+    # Auth
+    url(r'^auth/$',
+        AuthIndexEndpoint.as_view(),
+        name='sentry-api-0-auth'),
 
     # Users
     url(r'^users/(?P<user_id>[^\/]+)/$',

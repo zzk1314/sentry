@@ -15,3 +15,8 @@ class KeyAuthentication(BasicAuthentication):
             raise AuthenticationFailed('Invalid api key')
 
         return (pk.user, pk)
+
+
+class QuietBasicAuthentication(BasicAuthentication):
+    def authenticate_header(self, request):
+        return 'xBasic realm="%s"' % self.www_authenticate_realm

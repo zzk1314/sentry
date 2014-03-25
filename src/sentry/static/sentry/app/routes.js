@@ -10,6 +10,7 @@ define([
     'routes/help',
     'routes/helpGuide',
     'routes/index',
+    'routes/login',
     'routes/manageAccount',
     'routes/manageAccountSettings',
     'routes/manageAccountTeams',
@@ -44,6 +45,7 @@ define([
     HelpRoute,
     HelpGuideRoute,
     IndexRoute,
+    LoginRoute,
     ManageAccountRoute,
     ManageAccountSettingsRoute,
     ManageAccountTeamsRoute,
@@ -111,6 +113,7 @@ define([
             .state('help', HelpRoute)
             .state('help.guide', HelpGuideRoute)
             .state('index', IndexRoute)
+            .state('login', LoginRoute)
             .state('project', ProjectDetailsRoute)
             .state('project.stream', ProjectStreamRoute)
             .state('team', TeamDetailsRoute)

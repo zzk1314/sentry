@@ -19,6 +19,10 @@ from sentry.web.helpers import render_to_response
 
 @login_required
 def index(request):
+    # TODO(dcramer): we could do this via a middleware, or somewhat more
+    # intelligently
+    request.session.set_test_cookie()
+
     return render_to_response('sentry/index.html', request)
 
 
