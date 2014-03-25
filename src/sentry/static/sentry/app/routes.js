@@ -70,7 +70,7 @@ define([
     app.config(function($locationProvider, $stateProvider, $httpProvider, $urlRouterProvider,
                         $uiViewScrollProvider) {
         // use html5 location rather than hashes
-        $locationProvider.html5Mode(true);
+        // $locationProvider.html5Mode(true);
 
         $urlRouterProvider.otherwise("/");
 
