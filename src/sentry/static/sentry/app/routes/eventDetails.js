@@ -19,7 +19,7 @@ define(['app'], function() {
         },
         resolve: {
             selectedEvent: function($http, $stateParams) {
-                return $http.get('/api/0/events/' + $stateParams.event_id + '/').then(function(response){
+                return $http.get('/api/0/groups/' + $stateParams.group_id + '/events/' + $stateParams.event_id + '/').then(function(response){
                     return response.data;
                 });
             }
