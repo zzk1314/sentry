@@ -13,9 +13,22 @@ class GroupStatsEndpoint(Endpoint):
 
         assert_perm(group, request.user)
 
-        data = Group.objects.get_chart_data_for_group(
-            instances=[group],
-            max_days=min(int(request.GET.get('days', 1)), 30),
-        )
+        days = min(int(request.GET.get('days', 1)), 30)
+
+        import random
+        import time
+        now = int(time.time())
+        if days == 1:
+            TICK = 60 * 60
+            NUM_TICKS = 24
+        else:
+            TICK = 60 * 60 * 24
+            NUM_TICKS = days
+        data = [(now - (n * TICK), random.randint(0, 500)) for n in range(NUM_TICKS, 0, -1)]
+
+        # data = Group.objects.get_chart_data_for_group(
+        #     instances=[group],
+        #     max_days=min(int(request.GET.get('days', 1)), 30),
+        # )
 
         return Response(data)

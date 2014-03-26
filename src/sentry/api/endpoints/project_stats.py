@@ -13,9 +13,22 @@ class ProjectStatsEndpoint(Endpoint):
 
         assert_perm(project, request.user)
 
-        data = Project.objects.get_chart_data(
-            instances=project,
-            max_days=min(int(request.GET.get('days', 1)), 30),
-        )
+        days = min(int(request.GET.get('days', 1)), 30)
+
+        import random
+        import time
+        now = int(time.time())
+        if days == 1:
+            TICK = 60 * 60
+            NUM_TICKS = 24
+        else:
+            TICK = 60 * 60 * 24
+            NUM_TICKS = days
+        data = [(now - (n * TICK), random.randint(0, 500)) for n in range(NUM_TICKS, 0, -1)]
+
+        # data = Project.objects.get_chart_data(
+        #     instances=project,
+        #     max_days=min(int(request.GET.get('days', 1)), 30),
+        # )
 
         return Response(data)
