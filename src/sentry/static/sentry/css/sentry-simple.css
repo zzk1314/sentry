@@ -6120,6 +6120,11 @@ header .project-dropdown.open:before {
   font-weight: 600;
   padding: 8px 14px;
 }
+.nav-stacked li > a small,
+.nav-stacked li > a:hover small {
+  display: block;
+  font-weight: normal;
+}
 .nav-stacked li.active a,
 .nav-stacked li.active:hover a,
 .nav-stacked li.active:focus a {

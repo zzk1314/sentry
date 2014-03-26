@@ -10,7 +10,15 @@
 
 <section id="stream">
     <div class="row">
-        <div id="main" class="col-sm-12">
+        <div id="sidebar" class="col-sm-3">
+            <ul class="nav nav-pills nav-stacked">
+              <li class="active"><a href="#">Unresolved <small>Recent events</small></a></li>
+              <li><a href="#">Bookmarks <small>Bookmarked by you</small></a></li>
+              <li><a href="#">Tasks <small>Assigned to you</small></a></li>
+            </ul>
+        </div>
+
+        <div id="main" class="col-sm-9">
             <ul class="events">
                 <li class="event event-header">
                     <div class="row">
@@ -65,7 +73,7 @@
                         <div class="col-sm-2 col-md-1 hidden-xs users align-right">users</div>
                     </div>
                 </li>
-                <li class="deploy">
+                <li class="deploy" ng-if="false">
                     <code>master</code> deployed by <a href="#">ckj</a> at 2014-02-23 06:13:31 UTC
                 </li>
                 <li class="event" ng-repeat="group in groupList">
@@ -95,21 +103,5 @@
                 </div>
             </div>
         </div>
-    <!-- <div id="sidebar" class="col-sm-3">
-            <ul class="nav nav-pills nav-stacked">
-              <li class="active"><a href="#">All</a></li>
-              <li><a href="#">Bookmarked</a></li>
-            </ul>
-            <div class="filter">
-                <h6><label for="status">Status</label></h6>
-                <p>
-                </p>
-            </div>
-            <div class="filter">
-                <h6><label for="client">Client</label></h6>
-                <p>
-                </p>
-            </div>
-        </div> -->
     </div>
 </section>
