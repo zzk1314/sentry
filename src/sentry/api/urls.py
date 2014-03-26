@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url
 
 from .endpoints.auth_index import AuthIndexEndpoint
+from .endpoints.catchall import CatchallEndpoint
 from .endpoints.event_details import EventDetailsEndpoint
 from .endpoints.group_details import GroupDetailsEndpoint
 from .endpoints.group_resolve import GroupResolveEndpoint
@@ -104,6 +105,10 @@ urlpatterns = patterns(
     url(r'^events/(?P<event_id>\d+)/$',
         EventDetailsEndpoint.as_view(),
         name='sentry-api-0-event-details'),
+
+    url(r'^',
+        CatchallEndpoint.as_view(),
+        name='sentry-api-catchall'),
 
     # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 )
