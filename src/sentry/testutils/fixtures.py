@@ -7,6 +7,8 @@ sentry.testutils.fixtures
 """
 from django.utils.text import slugify
 from exam import fixture
+from uuid import uuid4
+
 from sentry.models import Activity, Event, Group, Project, Team, User
 from sentry.utils.compat import pickle
 from sentry.utils.strings import decompress
@@ -35,7 +37,7 @@ class Fixtures(object):
 
     @fixture
     def group(self):
-        return self.create_group()
+        return self.create_group(message='Foo bar')
 
     @fixture
     def event(self):
@@ -91,8 +93,9 @@ class Fixtures(object):
         )
 
     def create_group(self, project=None, **kwargs):
+        kwargs.setdefault('message', 'Hello world')
+        kwargs.setdefault('checksum', uuid4().hex)
         return Group.objects.create(
-            message='Foo bar',
             project=project or self.project,
             **kwargs
         )
