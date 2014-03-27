@@ -19,7 +19,9 @@ define(['app'], function(app) {
                     });
             });
 
-            $state.go('event', {event_id: 'latest'}, {location: false});
+            if ($state.current.name == 'group') {
+                $state.go('event', {event_id: 'latest'}, {location: false});
+            }
         },
         resolve: {
             groupData: function($http, $stateParams) {

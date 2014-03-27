@@ -7,6 +7,7 @@ define([
     'routes/eventDetails',
     'routes/groupDetails',
     'routes/groupNotes',
+    'routes/groupTags',
     'routes/help',
     'routes/helpGuide',
     'routes/index',
@@ -42,6 +43,7 @@ define([
     EventDetailsRoute,
     GroupDetailsRoute,
     GroupNotesRoute,
+    GroupTagsRoute,
     HelpRoute,
     HelpGuideRoute,
     IndexRoute,
@@ -110,6 +112,7 @@ define([
             .state('event', EventDetailsRoute)
             .state('group', GroupDetailsRoute)
             .state('group.notes', GroupNotesRoute)
+            .state('group.tags', GroupTagsRoute)
             .state('help', HelpRoute)
             .state('help.guide', HelpGuideRoute)
             .state('index', IndexRoute)
