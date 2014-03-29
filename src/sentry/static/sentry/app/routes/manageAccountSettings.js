@@ -7,9 +7,9 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
         templateUrl: 'partials/manage-account-settings.html',
         controller: function($scope, $http, $state, selectedUser){
             $scope.saveForm = function() {
-                $http.put('/api/0/users/' + selectedUser.id + '/', $scope.userData)
+                $http.put('/api/0/users/' + selectedUser.id + '/', $scope.settingsForm.getData())
                     .success(function(data){
-                        $scope.userData = data;
+                        $scope.settingsForm.setData(data);
                         angular.extend(selectedUser, data);
                     });
             };
@@ -40,6 +40,14 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
                 }
 
                 return angular.equals(this._data, data);
+            };
+
+            Form.prototype.getData = function(){
+                return this._data;
+            };
+
+            Form.prototype.setData = function(data){
+                this._data = data;
             };
 
             $scope.settingsForm = new Form({
