@@ -6,12 +6,6 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
         url: 'settings/',
         templateUrl: 'partials/manage-account-settings.html',
         controller: function($scope, $http, $state, selectedUser){
-            $scope.userData = angular.copy(selectedUser);
-
-            $scope.isUnchanged = function(data) {
-                return angular.equals(data, selectedUser);
-            };
-
             $scope.saveForm = function() {
                 $http.put('/api/0/users/' + selectedUser.id + '/', $scope.userData)
                     .success(function(data){
@@ -20,21 +14,46 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
                     });
             };
 
+            var Form = function(fields, initial){
+                var field,
+                    fieldName;
 
-            $scope.settingsForm = {
+                this._data = angular.copy(initial || {});
+                this._fields = fields;
+
+                for (fieldName in fields) {
+                    field = fields[fieldName];
+                    field.name = fieldName;
+                    field.value = this._data[fieldName];
+                    this[fieldName] = field;
+                }
+            };
+
+            Form.prototype.isUnchanged = function(){
+                var data = {},
+                    field,
+                    fieldName;
+
+                for (fieldName in this._fields) {
+                    field = this._fields[fieldName];
+                    data[fieldName] = field.value;
+                }
+
+                return angular.equals(this._data, data);
+            };
+
+            $scope.settingsForm = new Form({
                 name: {
                     name: 'name',
                     type: 'text',
-                    placeholder: 'Walter White',
-                    value: selectedUser.name
+                    placeholder: 'Walter White'
                 },
                 email: {
                     name: 'email',
                     type: 'email',
-                    placeholder: 'walter.white@example.com',
-                    value: selectedUser.email
+                    placeholder: 'walter.white@example.com'
                 }
-            };
+            }, selectedUser);
         },
         resolve: {
             selectedUser: function($http) {
