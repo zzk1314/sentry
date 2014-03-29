@@ -19,6 +19,20 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
                         angular.extend(selectedUser, data);
                     });
             };
+
+
+            $scope.settingsForm = {
+                name: {
+                    name: 'name',
+                    type: 'text',
+                    placeholder: 'Walter White'
+                },
+                email: {
+                    name: 'email',
+                    type: 'email',
+                    placeholder: 'walter.white@example.com'
+                }
+            };
         },
         resolve: {
             selectedUser: function($http) {

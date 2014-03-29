@@ -10,6 +10,7 @@ define([
   'event_handlers/httpRequest',
   'modules/barChart',
   'modules/eventManager',
+  'modules/forms',
   'modules/simpleSlider'
   ], function (angular) {
     'use strict';
@@ -23,6 +24,7 @@ define([
       'sentry.eventHandlers.default',
       'sentry.eventHandlers.exception',
       'sentry.eventHandlers.httpRequest',
+      'sentry.forms',
       'sentry.slider',
       'ui.bootstrap',
       'ui.router'

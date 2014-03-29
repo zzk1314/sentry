@@ -1,0 +1,13 @@
+<div class="form-group" ng-class="field.$invalid ? 'error' : ''">
+    <label for="{{field.id}}">{{field.label}}:</label>
+    <input id="{{field.id}}"
+           name="{{field.name}}"
+           ng-model="field.value"
+           class="form-control"
+           type="{{field.type}}"
+           placeholder="{{field.placeholder}}"
+           required>
+    <div ng-show="form.userName.$dirty && form.userName.$invalid">Invalid:
+        <span ng-show="form.userName.$error.required">Enter a valid {{field.label}}.</span>
+    </div>
+</div>

@@ -3,33 +3,8 @@
 </div>
 
 <form role="form" name="form">
-    <div class="form-group" ng-class="form.userName.$invalid ? 'error' : ''">
-        <label for="userName">Name:</label>
-        <input id="userName"
-               name="name"
-               ng-model="userData.name"
-               class="form-control"
-               type="text"
-               placeholder="e.g. Walter White"
-               required>
-        <div ng-show="form.userName.$dirty && form.userName.$invalid">Invalid:
-            <span ng-show="form.userName.$error.required">Enter a valid name.</span>
-        </div>
-    </div>
-
-    <div class="form-group" ng-class="form.userEmail.$invalid ? 'error' : ''">
-        <label for="userEmail">Email Address:</label>
-        <input id="userEmail"
-               name="email"
-               ng-model="userData.email"
-               class="form-control"
-               type="email"
-               placeholder="Email Address"
-               required>
-        <div ng-show="form.userEmail.$dirty && form.userEmail.$invalid">Invalid:
-            <span ng-show="form.userEmail.$error.required">Enter a valid email address.</span>
-        </div>
-    </div>
+    <div form-field="settingsForm.name"></div>
+    <div form-field="settingsForm.email"></div>
     <button class="btn btn-primary"
             ng-click="saveForm()"
             ng-disabled="form.$invalid || isUnchanged(userData)">Save</button>
