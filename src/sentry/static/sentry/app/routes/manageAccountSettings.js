@@ -5,49 +5,13 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
         parent: 'manage_account',
         url: 'settings/',
         templateUrl: 'partials/manage-account-settings.html',
-        controller: function($scope, $http, $state, selectedUser){
+        controller: function($scope, $http, $state, selectedUser, Form){
             $scope.saveForm = function() {
                 $http.put('/api/0/users/' + selectedUser.id + '/', $scope.settingsForm.getData())
                     .success(function(data){
                         $scope.settingsForm.setData(data);
                         angular.extend(selectedUser, data);
                     });
-            };
-
-            var Form = function(fields, initial){
-                var field,
-                    fieldName;
-
-                this._data = angular.copy(initial || {});
-                this._fields = fields;
-
-                for (fieldName in fields) {
-                    field = fields[fieldName];
-                    field.name = fieldName;
-                    field.value = this._data[fieldName];
-                    this[fieldName] = field;
-                }
-            };
-
-            Form.prototype.isUnchanged = function(){
-                var data = {},
-                    field,
-                    fieldName;
-
-                for (fieldName in this._fields) {
-                    field = this._fields[fieldName];
-                    data[fieldName] = field.value;
-                }
-
-                return angular.equals(this._data, data);
-            };
-
-            Form.prototype.getData = function(){
-                return this._data;
-            };
-
-            Form.prototype.setData = function(data){
-                this._data = data;
             };
 
             $scope.settingsForm = new Form({
