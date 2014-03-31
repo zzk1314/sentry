@@ -32,6 +32,7 @@ define([
     'routes/teamDetails',
 
     // registration via loader
+    'directives/autoFocus',
     'directives/timeSince',
     'filters/formatNumber'
 ], function(
@@ -78,28 +79,6 @@ define([
 
         // revert to default scrolling behavior as autoscroll is broken
         $uiViewScrollProvider.useAnchorScroll();
-
-        // on a 401 (from the API) redirect the user to the login view
-        var logInUserOn401 = ['$window', '$q', function($window, $q) {
-            function success(response) {
-                return response;
-            }
-
-            function error(response) {
-                if(response.status === 401) {
-                    $window.location.href = '/login/';
-                    return $q.reject(response);
-                }
-                else {
-                    return $q.reject(response);
-                }
-            }
-
-            return function(promise) {
-                return promise.then(success, error);
-            };
-        }];
-        $httpProvider.responseInterceptors.push(logInUserOn401);
 
         // add in Django csrf support
         $httpProvider.defaults.xsrfCookieName = 'csrftoken';

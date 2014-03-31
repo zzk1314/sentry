@@ -47,11 +47,22 @@ define([
       };
 
       Form.prototype.getData = function(){
-        return this._data;
+        var data = {},
+            fieldName;
+
+        for (fieldName in this._fields) {
+          data[fieldName] = this._fields[fieldName].value;
+        }
+        return data;
       };
 
       Form.prototype.setData = function(data){
+        var fieldName;
+
         this._data = data;
+        for (fieldName in this._fields) {
+          this._fields[fieldName].value = data[fieldName] || '';
+        }
       };
 
       return Form;

@@ -1,6 +1,4 @@
 from django.contrib.auth import login, logout
-from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
 from rest_framework.response import Response
 
 from sentry.api.authentication import QuietBasicAuthentication
@@ -15,7 +13,12 @@ class AuthIndexEndpoint(Endpoint):
             return Response(status=400)
 
         login(request, request.user)
-        return HttpResponseRedirect(reverse('sentry-api-0-user-details', args=[request.user.id]))
+
+        # TODO: make internal request to UserDetailsEndpoint
+        from sentry.api.endpoints.user_details import UserDetailsEndpoint
+        endpoint = UserDetailsEndpoint()
+        response = endpoint.get(request, user_id=request.user.id)
+        return response
 
     def delete(self, request, *args, **kwargs):
         logout(request)

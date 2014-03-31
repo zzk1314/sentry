@@ -7,6 +7,7 @@ define(['angular', 'app'], function(angular, app) {
         templateUrl: 'partials/login.html',
         controller: function($scope, $http, $state, userData){
             $scope.loginData = {};
+            $scope.isSudo = userData !== null;
 
             function addAuthHeader(data, headersGetter){
                 // as per HTTP authentication spec [1], credentials must be
