@@ -4,7 +4,8 @@ define([
   'use strict';
 
   var TEMPLATES = {
-    'text': 'input-text.html'
+    'text': 'input-text.html',
+    'select': 'input-select.html'
   };
 
   var DEFAULT_TEMPLATE = TEMPLATES.text;
@@ -27,6 +28,8 @@ define([
           field = fields[fieldName];
           field.name = fieldName;
           field.value = this._data[fieldName];
+          field.label = field.label || titleize(field.name);
+          field.required = field.required || false;
           this[fieldName] = field;
         }
       };
@@ -77,10 +80,6 @@ define([
         link: function(scope, element, attrs, ctrl) {
           var field = scope.formField;
           var templateName = TEMPLATES[field.type] || DEFAULT_TEMPLATE;
-
-          if (!field.label) {
-            field.label = titleize(field.name);
-          }
 
           scope.fieldTemplateUrl = 'partials/forms/' + templateName;
           scope.field = field;

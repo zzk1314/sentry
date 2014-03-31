@@ -2,12 +2,12 @@
     <label for="{{field.id}}">{{field.label}}:</label>
     <input id="{{field.id}}"
            name="{{field.name}}"
-           ng-model="field.value"
            class="form-control"
            type="{{field.type}}"
            placeholder="{{field.placeholder}}"
-           required>
-    <div ng-show="form.userName.$dirty && form.userName.$invalid">Invalid:
-        <span ng-show="form.userName.$error.required">Enter a valid {{field.label}}.</span>
+           ng-model="field.value"
+           ng-required="field.required">
+    <div ng-show="form[field.name].$dirty && form[field.name].$invalid">Invalid:
+        <span ng-show="form[field.name].$error.required">Enter a valid {{field.label}}.</span>
     </div>
 </div>

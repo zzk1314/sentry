@@ -1,5 +1,6 @@
 define([
     'app',
+    'routes/createAccessGroup',
     'routes/createProject',
     'routes/createTeam',
     'routes/deleteProject',
@@ -37,6 +38,7 @@ define([
     'filters/formatNumber'
 ], function(
     app,
+    CreateAccessGroupRoute,
     CreateProjectRoute,
     CreateTeamRoute,
     DeleteProjectRoute,
@@ -86,6 +88,7 @@ define([
 
         // and now our routes
         $stateProvider
+            .state('create_access_group', CreateAccessGroupRoute)
             .state('create_project', CreateProjectRoute)
             .state('create_team', CreateTeamRoute)
             .state('event', EventDetailsRoute)
