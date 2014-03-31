@@ -18,11 +18,13 @@ define(['app', 'angular', 'jquery'], function(app, angular, $) {
                 name: {
                     name: 'name',
                     type: 'text',
+                    required: true,
                     placeholder: 'Walter White'
                 },
                 email: {
                     name: 'email',
                     type: 'email',
+                    required: true,
                     placeholder: 'walter.white@example.com'
                 }
             }, selectedUser);

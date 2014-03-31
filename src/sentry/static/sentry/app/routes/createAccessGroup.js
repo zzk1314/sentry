@@ -10,12 +10,14 @@ define(['angular', 'app', 'jquery'], function(angular, app, $) {
                 name: {
                     name: 'name',
                     type: 'text',
-                    placeholder: 'The Rangers'
+                    placeholder: 'The Rangers',
+                    required: true
                 },
                 type: {
                     name: 'type',
                     label: 'Access Type',
                     type: 'select',
+                    required: true,
                     options: [
                         {name: 'User', value: 'user'},
                         {name: 'Admin', value: 'admin'}
