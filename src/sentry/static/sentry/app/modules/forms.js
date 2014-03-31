@@ -38,10 +38,12 @@ define([
 
         for (fieldName in this._fields) {
           field = this._fields[fieldName];
-          data[fieldName] = field.value;
+          if (field.value != this._data[fieldName]) {
+            return false;
+          }
         }
 
-        return angular.equals(this._data, data);
+        return true;
       };
 
       Form.prototype.getData = function(){
