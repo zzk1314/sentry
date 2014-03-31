@@ -31,7 +31,7 @@ class TeamAccessGroupCreateTest(APITestCase):
         })
         resp = self.client.post(url, data={
             'name': 'hello world',
-            'type': str(MEMBER_USER),
+            'type': 'user',
         })
         assert resp.status_code == 201, resp.content
         access_group = AccessGroup.objects.get(id=resp.data['id'])

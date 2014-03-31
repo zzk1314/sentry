@@ -2,12 +2,44 @@ from rest_framework import serializers, status
 from sentry.api.base import Endpoint
 from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
-from sentry.constants import MEMBER_ADMIN
+from sentry.constants import MEMBER_ADMIN, MEMBER_SYSTEM, MEMBER_USER
 from sentry.models import Team, AccessGroup
 from rest_framework.response import Response
 
 
+class AccessTypeField(serializers.ChoiceField):
+    DEFAULT_CHOICES = (
+        (MEMBER_USER, 'User'),
+        (MEMBER_ADMIN, 'Admin'),
+    )
+
+    def __init__(self, choices=DEFAULT_CHOICES, *args, **kwargs):
+        super(AccessTypeField, self).__init__(choices=choices, *args, **kwargs)
+
+    def to_native(self, obj):
+        if obj == MEMBER_ADMIN:
+            return 'admin'
+        elif obj == MEMBER_USER:
+            return 'user'
+        elif obj == MEMBER_SYSTEM:
+            return 'agent'
+        else:
+            raise ValueError(obj)
+
+    def from_native(self, obj):
+        if obj == 'admin':
+            return MEMBER_ADMIN
+        elif obj == 'user':
+            return MEMBER_USER
+        elif obj == 'agent':
+            return MEMBER_SYSTEM
+        else:
+            raise ValueError(obj)
+
+
 class AccessGroupSerializer(serializers.ModelSerializer):
+    type = AccessTypeField()
+
     class Meta:
         model = AccessGroup
         fields = ('name', 'type')
