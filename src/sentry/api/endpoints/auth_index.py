@@ -12,7 +12,8 @@ class AuthIndexEndpoint(Endpoint):
         if not request.user.is_authenticated():
             return Response(status=400)
 
-        login(request, request.user)
+        # Must use the real request object that Django knows about
+        login(request._request, request.user)
 
         # TODO: make internal request to UserDetailsEndpoint
         from sentry.api.endpoints.user_details import UserDetailsEndpoint
@@ -21,5 +22,5 @@ class AuthIndexEndpoint(Endpoint):
         return response
 
     def delete(self, request, *args, **kwargs):
-        logout(request)
+        logout(request._request)
         return Response(status=204)
