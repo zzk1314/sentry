@@ -596,7 +596,7 @@ class GroupManager(BaseManager, ChartMixin):
         return group, is_new, is_sample
 
     def add_tags(self, group, tags):
-        from sentry.models import TagValue, GroupTag
+        from sentry.models import TagValue, GroupTagValue
 
         project = group.project
         date = group.last_seen
@@ -625,7 +625,7 @@ class GroupManager(BaseManager, ChartMixin):
                 'data': data,
             })
 
-            app.buffer.incr(GroupTag, {
+            app.buffer.incr(GroupTagValue, {
                 'times_seen': 1,
             }, {
                 'group': group,
