@@ -48,6 +48,7 @@ class ProjectGroupIndexEndpoint(Endpoint):
             value = request.GET.get(tag)
             if value:
                 group_list = group_list.filter(
+                    grouptag__project=project,
                     grouptag__key=tag,
                     grouptag__value=value,
                 )
