@@ -7,100 +7,10 @@ import json
 from datetime import timedelta
 from django.core.urlresolvers import reverse
 from django.utils import timezone
-from exam import before, fixture
+from exam import fixture
 
-from sentry.models import GroupSeen, Group
 from sentry.constants import MAX_JSON_RESULTS
 from sentry.testutils import TestCase
-
-
-class GroupDetailsTest(TestCase):
-    @fixture
-    def path(self):
-        return reverse('sentry-group', kwargs={
-            'team_slug': self.team.slug,
-            'project_id': self.project.slug,
-            'group_id': self.group.id,
-        })
-
-    def test_simple(self):
-        self.login()
-        resp = self.client.get(self.path)
-        assert resp.status_code == 200
-        self.assertTemplateUsed(resp, 'sentry/groups/details.html')
-        assert 'group' in resp.context
-        assert 'project' in resp.context
-        assert 'team' in resp.context
-        assert resp.context['group'] == self.group
-        assert resp.context['project'] == self.project
-        assert resp.context['team'] == self.team
-
-        # ensure we've marked the group as seen
-        assert GroupSeen.objects.filter(
-            group=self.group, user=self.user).exists()
-
-
-class GroupListTest(TestCase):
-    @fixture
-    def path(self):
-        return reverse('sentry-stream', kwargs={
-            'team_slug': self.team.slug,
-            'project_id': self.project.slug,
-        })
-
-    @before
-    def create_a_couple_events(self):
-        later = timezone.now()
-        now = later - timedelta(hours=1)
-        past = now - timedelta(hours=1)
-
-        self.group1 = Group.objects.create(
-            project=self.project,
-            checksum='a' * 32,
-            last_seen=now,
-            first_seen=now,
-            times_seen=5,
-        )
-        self.group2 = Group.objects.create(
-            project=self.project,
-            checksum='b' * 32,
-            last_seen=later,
-            first_seen=past,
-            times_seen=50,
-        )
-
-    def test_does_render(self):
-        self.login()
-        resp = self.client.get(self.path)
-        assert resp.status_code == 200
-        self.assertTemplateUsed(resp, 'sentry/groups/group_list.html')
-        assert 'project' in resp.context
-        assert 'team' in resp.context
-        assert 'event_list' in resp.context
-        assert resp.context['project'] == self.project
-        assert resp.context['team'] == self.team
-
-    def test_date_sort(self):
-        self.login()
-        resp = self.client.get(self.path + '?sort=date')
-        assert resp.status_code == 200
-        self.assertTemplateUsed(resp, 'sentry/groups/group_list.html')
-        assert list(resp.context['event_list']) == [self.group2, self.group1]
-
-    def test_new_sort(self):
-        self.login()
-        resp = self.client.get(self.path + '?sort=new')
-        assert resp.status_code == 200
-        self.assertTemplateUsed(resp, 'sentry/groups/group_list.html')
-        print self.group1.score, self.group2.score
-        assert list(resp.context['event_list']) == [self.group1, self.group2]
-
-    def test_freq_sort(self):
-        self.login()
-        resp = self.client.get(self.path + '?sort=freq')
-        assert resp.status_code == 200
-        self.assertTemplateUsed(resp, 'sentry/groups/group_list.html')
-        assert list(resp.context['event_list']) == [self.group2, self.group1]
 
 
 class GroupEventListTest(TestCase):
