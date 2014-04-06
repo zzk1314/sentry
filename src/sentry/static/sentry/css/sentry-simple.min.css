@@ -5991,9 +5991,6 @@ header .project-dropdown {
 }
 header .project-dropdown .dropdown-menu {
   padding: 15px 15px 0;
-  left: -15px;
-  top: 41px;
-  border-radius: 0 0 4px 4px;
   width: 540px;
   max-height: 400px;
   overflow: auto;
@@ -6068,17 +6065,6 @@ header .project-dropdown .project-name {
 }
 header .project-dropdown .icon-arrow-down {
   top: 0;
-}
-header .project-dropdown.open:before {
-  z-index: 1;
-  display: block;
-  content: "";
-  background: rgba(0, 0, 0, 0.2);
-  position: absolute;
-  top: -16px;
-  left: -18px;
-  right: -18px;
-  bottom: -16px;
 }
 .align-right {
   text-align: right;
@@ -6603,6 +6589,14 @@ header .project-dropdown.open:before {
 .frame .stack > .table {
   margin-bottom: 0;
 }
+.section-header {
+  border-bottom: 2px solid #f1f2f3;
+  padding-top: 6px;
+  margin-bottom: 15px;
+}
+.section-header h4 {
+  margin: 0 0 15px;
+}
 #explore h2 {
   margin: 0 0 10px;
 }
@@ -6669,4 +6663,19 @@ figure {
   margin: -1px 0 0 0;
   top: 100%;
   left: 0;
+}
+section.settings .page-header h3 {
+  font-weight: 300;
+}
+.settings .table-settings th {
+  padding-top: 0;
+  vertical-align: middle;
+}
+.settings .table-settings td,
+.settings .table-settings th {
+  padding-left: 0;
+  padding-right: 0;
+}
+.settings .table-settings h4 {
+  margin: 0;
 }

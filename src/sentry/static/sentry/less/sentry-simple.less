@@ -142,9 +142,6 @@ header {
 
     .dropdown-menu {
       padding: 15px 15px 0;
-      left: -15px;
-      top: 41px;
-      border-radius: 0 0 4px 4px;
       width: 540px;
       max-height: 400px;
       overflow: auto;
@@ -209,17 +206,6 @@ header {
 
     .icon-arrow-down {
       top: 0;
-    }
-    &.open:before {
-      z-index: 1;
-      display: block;
-      content: "";
-      background: rgba(0,0,0, .2);
-      position: absolute;
-      top: -16px;
-      left: -18px;
-      right: -18px;
-      bottom: -16px;
     }
   }
 }
@@ -764,6 +750,14 @@ header {
   }
 }
 
+.section-header {
+  border-bottom: 2px solid #f1f2f3;
+  padding-top: 6px;
+  margin-bottom: 15px;
+  h4 {
+    margin: 0 0 15px;
+  }
+}
 
 #explore {
   h2 {
@@ -846,4 +840,25 @@ figure {
   margin: -1px 0 0 0;
   top: 100%;
   left: 0;
+}
+
+section.settings {
+  .page-header h3 {
+    font-weight: 300;
+  }
+}
+
+
+.settings .table-settings {
+  th {
+    padding-top: 0;
+    vertical-align: middle; 
+  }
+  td,th {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  h4 {
+    margin: 0;
+  }
 }
