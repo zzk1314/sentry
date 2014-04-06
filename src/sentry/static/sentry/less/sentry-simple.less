@@ -141,10 +141,18 @@ header {
     float: left;
 
     .dropdown-menu {
-      padding: 15px 15px 0;
       width: 540px;
       max-height: 400px;
       overflow: auto;
+      padding: 0;
+
+      .team {
+        border-bottom: 2px solid #f1f2f3;
+        padding: 15px 15px 0;
+        &:last-child {
+          border-bottom: 0;
+        }
+      }
 
       h5 {
         margin-bottom: 10px;
@@ -159,7 +167,7 @@ header {
       ul {
         .clearfix;
         .list-unstyled;
-        padding-bottom: 5px;
+
         li {
           width: 31%;
           float: left;

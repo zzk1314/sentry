@@ -5990,10 +5990,17 @@ header .project-dropdown {
   float: left;
 }
 header .project-dropdown .dropdown-menu {
-  padding: 15px 15px 0;
   width: 540px;
   max-height: 400px;
   overflow: auto;
+  padding: 0;
+}
+header .project-dropdown .dropdown-menu .team {
+  border-bottom: 2px solid #f1f2f3;
+  padding: 15px 15px 0;
+}
+header .project-dropdown .dropdown-menu .team:last-child {
+  border-bottom: 0;
 }
 header .project-dropdown .dropdown-menu h5 {
   margin-bottom: 10px;
@@ -6007,7 +6014,6 @@ header .project-dropdown .dropdown-menu h5 a:hover {
 header .project-dropdown .dropdown-menu ul {
   padding-left: 0;
   list-style: none;
-  padding-bottom: 5px;
 }
 header .project-dropdown .dropdown-menu ul:before,
 header .project-dropdown .dropdown-menu ul:after {
