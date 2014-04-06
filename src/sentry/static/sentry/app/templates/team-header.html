@@ -1,12 +1,12 @@
 <div class="container">
     <div class="pull-right hidden-xs">
-        <ul class="user-nav collapse navbar-collapse">
+        <ul class="user-nav">
             <li ng-if="selectedTeam.permission.edit"><a ui-sref="manage_team.settings({team_slug: selectedTeam.slug})">
                 <span class="icon-settings"></span> Team Settings
             </a></li>
             <li><a ui-sref="help()"><span class="icon-question"></span> Help</a></li>
             <li class="dropdown">
-                <a dropdown-toggle><span class="icon-arrow-down"></span> <img src="{{userData.avatarUrl}}"></a>
+                <a dropdown-toggle><img src="{{userData.avatarUrl}}" class="user-avatar"> <span class="icon-arrow-down"></span> </a>
                 <ul class="dropdown-menu">
                     <li><a ui-sref="manage_account.settings()">Account Settings</a></li>
                     <li><a href="/logout/" target="_self">Logout</a></li>
@@ -14,6 +14,7 @@
             </li>
         </ul>
     </div>
+    <a href="#" class="sentry-logo"><img src="/_static/sentry/images/sentry-logo-mark.svg"></a>
     <div class="project-dropdown dropdown" ng-if="selectedTeam">
         <a href="#" class="team-name" dropdown-toggle>
             <span>{{selectedTeam.name}}</span>

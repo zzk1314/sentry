@@ -101,11 +101,33 @@ header {
     }
   }
 
+  .sentry-logo {
+    float: left;
+    margin: 0 14px 0 0;
+    img {
+      width: 30px;
+    }
+    svg {
+      fill: #fff;
+    }
+  }
+
+  .user-avatar {
+    width: 22px;
+    border-radius: 3px;
+    position: relative;
+    top: -2px;
+  }
+
   .user-nav {
     margin-top: 4px;
     margin-bottom: 0;
     .clearfix();
-    li {
+    .dropdown-menu {
+      left: auto;
+      right: 0;
+    }
+    > li {
       list-style: none;
       float: left;
       margin-left: 30px;
