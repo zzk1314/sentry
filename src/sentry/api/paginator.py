@@ -64,7 +64,7 @@ class Paginator(object):
         cursor = cursor or (0, 0, 0)
 
         if cursor:
-            cursor_offset, offset, is_prev = cursor
+            cursor_offset, offset, is_prev = map(int, cursor)
         else:
             cursor_offset, offset, is_prev = 0, 0, 0
 
