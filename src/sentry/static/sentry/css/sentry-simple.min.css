@@ -5474,8 +5474,17 @@ td.visible-print {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.icon-sentry-logo:before {
+  content: "\e603";
+}
+.icon-bookmark:before {
+  content: "\e613";
+}
 .icon-search:before {
   content: "\e601";
+}
+.icon-forbid:before {
+  content: "\e604";
 }
 .icon-envelope:before {
   content: "\e605";
@@ -5504,23 +5513,20 @@ td.visible-print {
 .icon-x:before {
   content: "\e60d";
 }
-.icon-users:before {
-  content: "\e612";
-}
 .icon-pause:before {
   content: "\e614";
 }
 .icon-exclamation:before {
   content: "\e615";
 }
-.icon-book:before {
-  content: "\e600";
-}
 .icon-question:before {
   content: "\e602";
 }
-.icon-forbid:before {
-  content: "\e604";
+.icon-book:before {
+  content: "\e600";
+}
+.icon-users:before {
+  content: "\e612";
 }
 .icon-arrow-left:before {
   content: "\e60e";
@@ -5533,9 +5539,6 @@ td.visible-print {
 }
 .icon-arrow-right:before {
   content: "\e611";
-}
-.icon-bookmark:before {
-  content: "\e613";
 }
 .selectize-control {
   position: relative;
@@ -5934,15 +5937,10 @@ header a:hover {
   color: #fff;
   text-decoration: none;
 }
-header .sentry-logo {
+header .icon-sentry-logo {
   float: left;
-  margin: 0 14px 0 0;
-}
-header .sentry-logo img {
-  width: 30px;
-}
-header .sentry-logo svg {
-  fill: #fff;
+  margin: 2px 12px 0 0;
+  font-size: 22px;
 }
 header .user-avatar {
   width: 22px;
