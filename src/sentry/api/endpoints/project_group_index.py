@@ -113,31 +113,20 @@ class ProjectGroupIndexEndpoint(Endpoint):
             score_clause = SORT_CLAUSES.get(sort)
             filter_clause = SCORE_CLAUSES.get(sort)
 
+        assert score_clause
+
         if sort == 'tottime':
             group_list = group_list.filter(time_spent_count__gt=0)
         elif sort == 'avgtime':
             group_list = group_list.filter(time_spent_count__gt=0)
 
-        if score_clause:
-            group_list = group_list.extra(
-                select={'sort_value': score_clause},
-            )
-            # HACK: don't sort by the same column twice
-            if sort == 'date':
-                group_list = group_list.order_by('-last_seen')
-            else:
-                group_list = group_list.order_by('-sort_value', '-last_seen')
-
-            cursor = request.GET.get('cursor', request.GET.get('c'))
-            if cursor:
-                group_list = group_list.extra(
-                    where=['%s > %%s' % filter_clause],
-                    params=[float(cursor)],
-                )
+        group_list = group_list.extra(
+            select={'sort_value': score_clause},
+        )
 
         return self.paginate(
             request=request,
             queryset=group_list,
-            order_by='-last_seen',
+            order_by='-sort_value',
             on_results=lambda x: serialize(x, request.user),
         )
