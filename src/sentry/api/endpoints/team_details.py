@@ -8,6 +8,7 @@ from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
 from sentry.constants import MEMBER_ADMIN
 from sentry.models import Team, TeamMember
+from sentry.permissions import can_remove_team
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -19,7 +20,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 class TeamAdminSerializer(TeamSerializer):
-    owner = serializers.SlugRelatedField(slug_field='username')
+    owner = serializers.SlugRelatedField(slug_field='username', required=False)
 
     class Meta:
         model = Team
@@ -64,12 +65,15 @@ class TeamDetailsEndpoint(Endpoint):
     def delete(self, request, team_id):
         team = Team.objects.get(id=team_id)
 
+        assert_perm(team, request.user, access=MEMBER_ADMIN)
+
         if team.project_set.filter(id=settings.SENTRY_PROJECT).exists():
             return Response('{"error": "Cannot remove team containing default project."}',
                             status=status.HTTP_403_FORBIDDEN)
 
         if not (request.user.is_superuser or team.owner_id == request.user.id):
-            return Response('{"error": "form"}', status=status.HTTP_403_FORBIDDEN)
+            return Response('{"error": "You do not have permission to remove this team."}', status=status.HTTP_403_FORBIDDEN)
+
 
         # TODO(dcramer): this needs to push it into the queue
         team.delete()

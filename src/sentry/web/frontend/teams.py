@@ -42,37 +42,6 @@ def render_with_team_context(team, template, context, request=None):
     return render_to_response(template, context, request)
 
 
-@login_required
-@sudo_required
-@csrf_protect
-def create_new_team(request):
-    if not can_create_teams(request.user):
-        return missing_perm(request, Permissions.ADD_TEAM)
-
-    if request.user.is_superuser:
-        form_cls = NewTeamAdminForm
-        initial = {
-            'owner': request.user.username,
-        }
-    else:
-        form_cls = NewTeamForm
-        initial = {}
-
-    form = form_cls(request.POST or None, initial=initial)
-    if form.is_valid():
-        team = form.save(commit=False)
-        if not team.owner_id:
-            team.owner = request.user
-        team.save()
-        return HttpResponseRedirect(reverse('sentry-new-project', args=[team.slug]))
-
-    context = csrf(request)
-    context.update({
-        'form': form,
-    })
-
-    return render_to_response('sentry/teams/new.html', context, request)
-
 
 @has_access(MEMBER_OWNER)
 @csrf_protect
@@ -125,59 +94,6 @@ def manage_team(request, team):
     })
 
     return render_with_team_context(team, 'sentry/teams/manage.html', context, request)
-
-
-@has_access(MEMBER_OWNER)
-@csrf_protect
-def remove_team(request, team):
-    if not can_remove_team(request.user, team):
-        return HttpResponseRedirect(reverse('sentry'))
-
-    if request.method == 'POST':
-        form = RemoveTeamForm(request.POST)
-    else:
-        form = RemoveTeamForm()
-
-    if form.is_valid():
-        team.delete()
-        messages.add_message(
-            request, messages.SUCCESS,
-            _(u'The team %r was permanently deleted.') % (team.name.encode('utf-8'),))
-        return HttpResponseRedirect(reverse('sentry'))
-
-    context = csrf(request)
-    context.update({
-        'page': 'settings',
-        'form': form,
-        'SUBSECTION': 'settings',
-    })
-
-    return render_with_team_context(team, 'sentry/teams/remove.html', context, request)
-
-
-@has_access(MEMBER_OWNER)
-@csrf_protect
-def manage_team_projects(request, team):
-    result = plugins.first('has_perm', request.user, 'edit_team', team)
-    if result is False and not request.user.is_superuser:
-        return HttpResponseRedirect(reverse('sentry'))
-
-    project_list = team.project_set.all()
-    if not request.user.is_superuser:
-        project_list = project_list.filter(status=STATUS_VISIBLE)
-    project_list = sorted(project_list, key=lambda o: o.slug)
-    for project in project_list:
-        project.team = team
-
-    context = csrf(request)
-    context.update({
-        'page': 'projects',
-        'team': team,
-        'project_list': project_list,
-        'SUBSECTION': 'projects',
-    })
-
-    return render_with_team_context(team, 'sentry/teams/projects/index.html', context, request)
 
 
 @has_access(MEMBER_OWNER)

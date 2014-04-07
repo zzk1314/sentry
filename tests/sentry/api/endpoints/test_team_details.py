@@ -87,3 +87,18 @@ class TeamDeleteTest(APITestCase):
             response = self.client.delete(url)
 
         assert response.status_code == 403
+
+    def test_as_non_owner(self):
+        team = self.create_team(owner=self.user)
+        project = self.create_project(team=team)  # NOQA
+
+        user = self.create_user(email='foo@example.com', is_superuser=False)
+
+        team.member_set.create(user=user, type=MEMBER_ADMIN)
+
+        self.login_as(user=user)
+
+        url = reverse('sentry-api-0-team-details', kwargs={'team_id': team.id})
+        response = self.client.delete(url)
+
+        assert response.status_code == 403
