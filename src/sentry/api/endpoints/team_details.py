@@ -8,7 +8,6 @@ from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
 from sentry.constants import MEMBER_ADMIN
 from sentry.models import Team, TeamMember
-from sentry.permissions import can_remove_team
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -73,7 +72,6 @@ class TeamDetailsEndpoint(Endpoint):
 
         if not (request.user.is_superuser or team.owner_id == request.user.id):
             return Response('{"error": "You do not have permission to remove this team."}', status=status.HTTP_403_FORBIDDEN)
-
 
         # TODO(dcramer): this needs to push it into the queue
         team.delete()
