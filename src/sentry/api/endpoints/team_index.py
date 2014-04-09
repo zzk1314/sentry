@@ -2,7 +2,6 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from sentry.api.base import Endpoint
-from sentry.api.decorators import sudo_required
 from sentry.api.serializers import serialize
 from sentry.models import Team
 from sentry.permissions import can_create_teams
