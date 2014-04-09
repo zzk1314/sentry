@@ -1,4 +1,5 @@
 from django.core.urlresolvers import reverse
+from mock import patch
 
 from sentry.constants import MEMBER_ADMIN
 from sentry.models import Team
@@ -61,7 +62,8 @@ class TeamUpdateTest(APITestCase):
 
 
 class TeamDeleteTest(APITestCase):
-    def test_simple(self):
+    @patch('sentry.api.endpoints.team_details.delete_team')
+    def test_simple(self, delete_team):
         team = self.create_team()
         project = self.create_project(team=team)  # NOQA
 
@@ -73,7 +75,10 @@ class TeamDeleteTest(APITestCase):
             response = self.client.delete(url)
 
         assert response.status_code == 204
-        assert not Team.objects.filter(id=team.id).exists()
+        delete_team.delay.assert_called_once_with(
+            object_id=team.id,
+            countdown=60 * 5,
+        )
 
     def test_internal_project(self):
         team = self.create_team()
