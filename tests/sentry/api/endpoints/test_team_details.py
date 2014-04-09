@@ -2,7 +2,7 @@ from django.core.urlresolvers import reverse
 from mock import patch
 
 from sentry.constants import MEMBER_ADMIN
-from sentry.models import Team
+from sentry.models import Team, TeamStatus
 from sentry.testutils import APITestCase
 
 
@@ -73,6 +73,10 @@ class TeamDeleteTest(APITestCase):
 
         with self.settings(SENTRY_PROJECT=0):
             response = self.client.delete(url)
+
+        team = Team.objects.get(id=team.id)
+
+        assert team.status == TeamStatus.PENDING_DELETION
 
         assert response.status_code == 204
         delete_team.delay.assert_called_once_with(

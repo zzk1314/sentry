@@ -7,7 +7,7 @@ from sentry.api.decorators import sudo_required
 from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
 from sentry.constants import MEMBER_ADMIN
-from sentry.models import Team, TeamMember
+from sentry.models import Team, TeamMember, TeamStatus
 from sentry.tasks.deletion import delete_team
 
 
@@ -73,6 +73,8 @@ class TeamDetailsEndpoint(Endpoint):
 
         if not (request.user.is_superuser or team.owner_id == request.user.id):
             return Response('{"error": "You do not have permission to remove this team."}', status=status.HTTP_403_FORBIDDEN)
+
+        team.update(status=TeamStatus.PENDING_DELETION)
 
         # TODO(dcramer): set status to pending deletion
         # we delay the task for 5 minutes so we can implement an undo
