@@ -19,6 +19,8 @@ define(['app'], function(app) {
                     });
             });
 
+            $http.post('/api/0/groups/' + $stateParams.group_id + '/markseen/');
+
             if ($state.current.name == 'group') {
                 $state.go('event', {event_id: 'latest'}, {location: false});
             }
