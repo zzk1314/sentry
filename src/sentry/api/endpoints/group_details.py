@@ -34,13 +34,13 @@ class GroupDetailsEndpoint(Endpoint):
         return activity[:num]
 
     def _get_seen_by(self, request, group):
-        seen_by = sorted(filter(lambda ls: ls[0] != request.user and ls[0].email, [
+        seen_by = sorted([
             (gs.user, gs.last_seen)
             for gs in GroupSeen.objects.filter(
                 group=group
             ).select_related('user')
-        ]), key=lambda ls: ls[1], reverse=True)
-        return seen_by
+        ], key=lambda ls: ls[1], reverse=True)
+        return [s[0] for s in seen_by]
 
     def get(self, request, group_id):
         group = Group.objects.get(

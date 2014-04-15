@@ -18,9 +18,9 @@
   <div class="seen-by">
     <ul>
       <li>Seen by</li>
-      <li><a href="#"><img src="http://github.com/ckj.png" /></a></li>
-      <li><a href="#"><img src="http://github.com/dcramer.png" /></a></li>
-      <li><a href="#"><img src="http://github.com/mattrobenolt.png" /></a></li>
+      <li ng-repeat="user in selectedGroup.seenBy">
+        <a href="#"><img src="{{user.avatarUrl}}" /></a>
+      </ul>
     </ul>
   </div>
   <div class="group-actions">
