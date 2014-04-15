@@ -10,7 +10,20 @@
   </div>
 </div>
 
-<div class="box">
+
+<!-- <ul class="nav nav-pills">
+  <li ng-repeat="entry in entryList"><a href="#" render-entry-title="entry"></a></li>
+  <li><a href="#tags">Tags</a></li>
+</ul> -->
+
+<section class="entry box" ng-repeat="entry in entryList">
+  <div class="box-header">
+    <h4 render-entry-title="entry"></h4>
+  </div>
+  <div class="box-content" render-entry-body="entry"></div>
+</section>
+
+<!-- <div class="box">
   <div class="box-header">
     <h4>Timeline</h4>
   </div>
@@ -23,15 +36,15 @@
           </li>
       </ul>
   </div>
-</div>
+</div> -->
 
-<div class="box">
+<!-- <div class="box">
     <div class="box-header">
       <h4>Activity</h4>
     </div>
     <div class="box-content with-padding">
     </div>
-</div>
+</div> -->
 
 <div class="box">
     <div class="box-header">

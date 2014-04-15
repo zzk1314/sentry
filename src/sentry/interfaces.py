@@ -219,6 +219,18 @@ class Interface(object):
             # },
         }
 
+    def get_type_name(self):
+        """
+        Passed into the JSON api as the name of this interface in the entry list.
+        """
+        return self.get_slug()
+
+    def get_json_context(self):
+        """
+        Passed into the JSON api as the body for this entry.
+        """
+        return self.serialize()
+
 
 class Message(Interface):
     """
@@ -1136,6 +1148,9 @@ class Http(Interface):
                 'url': [self.short_url],
             }
         }
+
+    def get_type_name(self):
+        return 'http_request'
 
 
 class Template(Interface):

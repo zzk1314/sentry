@@ -8,16 +8,7 @@ define(['app'], function() {
         controller: function($scope, selectedEvent){
             $scope.$parent.selectedEvent = selectedEvent;
 
-            $scope.transactionEventList = [{
-                type: 'http_request',
-                method: 'GET',
-                url: 'http://example.com/foo/bar'
-            }, {
-                message: 'Hello world!'
-            }, {
-                type: 'exception'
-            }];
-
+            $scope.entryList = selectedEvent.entries;
         },
         resolve: {
             selectedEvent: function($http, $stateParams) {

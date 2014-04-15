@@ -14,9 +14,11 @@ class EventDetailsEndpoint(Endpoint):
 
         interface_list = []
         for interface in event.interfaces.itervalues():
-            # TODO(dcramer): this should be a method in the interface API so permissions
-            # can be passed
-            interface_list.append((interface, interface.serialize()))
+            entry = {
+                'data': interface.get_json_context(),
+                'type': interface.get_type_name(),
+            }
+            interface_list.append((interface, entry))
         interface_list.sort(key=lambda x: x[0].get_display_score(), reverse=True)
 
         return [i[1] for i in interface_list]
