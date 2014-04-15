@@ -6225,6 +6225,7 @@ header .project-dropdown .icon-arrow-down {
   color: #949ea4;
 }
 .events .graph figure {
+  border-bottom: 1px solid #eee;
   height: 40px;
   margin: 0;
 }
