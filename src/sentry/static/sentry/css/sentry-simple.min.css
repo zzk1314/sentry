@@ -6341,15 +6341,20 @@ header .project-dropdown .icon-arrow-down {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.group-body .graph .nav-links {
+  text-align: right;
+  font-size: 11px;
+}
 .group-body .graph .nav-links > li {
+  display: inline-block;
+}
+.group-body .graph .nav-links > li > a {
+  padding: 5px;
+  color: #dfe2e4;
   display: inline-block;
 }
 .group-body .graph .nav-links > li.active > a {
   color: #f63d09;
-}
-.group-body .graph .nav-links > li > a {
-  color: #dfe2e4;
-  display: inline-block;
 }
 .event-browser {
   text-align: center;

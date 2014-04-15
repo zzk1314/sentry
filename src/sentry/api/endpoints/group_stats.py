@@ -24,7 +24,7 @@ class GroupStatsEndpoint(Endpoint):
         else:
             TICK = 60 * 60 * 24
             NUM_TICKS = days
-        data = [(now - (n * TICK), random.randint(0, 500)) for n in range(NUM_TICKS, 0, -1)]
+        data = [(now - (n * TICK), random.randint(0, 500)) for n in range(NUM_TICKS + 1, 0, -1)]
 
         # data = Group.objects.get_chart_data_for_group(
         #     instances=[group],
