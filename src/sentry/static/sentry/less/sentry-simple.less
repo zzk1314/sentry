@@ -475,6 +475,29 @@ header {
   }
 }
 
+.group-body {
+  .graph {
+    .nav-links {
+      text-align: right;
+      font-size: 11px;
+
+      > li {
+        display: inline-block;
+
+        > a {
+          padding: 5px;
+          color: lighten(@gray, 46);
+          display: inline-block;
+        }
+
+        &.active > a {
+          color: @sentry-orange;
+        }
+      }
+    }
+  }
+}
+
 .event-browser {
   text-align: center;
   h5 {
