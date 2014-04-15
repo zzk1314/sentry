@@ -5,6 +5,7 @@ from sentry.api.base import Endpoint
 from sentry.api.permissions import assert_perm
 from sentry.db.models import create_or_update
 from sentry.models import Group, GroupSeen
+from sentry.utils.functional import extract_lazy_object
 
 
 class GroupMarkSeenEndpoint(Endpoint):
@@ -15,14 +16,15 @@ class GroupMarkSeenEndpoint(Endpoint):
 
         assert_perm(group, request.user)
 
-        create_or_update(
+        instance, created = create_or_update(
             GroupSeen,
             group=group,
-            user=request.user,
+            user=extract_lazy_object(request.user),
             project=group.project,
             defaults={
                 'last_seen': timezone.now(),
             }
         )
-
-        return Response()
+        if created:
+            return Response(status=201)
+        return Response(status=204)

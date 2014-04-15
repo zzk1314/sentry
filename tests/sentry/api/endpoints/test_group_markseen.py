@@ -15,7 +15,7 @@ class GroupMarkSeenTest(APITestCase):
         })
         response = self.client.post(url, format='json')
 
-        assert response.status_code == 200, response.content
+        assert response.status_code == 201, response.content
 
         # ensure we've marked the group as seen
         assert GroupSeen.objects.filter(
