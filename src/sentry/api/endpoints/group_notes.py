@@ -8,6 +8,7 @@ from sentry.api.base import Endpoint
 from sentry.api.permissions import assert_perm
 from sentry.api.serializers import serialize
 from sentry.models import Group, Activity
+from sentry.utils.functional import extract_lazy_object
 
 
 class NewNoteForm(forms.Form):
@@ -58,7 +59,7 @@ class GroupNotesEndpoint(Endpoint):
             group=group,
             project=group.project,
             type=Activity.NOTE,
-            user=request.user,
+            user=extract_lazy_object(request.user),
             data=form.cleaned_data,
         )
 
