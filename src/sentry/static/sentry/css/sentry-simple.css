@@ -6356,6 +6356,16 @@ header .project-dropdown .icon-arrow-down {
 .group-body .graph .nav-links > li.active > a {
   color: #f63d09;
 }
+.group-body .code {
+  display: block;
+  font-size: 12px;
+  line-height: 20px;
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre;
+  white-space: pre-wrap;
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+}
 .event-browser {
   text-align: center;
 }

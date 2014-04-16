@@ -34,6 +34,7 @@ define([
 
     // registration via loader
     'directives/autoFocus',
+    'directives/prettyJson',
     'directives/timeSince',
     'filters/formatNumber'
 ], function(
