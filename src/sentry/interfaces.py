@@ -1109,36 +1109,6 @@ class Http(Interface):
         else:
             return True, value
 
-    def get_context(self, event, is_public=False):
-        data = self.data
-        headers_is_dict, headers = self._to_dict(self.headers)
-
-        # educated guess as to whether the body is normal POST data
-        if headers_is_dict and headers.get('Content-Type') == 'application/x-www-form-urlencoded' and '=' in data:
-            _, data = self._to_dict(data)
-
-        context = {
-            'is_public': is_public,
-            'event': event,
-            'url': self.url,
-            'short_url': self.short_url,
-            'method': self.method,
-            'query_string': self.query_string,
-            'fragment': self.fragment,
-            'headers': self.headers,
-        }
-        if not is_public:
-            # It's kind of silly we store this twice
-            _, cookies = self._to_dict(self.cookies)
-
-            context.update({
-                'cookies': cookies,
-                'env': self.env,
-                'data': data,
-            })
-
-        return context
-
     def to_html(self, event, is_public=False, **kwargs):
         data = self.data
         headers_is_dict, headers = self._to_dict(self.headers)
