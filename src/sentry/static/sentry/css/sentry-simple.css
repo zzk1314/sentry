@@ -6090,7 +6090,7 @@ header .project-dropdown .icon-arrow-down {
   text-indent: -9999em;
 }
 .container {
-  max-width: 1040px;
+  max-width: 940px;
   position: relative;
 }
 #sidebar h6 {
@@ -6100,23 +6100,37 @@ header .project-dropdown .icon-arrow-down {
   margin: -10px 0 20px;
 }
 .search {
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+.search form {
+  display: block;
   position: relative;
-  width: 25%;
-  padding-left: 24px;
-  padding-top: 2px;
 }
 .search .icon-search {
+  color: #8E8E97;
   position: absolute;
-  right: 0;
-  top: 10px;
-  opacity: 0.4;
-  filter: alpha(opacity=40);
+  top: 15px;
+  left: 17px;
 }
 .search .form-control {
-  border: none;
   box-shadow: none;
-  margin-right: 24px;
-  padding-left: 0;
+  height: 44px;
+  line-height: 44px;
+  padding-left: 42px;
+  border: 3px solid #f2f4f6;
+  font-size: 14px;
+}
+.search .advanced-toggle {
+  color: inherit;
+  opacity: .4;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+.search .advanced-toggle:hover {
+  opacity: 1;
+  text-decoration: none;
 }
 .nav-stacked {
   margin: 0 0 20px;
@@ -6167,7 +6181,7 @@ header .project-dropdown .icon-arrow-down {
 .events .event {
   position: relative;
   border-bottom: 3px solid #F8F9FA;
-  padding: 16px 10px 16px 32px;
+  padding: 16px 0 16px 26px;
 }
 .events .event.level-alert:after {
   position: absolute;

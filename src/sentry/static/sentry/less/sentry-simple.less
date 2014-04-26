@@ -237,7 +237,7 @@ header {
 }
 
 .container {
-  max-width: 1040px;
+  max-width: 940px;
   position: relative;
 }
 
@@ -252,21 +252,37 @@ header {
 }
 
 .search {
-  position: relative;
-  width: 25%;
-  padding-left: 24px;
-  padding-top: 2px;
+  margin-top: -10px;
+  margin-bottom: 20px;
+
+  form {
+    display: block;
+    position: relative;
+  }
   .icon-search {
+    color: #8E8E97;
     position: absolute;
-    right: 0;
-    top: 10px;
-    .opacity(.4);
+    top: 15px;
+    left: 17px;
   }
   .form-control {
-    border: none;
     box-shadow: none;
-    margin-right: 24px;
-    padding-left: 0;
+    height: 44px;
+    line-height: 44px;
+    padding-left: 42px;
+    border: 3px solid #f2f4f6;
+    font-size: 14px;
+  }
+  .advanced-toggle {
+    color: inherit;
+    opacity: .4;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    &:hover {
+      opacity: 1;
+      text-decoration: none;
+    }
   }
 }
 
@@ -302,7 +318,7 @@ header {
   .event {
     position: relative;
     border-bottom: 3px solid #F8F9FA;
-    padding: 16px 10px 16px 32px;
+    padding: 16px 0 16px 26px;
 
     &.level-alert:after {
       position: absolute;
