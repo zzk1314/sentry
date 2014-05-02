@@ -6724,3 +6724,68 @@ section.settings .page-header h3 {
 .settings .table-settings h4 {
   margin: 0;
 }
+.team-dashboard .graph-placeholder {
+  height: 180px;
+  background: #f8f8f9;
+  border-radius: 5px;
+  margin: 0 0 30px;
+}
+.team-dashboard .events {
+  border-top: 2px solid #F8F9FA;
+}
+.team-dashboard .event {
+  padding: 13px 0 9px;
+  border-width: 2px;
+}
+.team-dashboard .event:before,
+.team-dashboard .event:after {
+  content: " ";
+  display: table;
+}
+.team-dashboard .event:after {
+  clear: both;
+}
+.team-dashboard .event:before,
+.team-dashboard .event:after {
+  content: " ";
+  display: table;
+}
+.team-dashboard .event:after {
+  clear: both;
+}
+.team-dashboard .event .details {
+  width: 54%;
+  float: left;
+}
+.team-dashboard .event .details h3 {
+  font-size: 13px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+.team-dashboard .event .details .meta {
+  font-size: 12px;
+}
+.team-dashboard .event .graph {
+  float: left;
+  width: 25%;
+  background: #f8f8f9;
+  margin-left: 2.5%;
+}
+.team-dashboard .counts {
+  width: 16%;
+  float: left;
+  font-size: 13px;
+  color: #949ea4;
+  margin-left: 2.5%;
+}
+.team-dashboard .counts > span {
+  display: block;
+  line-height: 0;
+  position: relative;
+  top: -6px;
+}
+.team-dashboard .counts .icon {
+  font-size: 13px;
+  margin-left: 4px;
+  opacity: .3;
+}

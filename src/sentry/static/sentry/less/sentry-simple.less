@@ -920,3 +920,57 @@ section.settings {
     margin: 0;
   }
 }
+
+.team-dashboard {
+  .graph-placeholder {
+    height: 180px;
+    background: lighten(#f1f2f3, 2.5);
+    border-radius: 5px;
+    margin: 0 0 30px;
+  }
+  .events {
+    border-top: 2px solid #F8F9FA;
+  }
+  .event {
+    .clearfix();
+    padding: 13px 0 9px;
+    border-width: 2px;
+    .details {
+      width: 54%;
+      float: left;
+      h3 {
+        font-size: 13px;
+        margin-top: 2px;
+        margin-bottom: 4px;
+      }
+      .meta {
+        font-size: 12px;
+      }
+    }
+    .graph {
+      float: left;
+      width: 25%;
+      background: lighten(#f1f2f3, 2.5);
+      margin-left: 2.5%;
+    }
+  }
+
+  .counts {
+    width: 16%;
+    float: left;
+    font-size: 13px;
+    color: #949ea4;
+    margin-left: 2.5%;
+    > span {
+      display: block;
+      line-height: 0;
+      position: relative;
+      top: -6px;
+    }
+    .icon {
+      font-size: 13px;
+      margin-left: 4px;
+      opacity: .3;
+    }
+  }
+}

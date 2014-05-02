@@ -4,11 +4,191 @@
         <flash-messages></flash-messages>
 
         <div ui-view>
-            <ul>
-                <li ng-repeat="project in projectList">
-                    <a ui-sref="project.stream({project_slug: project.slug})">{{project.name}}</a>
-                </li>
-            </ul>
+            <div class="row team-dashboard">
+                <div class="col-sm-9">
+                    <div class="graph-placeholder"></div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <h4>Trends</h4>
+                            <ul class="events">
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-6">
+                            <h4>New events</h4>
+                            <ul class="events">
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                                <li class="event">
+                                    <div class="details">
+                                        <h3><a ui-sref="group({group_id: group.id})">title</a></h3>
+                                        <div class="meta">
+                                            <time>2h </time> &middot;
+                                            <span class="message">culprit</span>
+                                        </div>
+                                    </div>
+                                    <div class="graph align-right">
+                                        <barchart ng-model="group.historicalData" width="100%" height="38" style="display:block"></barchart>
+                                    </div>
+                                    <div class="counts align-right">
+                                        <span class="occurrences">1.8k<span class="icon icon-exclamation"></span></span>
+                                        <span class="users">1k <span class="icon icon-users"></span></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <h5>Projects</h5>
+                    <ul class="list-unstyled">
+                        <li ng-repeat="project in projectList">
+                            <a ui-sref="project.stream({project_slug: project.slug})">{{project.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
     </div>
