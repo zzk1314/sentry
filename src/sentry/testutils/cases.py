@@ -25,16 +25,32 @@ from django.test import TestCase, TransactionTestCase
 from django.test.client import Client
 from django.utils.importlib import import_module
 from exam import Exam
+from nydus.db import create_cluster
 from rest_framework.test import APITestCase as BaseAPITestCase
 from django_sudo.settings import COOKIE_NAME as SUDO_COOKIE_NAME
 from django_sudo.utils import grant_sudo_privileges
 
 from sentry.constants import MODULE_ROOT
-from sentry.models import Option, ProjectOption
+from sentry.models import ProjectOption
 from sentry.utils import json
 
 from .fixtures import Fixtures
 from .helpers import get_auth_header
+
+
+def create_redis_conn():
+    options = {
+        'engine': 'nydus.db.backends.redis.Redis',
+    }
+    options.update(settings.SENTRY_REDIS_OPTIONS)
+
+    return create_cluster(options)
+
+_redis_conn = create_redis_conn()
+
+
+def flush_redis():
+    _redis_conn.flushdb()
 
 
 class BaseTestCase(Fixtures, Exam):
@@ -91,9 +107,12 @@ class BaseTestCase(Fixtures, Exam):
 
     def _pre_setup(self):
         cache.clear()
-        ProjectOption.objects.clear_cache()
-        Option.objects.clear_cache()
+        ProjectOption.objects.clear_local_cache()
         super(BaseTestCase, self)._pre_setup()
+
+    def _post_teardown(self):
+        flush_redis()
+        super(BaseTestCase, self)._post_teardown()
 
     def _makeMessage(self, data):
         return json.dumps(data)

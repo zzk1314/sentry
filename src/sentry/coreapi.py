@@ -93,6 +93,9 @@ class APIRateLimited(APIError):
     http_status = 429
     msg = 'Creation of this event was denied due to rate limiting.'
 
+    def __init__(self, retry_after=None):
+        self.retry_after = retry_after
+
 
 def get_interface(name):
     if name not in settings.SENTRY_ALLOWED_INTERFACES:
@@ -159,6 +162,9 @@ def project_from_auth_vars(auth_vars):
     if pk.secret_key != auth_vars.get('sentry_secret', pk.secret_key):
         raise APIForbidden('Invalid api key')
 
+    if not pk.roles.store:
+        raise APIForbidden('Key does not allow event storage access')
+
     project = Project.objects.get_from_cache(pk=pk.project_id)
 
     return project, pk.user
@@ -219,22 +225,6 @@ def safely_load_json_string(json_string):
     return dict((smart_str(k), v) for k, v in obj.iteritems())
 
 
-def ensure_valid_project_id(desired_project, data, client=None):
-    # Confirm they're using either the master key, or their specified project
-    # matches with the signed project.
-    if desired_project and data.get('project'):
-        if str(data.get('project')) not in [str(desired_project.id), desired_project.slug]:
-            logger.info(
-                'Project ID mismatch: %s != %s', desired_project.id, desired_project.slug,
-                **client_metadata(client))
-            raise APIForbidden('Invalid credentials')
-        data['project'] = desired_project.id
-    elif not desired_project:
-        data['project'] = 1
-    elif not data.get('project'):
-        data['project'] = desired_project.id
-
-
 def process_data_timestamp(data, current_datetime=None):
     if is_float(data['timestamp']):
         try:
@@ -267,7 +257,8 @@ def process_data_timestamp(data, current_datetime=None):
 
 
 def validate_data(project, data, client=None):
-    ensure_valid_project_id(project, data, client=client)
+    # TODO(dcramer): move project out of the data packet
+    data['project'] = project.id
 
     if not data.get('message'):
         data['message'] = '<no message value>'
@@ -280,7 +271,9 @@ def validate_data(project, data, client=None):
         data['message'] = truncatechars(
             data['message'], settings.SENTRY_MAX_MESSAGE_LENGTH)
 
-    if data.get('culprit') and len(data['culprit']) > MAX_CULPRIT_LENGTH:
+    if data.get('culprit'):
+        if not isinstance(data['culprit'], basestring):
+            raise APIError('Invalid value for culprit')
         logger.info(
             'Truncated value for culprit due to length (%d chars)',
             len(data['culprit']), **client_metadata(client, project))
@@ -288,6 +281,8 @@ def validate_data(project, data, client=None):
 
     if not data.get('event_id'):
         data['event_id'] = uuid.uuid4().hex
+    elif not isinstance(data['event_id'], basestring):
+        raise APIError('Invalid value for event_id')
     if len(data['event_id']) > 32:
         logger.info(
             'Discarded value for event_id due to length (%d chars)',

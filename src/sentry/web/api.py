@@ -21,12 +21,12 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.decorators.cache import never_cache, cache_control
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.vary import vary_on_cookie
 from django.views.generic.base import View as BaseView
 
 from raven.contrib.django.models import client as Raven
 
 from sentry import app
+from sentry.app import tsdb
 from sentry.constants import (
     MEMBER_USER, STATUS_MUTED, STATUS_UNRESOLVED, STATUS_RESOLVED,
     EVENTS_PER_PAGE)
@@ -37,13 +37,11 @@ from sentry.coreapi import (
     decompress_deflate, decompress_gzip)
 from sentry.exceptions import InvalidData, InvalidOrigin, InvalidRequest
 from sentry.models import (
-    Group, GroupBookmark, Project, ProjectCountByMinute, TagValue, Activity,
-    User)
+    Group, GroupBookmark, Project, TagValue, Activity, User)
 from sentry.signals import event_received
 from sentry.plugins import plugins
+from sentry.quotas.base import RateLimit
 from sentry.utils import json
-from sentry.utils.cache import cache
-from sentry.utils.db import has_trending
 from sentry.utils.javascript import to_json
 from sentry.utils.http import is_valid_origin, get_origins, is_same_domain
 from sentry.utils.safe import safe_execute
@@ -237,6 +235,8 @@ class APIView(BaseView):
 
             except APIError as error:
                 response = HttpResponse(unicode(error.msg), content_type='text/plain', status=error.http_status)
+                if isinstance(error, APIRateLimited) and error.retry_after is not None:
+                    response['Retry-After'] = str(error.retry_after)
 
         if origin:
             response['Access-Control-Allow-Origin'] = origin
@@ -305,13 +305,13 @@ class StoreView(APIView):
     def process(self, request, project, auth, data, **kwargs):
         event_received.send_robust(ip=request.META['REMOTE_ADDR'], sender=type(self))
 
-        is_rate_limited = safe_execute(app.quotas.is_rate_limited, project=project)
-        for plugin in plugins.all():
-            if safe_execute(plugin.is_rate_limited, project=project):
-                is_rate_limited = True
+        # TODO: improve this API (e.g. make RateLimit act on __ne__)
+        rate_limit = safe_execute(app.quotas.is_rate_limited, project=project)
+        if isinstance(rate_limit, bool):
+            rate_limit = RateLimit(is_limited=rate_limit, retry_after=None)
 
-        if is_rate_limited:
-            raise APIRateLimited
+        if rate_limit is not None and rate_limit.is_limited:
+            raise APIRateLimited(rate_limit.retry_after)
 
         result = plugins.first('has_perm', request.user, 'create_event', project)
         if result is False:
@@ -461,7 +461,10 @@ def resolve_group(request, team, project, group_id):
     except Group.DoesNotExist:
         return HttpResponseForbidden()
 
-    happened = group.update(status=STATUS_RESOLVED)
+    happened = group.update(
+        status=STATUS_RESOLVED,
+        resolved_at=timezone.now(),
+    )
     if happened:
         Activity.objects.create(
             project=project,
@@ -483,7 +486,10 @@ def mute_group(request, team, project, group_id):
     except Group.DoesNotExist:
         return HttpResponseForbidden()
 
-    happened = group.update(status=STATUS_MUTED)
+    happened = group.update(
+        status=STATUS_MUTED,
+        resolved_at=timezone.now(),
+    )
     if happened:
         Activity.objects.create(
             project=project,
@@ -505,7 +511,10 @@ def unresolve_group(request, team, project, group_id):
     except Group.DoesNotExist:
         return HttpResponseForbidden()
 
-    happened = group.update(status=STATUS_UNRESOLVED)
+    happened = group.update(
+        status=STATUS_UNRESOLVED,
+        active_at=timezone.now(),
+    )
     if happened:
         Activity.objects.create(
             project=project,
@@ -597,43 +606,6 @@ def clear(request, team, project):
     return response
 
 
-@vary_on_cookie
-@csrf_exempt
-@has_access
-def chart(request, team=None, project=None):
-    gid = request.REQUEST.get('gid')
-    days = int(request.REQUEST.get('days', '90'))
-    if gid:
-        try:
-            group = Group.objects.get(pk=gid)
-        except Group.DoesNotExist:
-            return HttpResponseForbidden()
-
-        data = Group.objects.get_chart_data(group, max_days=days)
-    elif project:
-        data = Project.objects.get_chart_data(project, max_days=days)
-    elif team:
-        cache_key = 'api.chart:team=%s,days=%s' % (team.id, days)
-
-        data = cache.get(cache_key)
-        if data is None:
-            project_list = list(Project.objects.filter(team=team))
-            data = Project.objects.get_chart_data_for_group(project_list, max_days=days)
-            cache.set(cache_key, data, 300)
-    else:
-        cache_key = 'api.chart:user=%s,days=%s' % (request.user.id, days)
-
-        data = cache.get(cache_key)
-        if data is None:
-            project_list = Project.objects.get_for_user(request.user)
-            data = Project.objects.get_chart_data_for_group(project_list, max_days=days)
-            cache.set(cache_key, data, 300)
-
-    response = HttpResponse(json.dumps(data))
-    response['Content-Type'] = 'application/json'
-    return response
-
-
 @never_cache
 @csrf_exempt
 @has_access
@@ -653,18 +625,13 @@ def get_group_trends(request, team=None, project=None):
         status=0,
     )
 
-    if has_trending():
-        group_list = list(Group.objects.get_accelerated(project_dict, base_qs, minutes=(
-            minutes
-        ))[:limit])
-    else:
-        cutoff = datetime.timedelta(minutes=minutes)
-        cutoff_dt = timezone.now() - cutoff
+    cutoff = datetime.timedelta(minutes=minutes)
+    cutoff_dt = timezone.now() - cutoff
 
-        group_list = list(base_qs.filter(
-            status=STATUS_UNRESOLVED,
-            last_seen__gte=cutoff_dt
-        ).extra(select={'sort_value': 'score'}).order_by('-score')[:limit])
+    group_list = list(base_qs.filter(
+        status=STATUS_UNRESOLVED,
+        last_seen__gte=cutoff_dt
+    ).extra(select={'sort_value': 'score'}).order_by('-score')[:limit])
 
     for group in group_list:
         group._project_cache = project_dict.get(group.project_id)
@@ -757,18 +724,28 @@ def get_stats(request, team=None, project=None):
         project_list = Project.objects.get_for_user(request.user, team=team)
 
     cutoff = datetime.timedelta(minutes=minutes)
-    cutoff_dt = timezone.now() - cutoff
 
-    num_events = ProjectCountByMinute.objects.filter(
-        project__in=project_list,
-        date__gte=cutoff_dt,
-    ).aggregate(t=Sum('times_seen'))['t'] or 0
+    end = timezone.now()
+    start = end - cutoff
+
+    # TODO(dcramer): this is used in an unreleased feature. reimplement it using
+    # new API and tsdb
+    results = tsdb.get_range(
+        model=tsdb.models.project,
+        keys=[p.id for p in project_list],
+        start=start,
+        end=end,
+    )
+    num_events = 0
+    for project, points in results.iteritems():
+        num_events += sum(p[1] for p in points)
 
     # XXX: This is too slow if large amounts of groups are resolved
+    # TODO(dcramer); move this into tsdb
     num_resolved = Group.objects.filter(
         project__in=project_list,
         status=STATUS_RESOLVED,
-        resolved_at__gte=cutoff_dt,
+        resolved_at__gte=start,
     ).aggregate(t=Sum('times_seen'))['t'] or 0
 
     data = {

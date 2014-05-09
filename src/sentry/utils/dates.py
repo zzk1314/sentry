@@ -9,7 +9,6 @@ from datetime import datetime
 from dateutil.parser import parse
 from django.db import connections
 
-from sentry.constants import MINUTE_NORMALIZATION
 from sentry.utils.db import get_db_engine
 
 DATE_TRUNC_GROUPERS = {
@@ -31,7 +30,7 @@ def get_sql_date_trunc(col, db='default', grouper='hour'):
     # TODO: does extract work for sqlite?
     if engine.startswith('oracle'):
         method = DATE_TRUNC_GROUPERS['oracle'].get(grouper, DATE_TRUNC_GROUPERS['default'][grouper])
-        if not '"' in col:
+        if '"' not in col:
             col = '"%s"' % col.upper()
     else:
         method = DATE_TRUNC_GROUPERS['default'][grouper]
@@ -53,9 +52,3 @@ def parse_date(datestr, timestr):
             return parse(datetimestr)
         except Exception:
             return
-
-
-def normalize_datetime(datetime, minutes=MINUTE_NORMALIZATION):
-    minutes = (datetime.minute - (datetime.minute % minutes))
-    normalized_datetime = datetime.replace(second=0, microsecond=0, minute=minutes)
-    return normalized_datetime

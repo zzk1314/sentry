@@ -21,7 +21,10 @@ def has_perm(object, user, access=MEMBER_USER):
         object = object.project
 
     if type(object) == Project:
-        return object.slug in Project.objects.get_for_user(user, access=access)
+        return any(
+            object == o
+            for o in Project.objects.get_for_user(user, access=access)
+        )
 
     raise TypeError(type(object))
 

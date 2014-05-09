@@ -14,7 +14,10 @@ class KeyAuthentication(BasicAuthentication):
         if pk.secret_key != password:
             raise AuthenticationFailed('Invalid api key')
 
-        return (pk.user, pk)
+        if not pk.roles.api:
+            raise AuthenticationFailed('Key does not allow API access')
+
+        return (None, pk)
 
 
 class QuietBasicAuthentication(BasicAuthentication):

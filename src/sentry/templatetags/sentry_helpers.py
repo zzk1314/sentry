@@ -8,11 +8,11 @@ sentry.templatetags.sentry_helpers
 # XXX: Import django-paging's template tags so we don't have to worry about
 #      INSTALLED_APPS
 
-import datetime
 import os.path
 import pytz
 
 from collections import namedtuple
+from datetime import timedelta
 from paging.helpers import paginate as paginate_func
 from pkg_resources import parse_version as Version
 from urllib import quote
@@ -29,7 +29,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
 from sentry.constants import STATUS_MUTED, EVENTS_PER_PAGE, MEMBER_OWNER
-from sentry.models import Team, Group, Option, GroupTagValue
+from sentry.models import Team, Option, GroupTagValue
 from sentry.web.helpers import group_is_public
 from sentry.utils import to_unicode
 from sentry.utils.avatar import get_gravatar_url
@@ -154,7 +154,7 @@ def timesince(value, now=None):
         now = timezone.now()
     if not value:
         return _('never')
-    if value < (now - datetime.timedelta(days=5)):
+    if value < (now - timedelta(days=5)):
         return value.date()
     value = (' '.join(timesince(value, now).split(' ')[0:2])).strip(',')
     if value == _('0 minutes'):
@@ -332,14 +332,8 @@ def with_metadata(group_list, request):
     else:
         bookmarks = set()
 
-    if group_list:
-        historical_data = Group.objects.get_chart_data_for_group(
-            instances=group_list,
-            max_days=1,
-            key='group',
-        )
-    else:
-        historical_data = {}
+    # TODO(dcramer): this is obsolete and needs to pull from the tsdb backend
+    historical_data = {}
 
     for g in group_list:
         yield g, {
@@ -350,15 +344,18 @@ def with_metadata(group_list, request):
 
 @register.inclusion_tag('sentry/plugins/bases/tag/widget.html')
 def render_tag_widget(group, tag):
+    cutoff = timezone.now() - timedelta(days=7)
+
     total = GroupTagValue.objects.filter(
         group=group,
         key=tag,
+        last_seen__gte=cutoff,
     ).aggregate(t=Sum('times_seen'))['t'] or 0
 
     return {
         'title': tag.replace('_', ' ').title(),
         'tag_name': tag,
-        'unique_tags': list(group.get_unique_tags(tag)[:10]),
+        'unique_tags': list(group.get_unique_tags(tag, cutoff)[:10]),
         'total_count': total,
         'group': group,
     }

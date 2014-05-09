@@ -34,8 +34,6 @@ SORT_OPTIONS = SortedDict((
     ('freq', _('Frequency')),
     ('tottime', _('Total Time Spent')),
     ('avgtime', _('Average Time Spent')),
-    ('accel_15', _('Trending: %(minutes)d minutes' % {'minutes': 15})),
-    ('accel_60', _('Trending: %(minutes)d minutes' % {'minutes': 60})),
 ))
 
 SORT_CLAUSES = {
@@ -192,8 +190,8 @@ DEFAULT_LOG_LEVEL = 'error'
 DEFAULT_LOGGER_NAME = 'root'
 
 # Default alerting threshold values
-DEFAULT_ALERT_PROJECT_THRESHOLD = (500, 100)  # 500%, 100 events
-DEFAULT_ALERT_GROUP_THRESHOLD = (1000, 100)  # 1000%, 100 events
+DEFAULT_ALERT_PROJECT_THRESHOLD = (500, 25)  # 500%, 25 events
+DEFAULT_ALERT_GROUP_THRESHOLD = (1000, 25)  # 1000%, 25 events
 
 # The maximum number of events which can be requested as JSON
 MAX_JSON_RESULTS = 1000

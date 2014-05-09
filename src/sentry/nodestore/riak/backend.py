@@ -11,8 +11,22 @@ from __future__ import absolute_import
 import riak
 import riak.resolver
 
+from time import sleep
+
 from sentry.nodestore.base import NodeStorage
 from sentry.utils.cache import memoize
+
+
+# Riak commonly has timeouts or non-200 HTTP errors. Being that almost
+# always our messages are immutable, it's safe to simply retry in many
+# cases
+def retry(attempts, func, *args, **kwargs):
+    for _ in xrange(attempts):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            sleep(0.01)
+    raise
 
 
 class RiakNodeStorage(NodeStorage):
@@ -40,13 +54,14 @@ class RiakNodeStorage(NodeStorage):
         return self.conn.bucket(self._bucket_name)
 
     def create(self, data):
-        obj = self.bucket.new(data=data)
-        obj.store()
+        node_id = self.generate_id()
+        obj = self.bucket.new(data=data, key=node_id)
+        retry(3, obj.store)
         return obj.key
 
     def delete(self, id):
         obj = self.bucket.new(key=id)
-        obj.delete()
+        retry(3, obj.delete)
 
     def get(self, id):
         # just fetch it from a random backend, we're not aiming for consistency
@@ -69,7 +84,7 @@ class RiakNodeStorage(NodeStorage):
 
     def set(self, id, data):
         obj = self.bucket.new(key=id, data=data)
-        obj.store()
+        retry(3, obj.store)
 
     def cleanup(self, cutoff_timestamp):
         # TODO(dcramer): we should either index timestamps or have this run

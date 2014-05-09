@@ -24,6 +24,7 @@ socket.setdefaulttimeout(5)
 
 DEBUG = False
 TEMPLATE_DEBUG = True
+MAINTENANCE = False
 
 ADMINS = ()
 
@@ -111,6 +112,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'sentry.middleware.maintenance.ServicesUnavailableMiddleware',
     'sentry.middleware.debug.NoIfModifiedSinceMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -477,6 +479,11 @@ SENTRY_FILTERS = (
     'sentry.filters.StatusFilter',
 )
 
+SENTRY_IGNORE_EXCEPTIONS = (
+    'OperationalError',
+)
+
+
 SENTRY_KEY = None
 
 # Absolute URL to the sentry root directory. Should not include a trailing slash.
@@ -557,10 +564,6 @@ SENTRY_ALLOW_PUBLIC_PROJECTS = True
 # manually.
 SENTRY_ALLOW_REGISTRATION = True
 
-# Enable trend results. These can be expensive and are calculated in real-time.
-# When disabled they will be replaced w/ a default priority sort.
-SENTRY_USE_TRENDING = True
-
 # Default to not sending the Access-Control-Allow-Origin header on api/store
 SENTRY_ALLOW_ORIGIN = None
 
@@ -604,7 +607,11 @@ SENTRY_SEARCH_OPTIONS = {}
 SENTRY_USE_SEARCH = True
 # SENTRY_INDEX_SEARCH = SENTRY_USE_SEARCH
 
-SENTRY_RAVEN_JS_URL = 'cdn.ravenjs.com/1.1.11/jquery,native/raven.min.js'
+# Time-series storage backend
+SENTRY_TSDB = 'sentry.tsdb.dummy.DummyTSDB'
+SENTRY_TSDB_OPTIONS = {}
+
+SENTRY_RAVEN_JS_URL = 'cdn.ravenjs.com/1.1.14/jquery,native/raven.min.js'
 
 # URI Prefixes for generating DSN URLs
 # (Defaults to URL_PREFIX by default)
