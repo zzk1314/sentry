@@ -74,12 +74,16 @@ define([
         resolution: '1h'
       },
       success: function(data){
-        var inputs = [], avg, i, data_avg = [], p_95th;
+        var inputs = [], avg, i, data_avg = [], p_95th, max_y = 10;
         for (i = 0; i < data.length; i++) {
           inputs.push(data[i][1]);
 
           // set timestamp to be in millis
           data[i][0] = data[i][0] * 1000;
+
+          if (data[i][1] > max_y) {
+            max_y = data[i][1];
+          }
         }
         p_95th = percentile(inputs);
 
@@ -117,6 +121,7 @@ define([
           },
           yaxis: {
             min: 0,
+            max: max_y,
             tickFormatter: function(value) {
               if (value > 999999) {
                 return (value / 1000000) + 'mm';
