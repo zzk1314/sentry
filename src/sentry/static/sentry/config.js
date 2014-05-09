@@ -2,9 +2,9 @@ requirejs.config({
   // TODO: we dont want this in prod
   urlArgs: "_=" + (new Date()).getTime(),
   paths: {
-    'backbone': 'scripts/lib/backbone',
+    'backbone': 'vendor/backbone/backbone',
     'bootstrap': 'vendor/bootstrap/dist/js/bootstrap.min',
-    'bootstrap-datepicker': 'scripts/lib/bootstrap-datepicker.js',
+    'bootstrap-datepicker': 'vendor/bootstrap-datepicker/js/bootstrap-datepicker',
     'd3': 'vendor/d3/d3.min',
     'd3-tip': 'vendor/d3-tip/index',
     'jquery': 'vendor/jquery/jquery.min',
@@ -20,8 +20,9 @@ requirejs.config({
     'json2': 'scripts/lib/json2',
     'moment': 'vendor/moment/moment',
     'requirejs': 'vendor/requirejs/requirejs',
+    'text': 'vendor/requirejs-plugins/lib/text',
     'simple-slider': 'vendor/simple-slider/simple-slider',
-    'underscore': 'scripts/lib/underscore'
+    'underscore': 'vendor/underscore/underscore'
   },
   shim: {
     'backbone': {
@@ -34,7 +35,7 @@ requirejs.config({
       deps: ['bootstrap']
     },
     'jquery': {
-      exports: 'jquery'
+      exports: ['jquery', '$']
     },
     'jquery.animate-colors': {
       deps: ['jquery']

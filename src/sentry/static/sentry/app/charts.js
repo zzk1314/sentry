@@ -1,12 +1,13 @@
 define([
     'backbone',
     'jquery',
+    'moment',
     'underscore',
     'app/utils'
-], function(Backbone, $, _, utils){
+], function(Backbone, $, moment, _, utils){
     'use strict';
 
-    return {
+    var charts = {
         render: function(el, options) {
             var $el = $('#chart');
             var url = $el.attr('data-api-url');
@@ -36,7 +37,7 @@ define([
                             maxval = val[1];
                         }
                     });
-                    createSparkline($spark, data, options);
+                    charts.createSparkline($spark, data, options);
                 }
             });
         },
@@ -86,4 +87,6 @@ define([
             }
         }
     };
+
+    return charts;
 });

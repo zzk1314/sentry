@@ -20,27 +20,28 @@
 <script src="{% url 'sentry-media' 'sentry' 'vendor/raven/raven.js' %}"></script>
 
 {% block scripts %}
-    {% comment %}
     <script type="text/javascript">
-    // TODO(dcramer): we need to load these from the backend or something?
-    {% if request.LANGUAGE_CODE %}
-        moment.lang('{{ request.LANGUAGE_CODE }}');
-    {% endif %}
-    app.config.popupCss = '{% url 'sentry-media' "sentry" 'styles/popup.css' %}';
-    app.config.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
-    app.config.urlPrefix = {{ URL_PREFIX|to_json|safe }};
-    {% if project %}
-        app.config.projectId = {{ project.slug|to_json|safe }};
-        app.config.teamId = {{ project.team.slug|to_json|safe }};
-    {% elif team %}
-        app.config.projectId = null;
-        app.config.teamId = {{ team.slug|to_json|safe }};
-    {% else %}
-        app.config.projectId = null;
-        app.config.teamId = null;
-    {% endif %}
+    require(['config', 'app/init'], function(_, app){
+        {% if request.LANGUAGE_CODE %}
+            require(['moment'], function(moment){
+                moment.lang('{{ request.LANGUAGE_CODE }}');
+            });
+        {% endif %}
+        app.config.popupCss = '{% url 'sentry-media' "sentry" 'styles/popup.css' %}';
+        app.config.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
+        app.config.urlPrefix = {{ URL_PREFIX|to_json|safe }};
+        {% if project %}
+            app.config.projectId = {{ project.slug|to_json|safe }};
+            app.config.teamId = {{ project.team.slug|to_json|safe }};
+        {% elif team %}
+            app.config.projectId = null;
+            app.config.teamId = {{ team.slug|to_json|safe }};
+        {% else %}
+            app.config.projectId = null;
+            app.config.teamId = null;
+        {% endif %}
+    });
     </script>
-    {% endcomment %}
 {% endblock %}
 
 {% block meta %}

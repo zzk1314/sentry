@@ -13,23 +13,25 @@
         {% endblock %}
         {% block above_content %}{% endblock %}
         <section id="content">
-            {% block content_before %}
-            {% endblock %}
-
-            {% block content %}
-                {% block alerts %}
-                    {% include "sentry/partial/alerts.html" %}
+            <div class="container">
+                {% block content_before %}
                 {% endblock %}
 
-                {% block main %}
+                {% block content %}
+                    {% block alerts %}
+                        {% include "sentry/partial/alerts.html" %}
+                    {% endblock %}
+
+                    {% block main %}
+                    {% endblock %}
+
+                    {% block sidebar %}
+                    {% endblock %}
                 {% endblock %}
 
-                {% block sidebar %}
+                {% block content_after %}
                 {% endblock %}
-            {% endblock %}
-
-            {% block content_after %}
-            {% endblock %}
+            </div>
         </section>
 
         <footer>

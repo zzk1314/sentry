@@ -1,15 +1,23 @@
 define([
     'backbone',
+    'moment',
     'jquery',
-    'underscore'
-], function(Backbone, $, _){
+    'underscore',
+
+    'app/charts',
+    'app/config',
+    'app/collections',
+    'app/models',
+    'app/templates',
+    'app/utils'
+], function(Backbone, moment, $, _, appCharts, appConfig, appCollections, appModels, appTemplates, appUtils){
     'use strict';
 
-    var app = {};
-    app.GroupView = Backbone.View.extend({
+    var views = {};
+    views.GroupView = Backbone.View.extend({
         tagName: 'li',
         className: 'group',
-        template: _.template(app.templates.group),
+        template: _.template(appTemplates.group),
 
         initialize: function(){
             Backbone.View.prototype.initialize.apply(this, arguments);
@@ -31,7 +39,7 @@ define([
 
         render: function(){
             var data = this.model.toJSON();
-            data.projectUrl = app.config.urlPrefix + '/' + app.config.teamId +
+            data.projectUrl = appConfig.urlPrefix + '/' + appConfig.teamId +
                 '/' + data.project.slug + '/';
             data.loggerUrl = data.projectUrl + '?logger=' + data.logger;
 
@@ -88,7 +96,7 @@ define([
 
             this.$el.addClass('with-sparkline');
 
-            app.charts.createSparkline(this.$el.find('.sparkline'), data);
+            appCharts.createSparkline(this.$el.find('.sparkline'), data);
         },
 
         resolve: function(){
@@ -116,19 +124,19 @@ define([
         },
 
         getResolveUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' +
-                    app.config.projectId + '/group/' + this.model.get('id') +
+            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/' +
+                    appConfig.projectId + '/group/' + this.model.get('id') +
                     '/set/resolved/';
         },
 
         getUnresolveUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' +
-                    app.config.projectId + '/group/' + this.model.get('id') +
+            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/' +
+                    appConfig.projectId + '/group/' + this.model.get('id') +
                     '/set/unresolved/';
         },
 
         getBookmarkUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' + app.config.projectId + '/bookmark/';
+            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/' + appConfig.projectId + '/bookmark/';
         },
 
         bookmark: function(){
@@ -159,7 +167,7 @@ define([
         },
 
         updateCount: function(){
-            var new_count = app.utils.formatNumber(this.model.get('count'));
+            var new_count = appUtils.formatNumber(this.model.get('count'));
             var counter = this.$el.find('.count');
             var digit = counter.find('span');
 
@@ -201,7 +209,7 @@ define([
             var value = annotation.count;
             if (value === null)
                 return;
-            var new_count = app.utils.formatNumber(value);
+            var new_count = appUtils.formatNumber(value);
             var counter = this.$el.find('.annotation[data-tag="' + annotation.label + '"]');
             var digit = counter.find('span');
 
@@ -248,11 +256,11 @@ define([
 
     });
 
-    app.OrderedElementsView = Backbone.View.extend({
+    views.OrderedElementsView = Backbone.View.extend({
 
         emptyMessage: '<div class="empty-message"><h2>No events to show.</h2><p>We\'ll notify you if that changes. In the meantime why not take a moment to become more familiar with Sentry.</p><p class="links"><a href="docs/">Installation instructions</a> <a href="settings/">Project settings</a></p></div>',
         loadingMessage: '<p>Loading...</p>',
-        model: app.models.Group,
+        model: appModels.Group,
 
         defaults: {
             maxItems: 50,
@@ -279,7 +287,7 @@ define([
 
             _.bindAll(this, 'renderMemberInContainer', 'unrenderMember', 'reSortMembers');
 
-            this.collection = new app.ScoredList([], {
+            this.collection = new appCollections.ScoredList([], {
                 model: data.model
             });
             this.collection.on('add', this.renderMemberInContainer, this);
@@ -419,7 +427,7 @@ define([
     });
 
 
-    app.GroupListView = app.OrderedElementsView.extend({
+    views.GroupListView = views.OrderedElementsView.extend({
 
         defaults: {
             realtime: false,
@@ -433,14 +441,14 @@ define([
             if (_.isUndefined(data))
                 data = {};
 
-            data.model = app.models.Group;
-            data.view = app.GroupView;
+            data.model = appModels.Group;
+            data.view = views.GroupView;
 
-            app.OrderedElementsView.prototype.initialize.call(this, data);
+            views.OrderedElementsView.prototype.initialize.call(this, data);
 
             this.options = $.extend({}, this.defaults, this.options, data);
 
-            this.queue = new app.ScoredList([], {
+            this.queue = new appCollections.ScoredList([], {
                 model: data.model
             });
 
@@ -489,7 +497,7 @@ define([
             if (!this.options.realtime || !this.options.pollUrl)
                 return window.setTimeout(this.poll, this.options.pollTime);
 
-            data = app.utils.getQueryParams();
+            data = appUtils.getQueryParams();
             data.cursor = this.cursor || undefined;
 
             $.ajax({
@@ -504,5 +512,5 @@ define([
 
     });
 
-    return app;
+    return views;
 });

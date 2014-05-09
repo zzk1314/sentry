@@ -4,16 +4,33 @@ define([
   'moment',
   'jquery',
 
+  'app/app',
   'app/base',
+  'app/charts',
+  'app/config',
+  'app/collections',
   'app/core',
   'app/models',
   'app/templates',
+  'app/views',
   'app/utils',
-  'app/collections',
-  'app/charts',
-  'app/views'
-], function (Backbone, bootstrap, moment, $, appBase) {
+
+  'bootstrap-datepicker',
+  'jquery.clippy',
+  'jquery.cookie'
+
+], function (Backbone, bootstrap, moment, $, app, appBase, appCharts,
+             appConfig, appCollections, appCore, appModels, appTemplates,
+             appViews, appUtils) {
   'use strict';
+
+  // HACK(dcramer): try to retain some legacy compat
+  window.app = app;
+  $.extend(app, appBase);
+  app.config = appConfig;
+  app.charts = appCharts;
+  app.models = appModels;
+  app.utils = appUtils;
 
   Backbone.sync = function(method, model, success, error){
       success();
@@ -36,7 +53,7 @@ define([
       container: 'body'
   });
 
-  $('.nav-tabs .active a').tab('show')
+  $('.nav-tabs .active a').tab('show');
 
   $('.project-selector').on('change', function(e){
       var $el = $(e.target).get(0);
@@ -77,4 +94,6 @@ define([
           });
       }, 5000);
   });
+
+  return app;
 });
