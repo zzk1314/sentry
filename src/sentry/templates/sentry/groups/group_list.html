@@ -105,6 +105,9 @@
                 </div>
             </li>
         </ul>
+
+        <div id="event_list"></div>
+
         <div class="stream-actions">
             <div class="btn-group pull-right">
                 <a class="btn btn-default prev{% if not event_list.paginator.has_previous %} disabled{% else %}" href="?{{ event_list.query_string|escape }}&amp;p={{ event_list.paginator.previous_page }}{% endif %}"><span class="icon-arrow-left">{% trans "Previous" %}</span></a>
@@ -160,11 +163,11 @@
 
     <script>
     require(['config', 'app/init'], function(_, app){
-            new app.StreamPage({
-                groups: {{ event_list.paginator.objects|to_json:request|safe }},
-                canStream: {{ has_realtime|to_json|safe }},
-                realtime: true
-            });
+        new app.StreamPage({
+            groups: {{ event_list.paginator.objects|to_json:request|safe }},
+            canStream: {{ has_realtime|to_json|safe }},
+            realtime: true
+        });
     });
     </script>
 

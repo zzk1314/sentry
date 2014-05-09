@@ -69,7 +69,7 @@ define([
 
         makeDefaultView: function(id){
             return new appViews.GroupListView({
-                className: 'group-list small',
+                className: 'events small',
                 id: id,
                 maxItems: 5,
                 stream: this.options.stream,
@@ -97,7 +97,7 @@ define([
                 BasePage.prototype.initialize.apply(this, arguments);
 
                 this.group_list = new appViews.GroupListView({
-                    className: 'group-list',
+                    className: 'events',
                     id: 'event_list',
                     members: data.groups,
                     maxItems: 50,
@@ -265,7 +265,7 @@ define([
                 BasePage.prototype.initialize.apply(this, arguments);
 
                 this.group_list = new appViews.GroupListView({
-                    className: 'group-list',
+                    className: 'events',
                     id: 'event_list',
                     members: [data.group],
                     model: appModels.Group
@@ -407,7 +407,7 @@ define([
 
             makeDefaultView: function(id){
                 return new appViews.GroupListView({
-                    className: 'group-list',
+                    className: 'events',
                     id: id,
                     maxItems: 5,
                     stream: this.options.stream,

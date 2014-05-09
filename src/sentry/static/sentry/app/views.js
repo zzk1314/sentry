@@ -16,7 +16,7 @@ define([
     var views = {};
     views.GroupView = Backbone.View.extend({
         tagName: 'li',
-        className: 'group',
+        className: 'event',
         template: _.template(appTemplates.group),
 
         initialize: function(){
