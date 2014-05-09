@@ -18,15 +18,6 @@ from sentry.web.helpers import render_to_response
 
 
 @login_required
-def index(request):
-    # TODO(dcramer): we could do this via a middleware, or somewhat more
-    # intelligently
-    request.session.set_test_cookie()
-
-    return render_to_response('sentry/index.html', request)
-
-
-@login_required
 def dashboard(request, template='dashboard.html'):
     team_list = Team.objects.get_for_user(request.user, with_projects=True)
     if not team_list:
@@ -56,11 +47,6 @@ def static_media(request, **kwargs):
         path = '%s/%s' % (module, path)
 
     return serve(request, path, insecure=True)
-
-
-def partial_static_media(request, path):
-    path = 'app/templates/' + path
-    return static_media(request, module='sentry', path=path)
 
 
 def missing_perm(request, perm, **kwargs):
