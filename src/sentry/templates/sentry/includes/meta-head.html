@@ -1,0 +1,47 @@
+{% load i18n %}
+{% load sentry_helpers %}
+{% load static_compiler %}
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="robots" content="NONE,NOARCHIVE">
+
+<link href="{% url 'sentry-media' "sentry" "images/favicon.ico" %}" rel="shortcut icon" type="image/png"/>
+
+{% staticbundle 'sentry/css/sentry-simple.min.css' %}
+
+<title>{% block title %}Sentry{% endblock %}</title>
+
+<!--[if lt IE 9]>
+<script type="text/javascript" src="{% url 'sentry-media' "sentry" "scripts/lib/html5shiv.js" %}"></script>
+<![endif]-->
+
+<script data-main="{% url 'sentry-media' 'sentry' 'main' %}"
+        src="{% url 'sentry-media' 'sentry' 'vendor/requirejs/require.js' %}"></script>
+<script src="{% url 'sentry-media' 'sentry' 'vendor/raven/raven.js' %}"></script>
+
+{% block scripts %}
+    {% comment %}
+    <script type="text/javascript">
+    // TODO(dcramer): we need to load these from the backend or something?
+    {% if request.LANGUAGE_CODE %}
+        moment.lang('{{ request.LANGUAGE_CODE }}');
+    {% endif %}
+    app.config.popupCss = '{% url 'sentry-media' "sentry" 'styles/popup.css' %}';
+    app.config.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
+    app.config.urlPrefix = {{ URL_PREFIX|to_json|safe }};
+    {% if project %}
+        app.config.projectId = {{ project.slug|to_json|safe }};
+        app.config.teamId = {{ project.team.slug|to_json|safe }};
+    {% elif team %}
+        app.config.projectId = null;
+        app.config.teamId = {{ team.slug|to_json|safe }};
+    {% else %}
+        app.config.projectId = null;
+        app.config.teamId = null;
+    {% endif %}
+    </script>
+    {% endcomment %}
+{% endblock %}
+
+{% block meta %}
+{% endblock %}

@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # cihad <cihadgundogdu@gmail.com>, 2013
 # cihad <cihadgundogdu@gmail.com>, 2012
@@ -92,7 +92,7 @@ msgstr "Çözümlenmiş"
 msgid "Muted"
 msgstr ""
 
-#: constants.py:101 templates/sentry/layout.html:107
+#: constants.py:101 templates/sentry/layouts/base.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Yönetici"
@@ -311,7 +311,7 @@ msgstr "İsteğiniz işlenirken sunucuda hata oluştu"
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr ""
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
 msgid "Dashboard"
 msgstr "Kontrol panel"
 
@@ -370,28 +370,28 @@ msgstr "Ara"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "Girdiğiniz kodl uyumlu mesaj bulunamadı"
 
-#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Hesap"
 
-#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr ""
 
-#: templates/sentry/layout.html:110
+#: templates/sentry/layouts/base.html:110
 msgid "Logout"
 msgstr "Çıkış Yap"
 
-#: templates/sentry/layout.html:114 templates/sentry/login.html:6
+#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Giriş Yap"
 
-#: templates/sentry/layout.html:170
+#: templates/sentry/layouts/base.html:170
 msgid "Contribute"
 msgstr ""
 
-#: templates/sentry/layout.html:170
+#: templates/sentry/layouts/base.html:170
 msgid "Translate"
 msgstr ""
 

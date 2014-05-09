@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # ktkim82 <epictrance@gmail.com>, 2013
 # 경수 한 <hansim@gmail.com>, 2013
@@ -93,7 +93,7 @@ msgstr ""
 msgid "Muted"
 msgstr ""
 
-#: constants.py:101 templates/sentry/layout.html:107
+#: constants.py:101 templates/sentry/layouts/base.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr ""
@@ -312,7 +312,7 @@ msgstr "서버 요청 처리 중 에러 발생"
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr ""
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
 msgid "Dashboard"
 msgstr "대시보드"
 
@@ -371,28 +371,28 @@ msgstr "검색"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "입력한 ID에 해당하는 메시지를 찾을 수 없습니다."
 
-#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "계정"
 
-#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "팀"
 
-#: templates/sentry/layout.html:110
+#: templates/sentry/layouts/base.html:110
 msgid "Logout"
 msgstr "로그아웃"
 
-#: templates/sentry/layout.html:114 templates/sentry/login.html:6
+#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "로그인"
 
-#: templates/sentry/layout.html:170
+#: templates/sentry/layouts/base.html:170
 msgid "Contribute"
 msgstr ""
 
-#: templates/sentry/layout.html:170
+#: templates/sentry/layouts/base.html:170
 msgid "Translate"
 msgstr ""
 

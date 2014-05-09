@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Apostolos Mpessas <mpessas+txc@transifex.com>, 2012
 # Dimitris Glezos <glezos@transifex.com>, 2012
@@ -89,7 +89,7 @@ msgstr ""
 msgid "Muted"
 msgstr ""
 
-#: constants.py:99 templates/sentry/layout.html:107
+#: constants.py:99 templates/sentry/layouts/base.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Διαχειριστής"
@@ -326,7 +326,7 @@ msgstr "Υπήρξε ένα σφάλμα στον εξυπηρετητή κατ�
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "Μπορείτε να αναφέρεστε σε αυτό το σφάλμα ως <strong>%(id)s</strong>."
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
 msgid "Dashboard"
 msgstr "Ταμπλώ"
 
@@ -385,28 +385,28 @@ msgstr "Αναζήτηση"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "Δε μπορέσαμε να βρούμε ένα μήνμα που να ταιριάζει στο ID που δώσατε."
 
-#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Λογαριασμός"
 
-#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "Ομάδες"
 
-#: templates/sentry/layout.html:110
+#: templates/sentry/layouts/base.html:110
 msgid "Logout"
 msgstr "Αποσύνδεση"
 
-#: templates/sentry/layout.html:114 templates/sentry/login.html:6
+#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Σύνδεση"
 
-#: templates/sentry/layout.html:170
+#: templates/sentry/layouts/base.html:170
 msgid "Contribute"
 msgstr ""
 
-#: templates/sentry/layout.html:170
+#: templates/sentry/layouts/base.html:170
 msgid "Translate"
 msgstr ""
 
