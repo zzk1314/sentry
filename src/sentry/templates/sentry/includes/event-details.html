@@ -79,12 +79,7 @@
 
     {% for interface, interface_html in interface_list %}
         <section class="entry box" id="{{ interface.get_slug }}">
-            <div class="box-header">
-                <h4>{{ interface.title }}</h4>
-            </div>
-            <div class="box-content">
-                {{ interface_html }}
-            </div>
+            {{ interface_html }}
         </section>
     {% endfor %}
 
