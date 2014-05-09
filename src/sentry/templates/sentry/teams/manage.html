@@ -1,58 +1,70 @@
-{% extends "sentry/bases/team.html" %}
+{% extends "sentry/teams/base.html" %}
 
 {% load crispy_forms_tags %}
 {% load i18n %}
 {% load sentry_helpers %}
 {% load sentry_plugins %}
 
-{% block title %}{% trans "Settings" %} | {{ block.super }}{% endblock %}
-
-{% block bodyclass %}{% endblock %}
+{% block title %}{{ team.name }} {% trans "Settings" %} | {{ block.super }}{% endblock %}
 
 {% block main %}
-    <section class="body">
-        {% block inner %}
-            <div class="page-header">
-                <h2>{% trans "Team Details" %}</h2>
-            </div>
-            <form class="form-stacked" action="" method="post">
-                {% csrf_token %}
+    <div class="page-header">
+        <h3>{% trans "Team Settings" %}</h3>
+    </div>
+    <div class="row">
+        <div class="col-sm-3">
+            <ul class="nav nav-pills nav-stacked">
+                <li{% if SUBSECTION == 'settings' %} class="active"{% endif %}>
+                    <a href="{% url 'sentry-manage-team' team.slug %}">{% trans "Settings" %}</a>
+                </li>
+                <li{% if SUBSECTION == 'projects' %} class="active"{% endif %}>
+                    <a href="{% url 'sentry-manage-team-projects' team.slug %}">{% trans "Projects" %}</a>
+                </li>
+                <li{% if SUBSECTION == 'members' %} class="active"{% endif %}>
+                    <a href="{% url 'sentry-manage-team-members' team.slug %}">{% trans "Members" %}</a>
+                </li>
+                <li{% if SUBSECTION == 'groups' %} class="active"{% endif %}>
+                    <a href="{% url 'sentry-manage-access-groups' team.slug %}">{% trans "Access Groups" %}</a>
+                </li>
 
-                {% if form.errors %}
-                    <div class="alert alert-error">{% trans "Please correct the errors below." %}</div>
-                {% endif %}
+                <li class="divider"></li>
+                <li ng-if="selectedTeam.permission.admin"
+                    ui-sref-active="active"><a ui-sref="manage_team.ownership()">Transfer Ownership</a></li>
+                <li ng-if="selectedTeam.permission.admin"
+                    ui-sref-active="active"><a ui-sref="manage_team.delete()">Delete Team</a></li>
+                </li>
+            </ul>
+        </div>
+        <div class="col-sm-9">
+            {% block inner %}
+                <form class="form-stacked" action="" method="post">
+                    {% csrf_token %}
 
-                {{ form|as_crispy_errors }}
-
-                <fieldset>
-                    {% for field in form %}
-                        {% if field.name != 'owner' %}
-                            {{ field|as_crispy_field }}
-                        {% endif %}
-                    {% endfor %}
-                </fieldset>
-
-                {% if form.owner %}
-                    <fieldset>
-                        <p>If you wish to transfer ownership of this project, enter the new owner's username:</p>
-                        {{ form.owner|as_crispy_field }}
-                    </fieldset>
-                {% endif %}
-
-                <fieldset class="form-actions">
-                    <button type="submit" class="btn btn-primary">{% trans "Save Changes" %}</button>
-                    {% if can_remove_team %}
-                        <a href="{% url 'sentry-remove-team' team.slug %}" class="btn btn-danger">{% trans "Remove Team" %}</a>
-                    {% else %}
-                        <div class="pull-right note">{% trans "You cannot remove this team because it has projects assigned to it" %}</div>
+                    {% if form.errors %}
+                        <div class="alert alert-error">{% trans "Please correct the errors below." %}</div>
                     {% endif %}
-                </fieldset>
-            </form>
-        {% endblock %}
-    </section>
+
+                    {{ form|as_crispy_errors }}
+
+                    <fieldset>
+                        {% for field in form %}
+                            {% if field.name != 'owner' %}
+                                {{ field|as_crispy_field }}
+                            {% endif %}
+                        {% endfor %}
+                    </fieldset>
+
+                    <fieldset class="form-actions">
+                        <button type="submit" class="btn btn-primary">{% trans "Save Changes" %}</button>
+                    </fieldset>
+                </form>
+            {% endblock %}
+        </div>
+    </div>
 
     <script type="text/javascript">
-    new app.TeamDetailsPage();
+        require(['config', 'app/init'], function(_, app){
+            new app.TeamDetailsPage();
+        });
     </script>
-
 {% endblock %}

@@ -4,42 +4,37 @@
 {% load sentry_helpers %}
 
 {% block inner %}
-    <div class="page-header">
-        {% if can_add_project %}
-            <a href="{% url 'sentry-new-project' team.slug %}" class="btn pull-right btn-primary">{% trans "New Project" %}</a>
-        {% endif %}
-        <h2>{% trans "Projects" %}</h2>
-    </div>
+<table class="table table-settings">
+    <colgroup>
+        <col>
+        <col width="140px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th><h4>{% trans "Project" %}</h4></th>
+            <th style="text-align:right;">
+                <a href="{% url 'sentry-new-project' team.slug %}"
+                   class="btn btn-default btn-sm pull-right">{% trans "New Project" %}</a>
+            </th>
+        </tr>
+    </thead>
     {% if project_list %}
-        <table class="table table-striped">
-            <colgroup>
-                <col/>
-                <col width="150px"/>
-            </colgroup>
-            <thead>
+        <tbody>
+            {% for project in project_list %}
                 <tr>
-                    <th>{% trans "Project" %}</th>
-                    <th style="text-align:center;">{% trans "Date Added" %}</th>
+                    <td>
+                        <a href="{% url 'sentry-manage-project' project.team.slug project.slug %}">{{ project.name }}</a>
+                        {% if project.status == STATUS_HIDDEN %}
+                            (pending deletion)
+                        {% endif %}<br>
+                         {{ team.slug }}/{{ project.slug }}
+                    </td>
+                    <td style="text-align:right;">
+                        {{ project.date_added|timesince }}
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for project in project_list %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'sentry-manage-project' project.team.slug project.slug %}">{{ project.name }}</a>
-                            {% if project.status == STATUS_HIDDEN %}
-                                (pending deletion)
-                            {% endif %}<br>
-                             {{ team.slug }}/{{ project.slug }}
-                        </td>
-                        <td style="text-align:center;">
-                            {{ project.date_added|timesince }}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>{% trans "There are no projects managed by this team." %}</p>
+            {% endfor %}
+        </tbody>
     {% endif %}
+</table>
 {% endblock %}
