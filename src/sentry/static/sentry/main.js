@@ -7,10 +7,11 @@ require(['config'], function(config){
     'moment',
 
     'app/controllers/projectStream',
-    'app/filters/formatNumber'
+    'app/filters/formatNumber',
+    'app/filters/timeSince'
   ], function(angular, app, moment){
     app.config(function(
-      $httpProvider, $interpolateProvider
+      $httpProvider, $interpolateProvider, $provide
     ) {
       // compatiblity with Django templates
       $interpolateProvider.startSymbol('<%');
@@ -19,6 +20,8 @@ require(['config'], function(config){
       // add in Django csrf support
       $httpProvider.defaults.xsrfCookieName = 'csrftoken';
       $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+
+      $provide.value('config', window.SentryConfig);
     });
 
     moment.lang(window.SentryConfig.lang);

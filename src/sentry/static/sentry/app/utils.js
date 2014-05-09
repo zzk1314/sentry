@@ -1,11 +1,6 @@
 define([
-    'backbone',
-    'jquery',
-    'moment',
-    'underscore',
-
-    'app/config'
-], function(Backbone, $, moment, _, appConfig){
+    'jquery'
+], function($, appConfig){
     'use strict';
 
     var number_formats = [
@@ -92,143 +87,27 @@ define([
                 $link.html($link.attr('data-expand-label'));
         },
 
-        getSearchUsersUrl: function(){
-            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/users/search/';
-        },
+        sortArray: function(arr, score_fn) {
+            arr.sort(function(a, b){
+              var a_score = score_fn(a),
+                  b_score = score_fn(b);
 
-        getSearchProjectsUrl: function(){
-            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/projects/search/';
-        },
-
-        getSearchTagsUrl: function(){
-            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/' + appConfig.projectId + '/tags/search/';
-        },
-
-        makeSearchableInput: function(el, url, callback, options) {
-            $(el).select2($.extend({
-                allowClear: true,
-                width: 'element',
-                initSelection: function (el, callback) {
-                    var $el = $(el);
-                    callback({id: $el.val(), text: $el.val()});
-                },
-                ajax: {
-                    url: url,
-                    dataType: 'json',
-                    data: function (term, page) {
-                        return {
-                            query: term,
-                            limit: 10
-                        };
-                    },
-                    results: function(data, page) {
-                        var results = callback(data);
-                        return {results: callback(data)};
-                    }
+              for (var i = 0; i < a_score.length; i++) {
+                if (a_score[i] < b_score[i]) {
+                  return 1;
                 }
-            }, options || {}));
+                if (a_score[i] > b_score[i]) {
+                  return -1;
+                }
+              }
+              return 0;
+            });
+
+            return arr;
         },
 
         escape: function(str) {
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        },
-
-        makeSearchableUsersInput: function(el) {
-            this.makeSearchableInput(el, this.getSearchUsersUrl(), _.bind(function(data){
-                var results = [];
-                $(data.results).each(_.bind(function(_, val){
-                    var label;
-                    if (val.first_name) {
-                        label = this.escape(val.first_name) + ' &mdash; ' + this.escape(val.username);
-                    } else {
-                        label = this.escape(val.username);
-                    }
-                    label += '<br>' + this.escape(val.email);
-                    results.push({
-                        id: val.username,
-                        text: label
-                    });
-                }, this));
-
-                if (data.query && $(results).filter(function(){
-                    return this.id.localeCompare(data.query) === 0;
-                }).length === 0) {
-                    results.push({
-                        id: this.escape(data.query),
-                        text: this.escape(data.query)
-                    });
-                }
-
-                return results;
-            }, this), {
-                escapeMarkup: function(s) { return s; }
-            });
-        },
-
-        makeSearchableProjectsInput: function(el) {
-            this.makeSearchableInput(el, this.getSearchProjectsUrl(), function(data){
-                var results = [];
-                $(data.results).each(function(_, val){
-                    results.push({
-                        id: val.slug,
-                        text: this.escape(val.name) + '<br>' + val.slug
-                    });
-                });
-                return results;
-            }, {
-                escapeMarkup: function(s) { return s; }
-            });
-        },
-
-        makeSearchableTagsInput: function(el, options) {
-            var $el = $(el);
-            $el.select2({
-                multiple: true,
-                tokenSeperators: [","],
-                minimumInputLength: 3,
-                allowClear: true,
-                width: 'element',
-                initSelection: function (el, callback) {
-                    var $el = $(el);
-                    var values = $el.val().split(',');
-                    var results = [];
-                    $.each(values, function(_, val) {
-                        if (val === '') return;
-                        results.push({id: val, text: val});
-                    });
-                    callback(results);
-                },
-                ajax: {
-                    url: this.getSearchTagsUrl(),
-                    dataType: 'json',
-                    data: function (term, page) {
-                        return {
-                            query: term,
-                            quietMillis: 300,
-                            name: $el.data('tag'),
-                            limit: 10
-                        };
-                    },
-                    results: function(data, page) {
-                        var results = [];
-
-                        $(data.results).each(function(_, val){
-                            results.push({
-                                id: val,
-                                text: val
-                            });
-                        });
-
-                        if (data.query && $(results).filter(function(){
-                            return this.id.localeCompare(data.query) === 0;
-                        }).length === 0) {
-                            results.push({id:data.query, text:data.query});
-                        }
-
-                        return {results: results};
-                    }
-                }
-            });
         }
 
     };

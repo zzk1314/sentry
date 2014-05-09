@@ -2,8 +2,6 @@ define([
   'angular',
   'ngBootstrap',
   'ngClassy',
-  'ngHttpAuth',
-  'ngLoadingBar',
 
   'moment',
   'jquery'
@@ -13,8 +11,6 @@ define([
 
   return angular.module('app', [
     'classy',
-    'http-auth-interceptor',
-    'chieffancypants.loadingBar',
     'ui.bootstrap'
   ]);
 });

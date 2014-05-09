@@ -26,11 +26,11 @@ window.SentryConfig.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
 window.SentryConfig.urlPrefix = {{ URL_PREFIX|to_json|safe }};
 window.SentryConfig.lang = {{ request.LANGUAGE_CODE|to_json|safe }};
 {% if project %}
-    window.SentryConfig.projectId = {{ project.slug|to_json|safe }};
-    window.SentryConfig.teamId = {{ project.team.slug|to_json|safe }};
+    window.SentryConfig.projectId = {{ project.id|to_json|safe }};
+    window.SentryConfig.teamId = {{ project.team.id|to_json|safe }};
 {% elif team %}
     window.SentryConfig.projectId = null;
-    window.SentryConfig.teamId = {{ team.slug|to_json|safe }};
+    window.SentryConfig.teamId = {{ team.id|to_json|safe }};
 {% else %}
     window.SentryConfig.projectId = null;
     window.SentryConfig.teamId = null;
