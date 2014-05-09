@@ -1,8 +1,6 @@
 define([
-    'backbone',
     'jquery',
     'moment',
-    'underscore',
 
     'app/utils',
 
@@ -11,7 +9,7 @@ define([
     'jquery.flot.resize',
     'jquery.flot.time',
     'jquery.flot.tooltip'
-], function(Backbone, $, moment, _, utils){
+], function($, moment, utils){
     'use strict';
 
     var average = function(a) {

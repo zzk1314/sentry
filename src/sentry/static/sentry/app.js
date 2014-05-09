@@ -6,6 +6,7 @@ define([
   'moment',
   'jquery',
 
+  'app/modules/charts',
   'app/modules/collection'
 
 ], function(angular){
@@ -13,6 +14,7 @@ define([
 
   return angular.module('app', [
     'classy',
+    'sentry.charts',
     'sentry.collection',
     'ui.bootstrap'
   ]);

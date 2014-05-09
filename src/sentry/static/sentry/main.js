@@ -6,7 +6,10 @@ require(['config'], function(config){
     'app',
     'moment',
 
+    'app/controllers/default',
     'app/controllers/projectStream',
+    'app/controllers/teamDashboard',
+
     'app/directives/count',
     'app/directives/timeSince'
   ], function(angular, app, moment){

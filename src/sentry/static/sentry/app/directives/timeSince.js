@@ -1,7 +1,7 @@
 define(['app', 'moment'], function(app, moment) {
   'use strict';
 
-  app.directive('timeSince', function($timeout) {
+  app.directive('timeSince', ['$timeout', function($timeout) {
     return function timeSince(scope, element, attrs) {
       var timeout_id;
 
@@ -28,5 +28,5 @@ define(['app', 'moment'], function(app, moment) {
 
       tick();
     };
-  });
+  }]);
 });

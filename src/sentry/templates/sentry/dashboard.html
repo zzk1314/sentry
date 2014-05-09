@@ -4,27 +4,16 @@
 
 {% block title %}{% trans "Dashboard" %} | {{ block.super }}{% endblock %}
 
-{% block page_header_block %}
-    <section id="page-header" class="toolbar" style="height:5px;">
-    </section>
-{% endblock %}
-
-{% block bodyclass %}{% endblock %}
-
 {% block content %}
-    <div class="main">
+    <div class="main" ng-controller="TeamDashboardCtrl">
         {% block alerts %}
             {% include "sentry/partial/alerts.html" %}
         {% endblock %}
+
         {% block main %}
             <section class="body dashboard">
                 {% if project_list %}
-                    <div id="chart" class="chart" data-api-url="{% url 'sentry-api-0-team-stats' team.id %}">
-                        <div class="sparkline">
-                            <noscript>{% trans "Get yourself some JavaScripts dood" %}</noscript>
-                            <span class="loading">{% trans "Loading historical data..." %}</span>
-                        </div>
-                    </div>
+                    <div class="chart" simple-chart="{% url 'sentry-api-0-team-stats' team.id %}"></div>
                     <div class="row-fluid">
                         <div class="span6">
                             <div class="page-header clearfix">

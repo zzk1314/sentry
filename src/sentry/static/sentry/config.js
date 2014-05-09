@@ -1,8 +1,8 @@
 requirejs.config({
   // TODO: we dont want this in prod
-  urlArgs: "_=" + (new Date()).getTime(),
+  // urlArgs: "_=" + (new Date()).getTime(),
   paths: {
-    'angular': 'vendor/angular/angular.min',
+    'angular': 'vendor/angular/angular',
     'bootstrap': 'vendor/bootstrap/dist/js/bootstrap.min',
     'bootstrap-datepicker': 'vendor/bootstrap-datepicker/js/bootstrap-datepicker',
     'd3': 'vendor/d3/d3.min',
