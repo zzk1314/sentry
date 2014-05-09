@@ -28,10 +28,11 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
+from sentry.api.serializers import serialize as serialize_func
 from sentry.constants import STATUS_MUTED, EVENTS_PER_PAGE, MEMBER_OWNER
 from sentry.models import Team, Option, GroupTagValue
 from sentry.web.helpers import group_is_public
-from sentry.utils import to_unicode
+from sentry.utils import json, to_unicode
 from sentry.utils.avatar import get_gravatar_url
 from sentry.utils.http import absolute_uri
 from sentry.utils.javascript import to_json
@@ -131,6 +132,14 @@ def to_str(data):
 @register.filter
 def is_none(value):
     return value is None
+
+
+@register.simple_tag(takes_context=True)
+def serialize(context, value):
+    value = serialize_func(value, context['request'].user)
+    value = json.dumps(value)
+    value = value.replace('<', '&lt;').replace('>', '&gt;')
+    return mark_safe(value)
 
 
 @register.simple_tag(takes_context=True)

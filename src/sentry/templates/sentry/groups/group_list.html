@@ -25,7 +25,7 @@
     {% endif %}
 
     <script>
-    window.groupList = {{ event_list.paginator.objects|to_json:request|safe }};
+    window.groupList = {% serialize event_list.paginator.objects %};
     </script>
 
     <section id="stream"><div class="row"><div id="main">
