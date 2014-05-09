@@ -7,8 +7,8 @@ require(['config'], function(config){
     'moment',
 
     'app/controllers/projectStream',
-    'app/filters/formatNumber',
-    'app/filters/timeSince'
+    'app/directives/count',
+    'app/directives/timeSince'
   ], function(angular, app, moment){
     app.config(function(
       $httpProvider, $interpolateProvider, $provide

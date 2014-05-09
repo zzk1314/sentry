@@ -54,7 +54,7 @@ class GroupSerializer(Serializer):
             g.is_bookmarked = g.pk in bookmarks
             active_date = g.active_at or g.last_seen
             g.has_seen = seen_groups.get(g.id, active_date) > active_date
-            g.annotations = []
+            g.annotations = {}
             for key in sorted(tag_keys):
                 if key in project_annotations[project]:
                     label = TAG_LABELS.get(key, key.replace('_', ' ')).lower() + 's'
@@ -62,10 +62,10 @@ class GroupSerializer(Serializer):
                         value = annotation_counts[key].get(g.id, 0)
                     except KeyError:
                         value = 0
-                    g.annotations.append({
+                    g.annotations[key] = {
                         'label': label,
                         'count': value,
-                    })
+                    }
 
     def serialize(self, obj, user):
         status = obj.get_status()

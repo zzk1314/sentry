@@ -31,9 +31,14 @@ define(['app'], function(app){
       return '' + number;
   };
 
-  app.filter('formatNumber', function(){
-    return function(input) {
-      return formatNumber(input);
+  app.directive('count', function() {
+    return function(scope, element, attrs){
+      var value = scope.$eval(attrs.count);
+      if (value === undefined) {
+        element.text('');
+      } else {
+        element.text(formatNumber(value));
+      }
     };
   });
 });

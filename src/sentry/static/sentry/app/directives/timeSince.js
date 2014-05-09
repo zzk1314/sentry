@@ -1,17 +1,16 @@
-define(['app', 'moment', 'jquery'], function(app, moment, $) {
+define(['app', 'moment'], function(app, moment) {
   'use strict';
 
   app.directive('timeSince', function($timeout) {
     return function timeSince(scope, element, attrs) {
-      var $element = $(element),
-          timeout_id;
+      var timeout_id;
 
       function update(value){
         if (!value || value === undefined) {
           return '';
         }
 
-        $element.text(moment.utc(value).fromNow());
+        element.text(moment.utc(value).fromNow());
       }
 
       function tick(){
