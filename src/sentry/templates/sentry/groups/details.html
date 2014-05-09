@@ -175,7 +175,7 @@
 
 {% block content_after %}
     <script type="text/javascript">
-    $(document).ready(function() {
+    require(['config', 'app/init'], function(_, app){
         new app.GroupDetailsPage({
             group: {{ group|to_json:request|safe }},
         });
