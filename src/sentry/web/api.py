@@ -28,8 +28,8 @@ from raven.contrib.django.models import client as Raven
 from sentry import app
 from sentry.app import tsdb
 from sentry.constants import (
-    MEMBER_USER, STATUS_MUTED, STATUS_UNRESOLVED, STATUS_RESOLVED,
-    EVENTS_PER_PAGE)
+    MEMBER_USER, STATUS_MUTED, STATUS_UNRESOLVED, STATUS_RESOLVED
+)
 from sentry.coreapi import (
     project_from_auth_vars, decode_and_decompress_data,
     safely_load_json_string, validate_data, insert_data_to_database, APIError,
@@ -348,25 +348,6 @@ class StoreView(APIView):
         logger.debug('New event from project %s/%s (id=%s)', project.team.slug, project.slug, event_id)
 
         return event_id
-
-
-@csrf_exempt
-@has_access
-@never_cache
-@api
-def poll(request, team, project):
-    offset = 0
-    limit = EVENTS_PER_PAGE
-
-    response = _get_group_list(
-        request=request,
-        project=project,
-    )
-
-    event_list = response['event_list']
-    event_list = list(event_list[offset:limit])
-
-    return to_json(event_list, request)
 
 
 @csrf_exempt
