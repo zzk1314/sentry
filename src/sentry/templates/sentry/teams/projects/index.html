@@ -11,11 +11,8 @@
     </colgroup>
     <thead>
         <tr>
-            <th><h4>{% trans "Project" %}</h4></th>
-            <th style="text-align:right;">
-                <a href="{% url 'sentry-new-project' team.slug %}"
-                   class="btn btn-default btn-sm pull-right">{% trans "New Project" %}</a>
-            </th>
+            <th>{% trans "Project" %}</th>
+            <th style="text-align:right;">{% trans "Created" %}</th>
         </tr>
     </thead>
     {% if project_list %}
