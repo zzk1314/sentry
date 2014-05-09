@@ -20,14 +20,6 @@
                                 <li><a href="{% url 'sentry-stream' team.slug project.slug %}">{{ project.name }}</a></li>
                             {% endfor %}
                         </ul>
-
-                        <div class="chart" data-api-url="{% url 'sentry-api-0-team-stats' team.id %}">
-                            <div class="sparkline">
-                                <noscript>{% trans "Get yourself some JavaScripts dood" %}</noscript>
-                                <span class="loading">{% trans "Loading historical data..." %}</span>
-                            </div>
-                        </div>
-
                     </li>
                 {% endfor %}
             </ul>
@@ -35,12 +27,4 @@
             <div class="alert alert-info">{% trans "You are not a member of any teams." %}</div>
         {% endif %}
     </section>
-{% endblock %}
-
-{% block content_after %}
-    <script>
-    require(['config', 'app/base'], function(_, appBase){
-        new appBase.SelectTeamPage();
-    });
-    </script>
 {% endblock %}

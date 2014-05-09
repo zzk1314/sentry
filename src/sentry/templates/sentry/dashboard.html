@@ -61,14 +61,3 @@
         {% endblock %}
     </div>
 {% endblock %}
-
-{% block content_after %}
-    <script>
-    require(['config', 'app/base'], function(_, appBase){
-        new appBase.DashboardPage({
-            realtime: false,
-            stream: false
-        });
-    });
-    </script>
-{% endblock %}
