@@ -13,7 +13,7 @@
         {% block main %}
             <section class="body dashboard">
                 {% if project_list %}
-                    <div class="chart" simple-chart="{% url 'sentry-api-0-team-stats' team.id %}"></div>
+                    <figure class="chart" simple-chart="{% url 'sentry-api-0-team-stats' team.id %}"></figure>
                     <div class="row-fluid">
                         <div class="span6">
                             <div class="page-header clearfix">

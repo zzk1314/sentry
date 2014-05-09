@@ -149,9 +149,6 @@ define([
           lines: { show: false }
         };
 
-        // TODO(dcramer): make this configurable
-        el.height(200);
-
         $.plot(el, points, options);
 
         $(window).resize(function(){
