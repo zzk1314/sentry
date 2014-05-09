@@ -2,8 +2,10 @@ define([
     'backbone',
     'jquery',
     'moment',
-    'underscore'
-], function(Backbone, $, moment, _){
+    'underscore',
+
+    'app/config'
+], function(Backbone, $, moment, _, appConfig){
     'use strict';
 
     var number_formats = [
@@ -91,15 +93,15 @@ define([
         },
 
         getSearchUsersUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.teamId + '/users/search/';
+            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/users/search/';
         },
 
         getSearchProjectsUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.teamId + '/projects/search/';
+            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/projects/search/';
         },
 
         getSearchTagsUrl: function(){
-            return app.config.urlPrefix + '/api/' + app.config.teamId + '/' + app.config.projectId + '/tags/search/';
+            return appConfig.urlPrefix + '/api/' + appConfig.teamId + '/' + appConfig.projectId + '/tags/search/';
         },
 
         makeSearchableInput: function(el, url, callback, options) {
