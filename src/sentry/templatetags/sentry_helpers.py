@@ -463,7 +463,7 @@ def recent_alerts(context, project, asvar):
 
 
 @register.filter
-def reorder_teams(team_list, team):
+def reorder_teams(team_list, team=None):
     pending = []
     for t, p_list in team_list:
         if t == team:
