@@ -34,3 +34,11 @@
         {% endif %}
     </section>
 {% endblock %}
+
+{% block content_after %}
+    <script>
+    require(['config', 'app/init'], function(_, app){
+        new app.SelectTeamPage();
+    });
+    </script>
+{% endblock %}
