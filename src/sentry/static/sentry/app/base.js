@@ -118,7 +118,7 @@ define([
                 }, this));
 
                 $('#chart').height('50px');
-                appCharts.render('#chart', {
+                appCharts.createBasic('#chart', {
                     placement: 'left'
                 });
             },
@@ -195,7 +195,7 @@ define([
                 BasePage.prototype.initialize.apply(this, arguments);
 
                 $('#chart').height('150px');
-                Sentry.charts.render('#chart');
+                appCharts.createBasic('#chart');
             }
 
         }),
@@ -272,7 +272,7 @@ define([
                 });
 
                 $('#chart').height('150px');
-                Sentry.charts.render('#chart');
+                appCharts.createBasic('#chart');
 
                 $('#public-status .action').click(function(){
                     var $this = $(this);
