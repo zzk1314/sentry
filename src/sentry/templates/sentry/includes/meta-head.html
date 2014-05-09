@@ -19,30 +19,23 @@
         src="{% url 'sentry-media' 'sentry' 'vendor/requirejs/require.js' %}"></script>
 <script src="{% url 'sentry-media' 'sentry' 'vendor/raven/raven.js' %}"></script>
 
-{% block scripts %}
-    <script type="text/javascript">
-    require(['config', 'app/init'], function(_, app){
-        {% if request.LANGUAGE_CODE %}
-            require(['moment'], function(moment){
-                moment.lang('{{ request.LANGUAGE_CODE }}');
-            });
-        {% endif %}
-        app.config.popupCss = '{% url 'sentry-media' "sentry" 'styles/popup.css' %}';
-        app.config.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
-        app.config.urlPrefix = {{ URL_PREFIX|to_json|safe }};
-        {% if project %}
-            app.config.projectId = {{ project.slug|to_json|safe }};
-            app.config.teamId = {{ project.team.slug|to_json|safe }};
-        {% elif team %}
-            app.config.projectId = null;
-            app.config.teamId = {{ team.slug|to_json|safe }};
-        {% else %}
-            app.config.projectId = null;
-            app.config.teamId = null;
-        {% endif %}
-    });
-    </script>
-{% endblock %}
+<script>
+window.SentryConfig = {};
+window.SentryConfig.popupCss = '{% url 'sentry-media' "sentry" 'styles/popup.css' %}';
+window.SentryConfig.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
+window.SentryConfig.urlPrefix = {{ URL_PREFIX|to_json|safe }};
+window.SentryConfig.lang = {{ request.LANGUAGE_CODE|to_json|safe }};
+{% if project %}
+    window.SentryConfig.projectId = {{ project.slug|to_json|safe }};
+    window.SentryConfig.teamId = {{ project.team.slug|to_json|safe }};
+{% elif team %}
+    window.SentryConfig.projectId = null;
+    window.SentryConfig.teamId = {{ team.slug|to_json|safe }};
+{% else %}
+    window.SentryConfig.projectId = null;
+    window.SentryConfig.teamId = null;
+{% endif %}
+</script>
 
 {% block meta %}
 {% endblock %}

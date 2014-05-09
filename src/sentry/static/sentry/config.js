@@ -2,13 +2,12 @@ requirejs.config({
   // TODO: we dont want this in prod
   urlArgs: "_=" + (new Date()).getTime(),
   paths: {
-    'backbone': 'vendor/backbone/backbone',
+    'angular': 'vendor/angular/angular.min',
     'bootstrap': 'vendor/bootstrap/dist/js/bootstrap.min',
     'bootstrap-datepicker': 'vendor/bootstrap-datepicker/js/bootstrap-datepicker',
     'd3': 'vendor/d3/d3.min',
     'd3-tip': 'vendor/d3-tip/index',
     'jquery': 'vendor/jquery/jquery.min',
-    'jquery.animate-colors': 'scripts/lib/jquery.animate-colors',
     'jquery.clippy': 'scripts/lib/jquery.clippy.min',
     'jquery.cookie': 'scripts/lib/jquery.cookie',
     'jquery.flot': 'scripts/lib/jquery.flot',
@@ -17,12 +16,16 @@ requirejs.config({
     'jquery.flot.time': 'scripts/lib/jquery.flot.time',
     'jquery.flot.tooltip': 'scripts/lib/jquery.flot.tooltip',
     'jquery.migrate': 'scripts/lib/jquery-migrate',
-    'json2': 'scripts/lib/json2',
     'moment': 'vendor/moment/moment',
-    'requirejs': 'vendor/requirejs/requirejs',
-    'text': 'vendor/requirejs-plugins/lib/text',
-    'simple-slider': 'vendor/simple-slider/simple-slider',
-    'underscore': 'vendor/underscore/underscore'
+    'ngBootstrap': 'vendor/angular-bootstrap/ui-bootstrap-tpls',
+    'ngClassy': 'vendor/angular-classy/angular-classy.min',
+    'ngHttpAuth': 'vendor/angular-http-auth/src/http-auth-interceptor',
+    'ngLoadingBar': 'vendor/angular-loading-bar/build/loading-bar.min',
+    'ngRaven': 'vendor/angular-raven/angular-raven',
+    'ngRoute': 'vendor/angular-route/angular-route',
+    'ngRouter': 'vendor/angular-ui-router/release/angular-ui-router',
+    'ngSanitize': 'vendor/angular-sanitize/angular-sanitize',
+    'simple-slider': 'vendor/simple-slider/simple-slider'
   },
   shim: {
     'backbone': {
@@ -64,6 +67,18 @@ requirejs.config({
     'jquery.flot.tooltip': {
       deps: ['jquery.flot']
     },
+    'angular': {
+      exports: 'angular',
+      deps: ['jquery']
+    },
+    'ngBootstrap': ['angular'],
+    'ngClassy': ['angular'],
+    'ngHttpAuth': ['angular'],
+    'ngLoadingBar': ['angular'],
+    'ngRaven': ['angular'],
+    'ngRoute': ['angular'],
+    'ngSanitize': ['angular'],
+    'ngRouter': ['angular'],
     'simple-slider': {
       deps: ['jquery']
     },

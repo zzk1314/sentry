@@ -1,10 +1,9 @@
 define([
-  'backbone',
   'bootstrap',
   'moment',
   'jquery',
 
-  'app/app',
+  'app',
   'app/base',
   'app/charts',
   'app/config',
@@ -19,22 +18,10 @@ define([
   'jquery.clippy',
   'jquery.cookie'
 
-], function (Backbone, bootstrap, moment, $, app, appBase, appCharts,
+], function (bootstrap, moment, $, app, appBase, appCharts,
              appConfig, appCollections, appCore, appModels, appTemplates,
              appViews, appUtils) {
   'use strict';
-
-  // HACK(dcramer): try to retain some legacy compat
-  window.app = app;
-  $.extend(app, appBase);
-  app.config = appConfig;
-  app.charts = appCharts;
-  app.models = appModels;
-  app.utils = appUtils;
-
-  Backbone.sync = function(method, model, success, error){
-      success();
-  };
 
   $('.clippy').clippy({
       clippy_path: '../clippy.swf',

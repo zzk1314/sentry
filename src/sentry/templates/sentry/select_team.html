@@ -14,18 +14,20 @@
             <ul class="team-list">
                 {% for team, project_list in team_list %}
                     <li>
-                        <div class="chart" data-api-url="{% url 'sentry-api-0-team-stats' team.id %}">
-                            <div class="sparkline">
-                                <noscript>{% trans "Get yourself some JavaScripts dood" %}</noscript>
-                                <span class="loading">{% trans "Loading historical data..." %}</span>
-                            </div>
-                        </div>
                         <h2><a href="{% url 'sentry' team.slug %}">{{ team.name }}</a></h2>
                         <ul>
                             {% for project in project_list %}
                                 <li><a href="{% url 'sentry-stream' team.slug project.slug %}">{{ project.name }}</a></li>
                             {% endfor %}
                         </ul>
+
+                        <div class="chart" data-api-url="{% url 'sentry-api-0-team-stats' team.id %}">
+                            <div class="sparkline">
+                                <noscript>{% trans "Get yourself some JavaScripts dood" %}</noscript>
+                                <span class="loading">{% trans "Loading historical data..." %}</span>
+                            </div>
+                        </div>
+
                     </li>
                 {% endfor %}
             </ul>
@@ -37,8 +39,8 @@
 
 {% block content_after %}
     <script>
-    require(['config', 'app/init'], function(_, app){
-        new app.SelectTeamPage();
+    require(['config', 'app/base'], function(_, appBase){
+        new appBase.SelectTeamPage();
     });
     </script>
 {% endblock %}

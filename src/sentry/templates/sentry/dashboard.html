@@ -64,8 +64,8 @@
 
 {% block content_after %}
     <script>
-    require(['config', 'app/init'], function(_, app){
-        new app.DashboardPage({
+    require(['config', 'app/base'], function(_, appBase){
+        new appBase.DashboardPage({
             realtime: false,
             stream: false
         });
