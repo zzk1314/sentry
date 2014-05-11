@@ -179,7 +179,7 @@ enable more aggressive/optimized LRU.
 
 That said, if you're running a small install you can probably get away with just setting up the defaults:
 
-.. code-block::
+::
 
     SENTRY_REDIS_OPTIONS = {
         'hosts': {
@@ -369,7 +369,7 @@ slightly better).
 Enabling Social Auth
 --------------------
 
-Most of the time it doesnt really matter **how** someone authenticates to the service, so much as it that they do. In
+Most of the time it doesn't really matter **how** someone authenticates to the service, so much as it that they do. In
 these cases, Sentry provides tight integrated with several large social services, including: Twitter, Facebook, Google,
 and GitHub. Enabling this is as simple as setting up an application with the respective services, and configuring a
 couple values in your ``sentry.conf.py`` file.
