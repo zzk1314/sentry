@@ -7,6 +7,8 @@ require(['config'], function(config){
     'moment',
 
     'app/controllers/default',
+    'app/controllers/loginSudo',
+    'app/controllers/manageTeamOwnership',
     'app/controllers/projectStream',
     'app/controllers/teamDashboard',
 
@@ -25,6 +27,8 @@ require(['config'], function(config){
       $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 
       $provide.value('config', window.SentryConfig);
+      $provide.value('selectedTeam', window.SentryConfig.selectedTeam);
+      $provide.value('selectedProject', window.SentryConfig.selectedProject);
     });
 
     moment.lang(window.SentryConfig.lang);

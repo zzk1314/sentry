@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load sentry_api %}
 {% load sentry_helpers %}
 {% load static_compiler %}
 
@@ -25,15 +26,15 @@ window.SentryConfig.popupCss = '{% url 'sentry-media' "sentry" 'styles/popup.css
 window.SentryConfig.mediaUrl = '{% url 'sentry-media' "sentry" '' %}';
 window.SentryConfig.urlPrefix = {{ URL_PREFIX|to_json|safe }};
 window.SentryConfig.lang = {{ request.LANGUAGE_CODE|to_json|safe }};
-{% if project %}
-    window.SentryConfig.projectId = {{ project.id|to_json|safe }};
-    window.SentryConfig.teamId = {{ project.team.id|to_json|safe }};
-{% elif team %}
-    window.SentryConfig.projectId = null;
-    window.SentryConfig.teamId = {{ team.id|to_json|safe }};
+{% if selectedProject %}
+    window.SentryConfig.selectedProject = {% convert_to_json selectedProject %}
 {% else %}
-    window.SentryConfig.projectId = null;
-    window.SentryConfig.teamId = null;
+    window.SentryConfig.selectedProject = null;
+{% endif %}
+{% if selectedTeam %}
+    window.SentryConfig.selectedTeam = {% convert_to_json selectedTeam %}
+{% else %}
+    window.SentryConfig.selectedTeam = null;
 {% endif %}
 </script>
 

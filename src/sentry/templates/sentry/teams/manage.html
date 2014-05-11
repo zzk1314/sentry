@@ -51,17 +51,20 @@
                     <a href="{% url 'sentry-manage-access-groups' team.slug %}">{% trans "Access Groups" %}</a>
                 </li>
 
-                <li class="divider"></li>
-                <li ng-if="selectedTeam.permission.admin"
-                    ui-sref-active="active"><a ui-sref="manage_team.ownership()">Transfer Ownership</a></li>
-                <li ng-if="selectedTeam.permission.admin"
-                    ui-sref-active="active"><a ui-sref="manage_team.delete()">Delete Team</a></li>
-                </li>
+                {% if selectedTeam.permission.admin %}
+                    <li class="divider"></li>
+                    <li{% if SUBSECTION == 'transfer' %} class="active"{% endif %}>
+                        <a>{% trans "Transfer Ownership" %}</a>
+                    </li>
+                    <li{% if SUBSECTION == 'delete' %} class="active"{% endif %}>
+                        <a>{% trans "Delete Team" %}</a>
+                    </li>
+                {% endif %}
             </ul>
         </div>
         <div class="col-sm-9">
             {% block inner %}
-                <form class="form-stacked" action="" method="post">
+                <form class="form-stacked" action="." method="post">
                     {% csrf_token %}
 
                     {% if form.errors %}

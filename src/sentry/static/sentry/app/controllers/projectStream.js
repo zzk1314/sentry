@@ -10,7 +10,7 @@ define([
   app.classy.controller({
     name: 'ProjectStreamCtrl',
 
-    inject: ['Collection', 'config', '$http', '$scope', '$window', '$timeout'],
+    inject: ['Collection', 'selectedProject', '$http', '$scope', '$window', '$timeout'],
 
     init: function() {
       this.$scope.groupList = new this.Collection(this.$window.groupList);
@@ -21,7 +21,7 @@ define([
     pollForChanges: function() {
       var self = this;
 
-      this.$http.get('/api/0/projects/' + this.config.projectId + '/groups/').success(function(data){
+      this.$http.get('/api/0/projects/' + this.selectedProject.id + '/groups/').success(function(data){
         for (var i = 0; i < data.length; i++) {
           self.$scope.groupList.unshift(data[i]);
         }
