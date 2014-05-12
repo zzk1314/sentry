@@ -129,7 +129,7 @@ def get_default_context(request, existing_context=None, team=None):
     if 'team' in existing_context:
         existing_context['selectedTeam'] = serialize(existing_context['team'], request.user)
     if 'project' in existing_context:
-        existing_context['selectedPeam'] = serialize(existing_context['project'], request.user)
+        existing_context['selectedProject'] = serialize(existing_context['project'], request.user)
 
     return context
 
