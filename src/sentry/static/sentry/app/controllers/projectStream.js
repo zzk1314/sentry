@@ -16,6 +16,12 @@ define([
       this.$scope.groupList = new this.Collection(this.$window.groupList);
 
       this.$timeout(this.pollForChanges, 1000);
+
+      this.setChartDuration('1d');
+    },
+
+    setChartDuration: function(duration) {
+      this.$scope.chartDuration = duration;
     },
 
     pollForChanges: function() {

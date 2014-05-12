@@ -79,12 +79,12 @@
                     </div>
                     <div class="col-lg-2 hidden-md hidden-sm hidden-xs graph align-right">
                         <ul>
-                            <li class="active"><a href="#">24h</a></li>
-                            <li><a href="#">2w</a></li>
-                            <li><a href="#">30d</a></li>
+                            <li ng-class="{active: chartDuration=='1d'}"><a ng-click="setChartDuration('1d')">24h</a></li>
+                            <li ng-class="{active: chartDuration=='14d'}"><a ng-click="setChartDuration('14d')">2w</a></li>
+                            <li ng-class="{active: chartDuration=='30d'}"><a ng-click="setChartDuration('30d')">30d</a></li>
                         </ul>
                     </div>
-                    <div class="col-sm-2 col-md-1 hidden-xs occurrences align-right">occurrences</div>
+                    <div class="col-sm-2 col-md-1 hidden-xs occurrences align-right">count</div>
                     <div class="col-sm-2 col-md-1 hidden-xs users align-right">users</div>
                 </div>
             </li>
