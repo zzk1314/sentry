@@ -22,6 +22,9 @@ define([
 
     setChartDuration: function(duration) {
       this.$scope.chartDuration = duration;
+      $.each(this.$scope.groupList, function(_, group){
+        group.activeChartData = group.stats['24h'];
+      });
     },
 
     pollForChanges: function() {
