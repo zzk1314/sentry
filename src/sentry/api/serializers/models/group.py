@@ -1,13 +1,14 @@
 from collections import defaultdict
+from datetime import timedelta
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 
 from sentry.api.serializers import Serializer, register
+from sentry.app import tsdb
 from sentry.constants import STATUS_RESOLVED, STATUS_MUTED, TAG_LABELS
 from sentry.models import (
-    Group, GroupBookmark, GroupTagKey, GroupSeen, ProjectOption
+    Group, GroupBookmark, GroupTagKey, GroupSeen
 )
-# from sentry.templatetags.sentry_plugins import get_tags
-# from sentry.templatetags.sentry_plugins import handle_before_events
 from sentry.utils.db import attach_foreignkey
 from sentry.utils.http import absolute_uri
 
@@ -16,9 +17,6 @@ from sentry.utils.http import absolute_uri
 class GroupSerializer(Serializer):
     def get_attrs(self, item_list, user):
         attach_foreignkey(item_list, Group.project, ['team'])
-
-        # if request and objects:
-        #     handle_before_events(request, objects)
 
         if user.is_authenticated() and item_list:
             bookmarks = set(GroupBookmark.objects.filter(
@@ -33,44 +31,53 @@ class GroupSerializer(Serializer):
             bookmarks = set()
             seen_groups = {}
 
-        project_list = set(o.project for o in item_list)
-        tag_keys = set(['sentry:user'])
-        project_annotations = {}
-        for project in project_list:
-            enabled_annotations = ProjectOption.objects.get_value(
-                project, 'annotations', ['sentry:user'])
-            project_annotations[project] = enabled_annotations
-            tag_keys.update(enabled_annotations)
-
-        annotation_counts = defaultdict(dict)
-        annotation_results = GroupTagKey.objects.filter(
+        tag_counts = defaultdict(dict)
+        tag_results = GroupTagKey.objects.filter(
             group__in=item_list,
-            key__in=tag_keys,
         ).values_list('key', 'group', 'values_seen')
-        for key, group_id, values_seen in annotation_results:
-            annotation_counts[key][group_id] = values_seen
+        for key, group_id, values_seen in tag_results:
+            tag_counts[key][group_id] = values_seen
+
+        # we need to compute stats at 1d (1h resolution), and 14d/30d (1 day res)
+        group_ids = [g.id for g in item_list]
+        now = timezone.now()
+        hourly_stats = tsdb.get_range(
+            model=tsdb.models.group,
+            keys=group_ids,
+            end=now,
+            start=now - timedelta(days=1),
+            rollup=3600,
+        )
+        daily_stats = tsdb.get_range(
+            model=tsdb.models.group,
+            keys=group_ids,
+            end=now,
+            start=now - timedelta(days=30),
+            rollup=3600 * 24,
+        )
 
         result = {}
         for item in item_list:
             active_date = item.active_at or item.last_seen
 
-            annotations = {}
-            for key in sorted(tag_keys):
-                if key in project_annotations[project]:
-                    label = TAG_LABELS.get(key, key.replace('_', ' ')).lower() + 's'
-                    try:
-                        value = annotation_counts[key].get(item.id, 0)
-                    except KeyError:
-                        value = 0
-                    annotations[key] = {
-                        'label': label,
-                        'count': value,
-                    }
+            tags = {}
+            for key in tag_counts.iterkeys():
+                label = TAG_LABELS.get(key, key.replace('_', ' ')).lower() + 's'
+                try:
+                    value = tag_counts[key].get(item.id, 0)
+                except KeyError:
+                    value = 0
+                tags[key] = {
+                    'label': label,
+                    'count': value,
+                }
 
             result[item] = {
                 'is_bookmarked': item.id in bookmarks,
                 'has_seen': seen_groups.get(item.id, active_date) > active_date,
-                'annotations': annotations,
+                'tags': tags,
+                'hourly_stats': hourly_stats[item.id],
+                'daily_stats': hourly_stats[item.id],
             }
         return result
 
@@ -110,15 +117,12 @@ class GroupSerializer(Serializer):
                 'name': obj.project.name,
                 'slug': obj.project.slug,
             },
+            'stats': {
+                '24h': attrs['hourly_stats'],
+                '30d': attrs['daily_stats'],
+            },
+            'isBookmarked': attrs['is_bookmarked'],
+            'hasSeen': attrs['has_seen'],
+            'tags': attrs['tags'],
         }
-        if hasattr(obj, 'is_bookmarked'):
-            d['isBookmarked'] = obj.is_bookmarked
-        if hasattr(obj, 'has_seen'):
-            d['hasSeen'] = obj.has_seen
-        if hasattr(obj, 'historical_data'):
-            d['historicalData'] = obj.historical_data
-        if hasattr(obj, 'annotations'):
-            d['annotations'] = obj.annotations
-        # if request:
-        #     d['tags'] = list(get_tags(obj, request))
         return d
