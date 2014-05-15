@@ -14,26 +14,26 @@ from sentry.utils.http import absolute_uri
 
 @register(Group)
 class GroupSerializer(Serializer):
-    def attach_metadata(self, objects, user):
-        attach_foreignkey(objects, Group.project, ['team'])
+    def get_attrs(self, item_list, user):
+        attach_foreignkey(item_list, Group.project, ['team'])
 
         # if request and objects:
         #     handle_before_events(request, objects)
 
-        if user.is_authenticated() and objects:
+        if user.is_authenticated() and item_list:
             bookmarks = set(GroupBookmark.objects.filter(
                 user=user,
-                group__in=objects,
+                group__in=item_list,
             ).values_list('group_id', flat=True))
             seen_groups = dict(GroupSeen.objects.filter(
                 user=user,
-                group__in=objects,
+                group__in=item_list,
             ).values_list('group_id', 'last_seen'))
         else:
             bookmarks = set()
             seen_groups = {}
 
-        project_list = set(o.project for o in objects)
+        project_list = set(o.project for o in item_list)
         tag_keys = set(['sentry:user'])
         project_annotations = {}
         for project in project_list:
@@ -44,30 +44,37 @@ class GroupSerializer(Serializer):
 
         annotation_counts = defaultdict(dict)
         annotation_results = GroupTagKey.objects.filter(
-            group__in=objects,
+            group__in=item_list,
             key__in=tag_keys,
         ).values_list('key', 'group', 'values_seen')
         for key, group_id, values_seen in annotation_results:
             annotation_counts[key][group_id] = values_seen
 
-        for g in objects:
-            g.is_bookmarked = g.pk in bookmarks
-            active_date = g.active_at or g.last_seen
-            g.has_seen = seen_groups.get(g.id, active_date) > active_date
-            g.annotations = {}
+        result = {}
+        for item in item_list:
+            active_date = item.active_at or item.last_seen
+
+            annotations = {}
             for key in sorted(tag_keys):
                 if key in project_annotations[project]:
                     label = TAG_LABELS.get(key, key.replace('_', ' ')).lower() + 's'
                     try:
-                        value = annotation_counts[key].get(g.id, 0)
+                        value = annotation_counts[key].get(item.id, 0)
                     except KeyError:
                         value = 0
-                    g.annotations[key] = {
+                    annotations[key] = {
                         'label': label,
                         'count': value,
                     }
 
-    def serialize(self, obj, user):
+            result[item] = {
+                'is_bookmarked': item.id in bookmarks,
+                'has_seen': seen_groups.get(item.id, active_date) > active_date,
+                'annotations': annotations,
+            }
+        return result
+
+    def serialize(self, obj, attrs, user):
         status = obj.get_status()
         if status == STATUS_RESOLVED:
             status_label = 'resolved'
