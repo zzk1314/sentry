@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Antoni Aloy <aaloy@apsl.net>, 2012
 # mpuig <marc.puig@gmail.com>, 2012
@@ -87,7 +87,7 @@ msgstr "Resolts"
 msgid "Muted"
 msgstr ""
 
-#: constants.py:99 templates/sentry/layouts/base.html:107
+#: constants.py:99 templates/sentry/layout.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Administració"
@@ -324,7 +324,7 @@ msgstr "Ha ocorregut un error intern del sistema mentre es processava la teva pe
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "Pots fer referència a aquest error com <strong>%(id)s</strong>."
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
 msgid "Dashboard"
 msgstr "Panell de control"
 
@@ -383,28 +383,28 @@ msgstr "Cercar"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "No he pogut trobar cap missatge que casi amb l'ID que has introduït"
 
-#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Compta"
 
-#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "Equips"
 
-#: templates/sentry/layouts/base.html:110
+#: templates/sentry/layout.html:110
 msgid "Logout"
 msgstr "Sortir"
 
-#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
+#: templates/sentry/layout.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Entrar"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Contribute"
 msgstr ""
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Translate"
 msgstr ""
 

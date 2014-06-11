@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 msgid ""
 msgstr ""
@@ -90,7 +90,7 @@ msgstr "Resuelto"
 msgid "Muted"
 msgstr "Silenciado"
 
-#: constants.py:101 templates/sentry/layouts/base.html:107
+#: constants.py:101 templates/sentry/layout.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Administrador"
@@ -309,7 +309,7 @@ msgstr "Se produjo un error interno del servidor al procesar la solicitud."
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "Puede hacer referencia a este error como <strong>%(id)s</strong>."
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
 msgid "Dashboard"
 msgstr "Panel de control"
 
@@ -368,28 +368,28 @@ msgstr "Buscar"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "No pudimos encontrar un mensaje que coincida con la ID introducida."
 
-#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Cuenta"
 
-#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "Equipos"
 
-#: templates/sentry/layouts/base.html:110
+#: templates/sentry/layout.html:110
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
+#: templates/sentry/layout.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Iniciar sesión"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Contribute"
 msgstr "Contribuir"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Translate"
 msgstr "Traducir"
 

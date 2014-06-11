@@ -2,5 +2,5 @@ define([
 ], function(){
   'use strict';
 
-  return {};
+  return window.SentryConfig || {};
 });

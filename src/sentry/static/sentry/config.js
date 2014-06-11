@@ -2,7 +2,8 @@ requirejs.config({
   // TODO: we dont want this in prod
   // urlArgs: "_=" + (new Date()).getTime(),
   paths: {
-    'angular': 'vendor/angular/angular',
+    'angular': 'vendor/angular/angular.min',
+    'backbone': 'vendor/backbone/backbone',
     'bootstrap': 'vendor/bootstrap/dist/js/bootstrap.min',
     'bootstrap-datepicker': 'vendor/bootstrap-datepicker/js/bootstrap-datepicker',
     'd3': 'vendor/d3/d3.min',
@@ -10,14 +11,14 @@ requirejs.config({
     'jquery': 'vendor/jquery/jquery.min',
     'jquery.clippy': 'scripts/lib/jquery.clippy.min',
     'jquery.cookie': 'scripts/lib/jquery.cookie',
-    'jquery.flot': 'scripts/lib/jquery.flot',
+    'jquery.flot': 'vendor/jquery-flot/jquery.flot',
     'jquery.flot.dashes': 'scripts/lib/jquery.flot.dashes',
-    'jquery.flot.resize': 'scripts/lib/jquery.flot.resize',
-    'jquery.flot.time': 'scripts/lib/jquery.flot.time',
+    'jquery.flot.resize': 'vendor/jquery-flot/jquery.flot.resize',
+    'jquery.flot.time': 'vendor/jquery-flot/jquery.flot.time',
     'jquery.flot.tooltip': 'scripts/lib/jquery.flot.tooltip',
-    'jquery.migrate': 'scripts/lib/jquery-migrate',
-    'moment': 'vendor/moment/moment',
-    'ngBootstrap': 'vendor/angular-bootstrap/ui-bootstrap-tpls',
+    'json2': 'vendor/json2/json2',
+    'moment': 'vendor/moment/min/moment.min',
+    'ngBootstrap': 'vendor/angular-bootstrap/ui-bootstrap-tpls.min',
     'ngClassy': 'vendor/angular-classy/angular-classy.min',
     'ngHttpAuth': 'vendor/angular-http-auth/src/http-auth-interceptor',
     'ngLoadingBar': 'vendor/angular-loading-bar/build/loading-bar.min',
@@ -25,7 +26,9 @@ requirejs.config({
     'ngRoute': 'vendor/angular-route/angular-route',
     'ngRouter': 'vendor/angular-ui-router/release/angular-ui-router',
     'ngSanitize': 'vendor/angular-sanitize/angular-sanitize',
-    'simple-slider': 'vendor/simple-slider/simple-slider'
+    'simple-slider': 'vendor/simple-slider/simple-slider',
+    'underscore': 'vendor/underscore/underscore',
+    'text': 'vendor/requirejs-plugins/lib/text',
   },
   shim: {
     'backbone': {
@@ -39,9 +42,6 @@ requirejs.config({
     },
     'jquery': {
       exports: ['jquery', '$']
-    },
-    'jquery.animate-colors': {
-      deps: ['jquery']
     },
     'jquery.clippy': {
       deps: ['jquery']

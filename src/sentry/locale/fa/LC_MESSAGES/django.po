@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Ali Nikneshan <ali@nikneshan.com>, 2013
 msgid ""
@@ -91,7 +91,7 @@ msgstr ""
 msgid "Muted"
 msgstr ""
 
-#: constants.py:101 templates/sentry/layouts/base.html:107
+#: constants.py:101 templates/sentry/layout.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "ادمین"
@@ -310,7 +310,7 @@ msgstr "یک خطای داخلی سرور در حین پردازش تقاضای 
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "شما می توانید به این خطا با <strong>%(id)s</strong> اشاره کنید"
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
 msgid "Dashboard"
 msgstr "داشبورد"
 
@@ -369,28 +369,28 @@ msgstr "جستجو"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "ما نمیتوانیم پیام مطابق با شماره ID ورودی شما را پیدا کنیم"
 
-#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "حساب"
 
-#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr ""
 
-#: templates/sentry/layouts/base.html:110
+#: templates/sentry/layout.html:110
 msgid "Logout"
 msgstr "خروج"
 
-#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
+#: templates/sentry/layout.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "ورود"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Contribute"
 msgstr ""
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Translate"
 msgstr ""
 

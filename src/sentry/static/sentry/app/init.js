@@ -82,5 +82,7 @@ define([
       }, 5000);
   });
 
-  return app;
+  var Sentry = $.extend({}, appBase);
+  Sentry.utils = appUtils;
+  return Sentry;
 });

@@ -1,8 +1,6 @@
 define([
-    'backbone',
-
     'text!app/templates/group.html'
-], function(Backbone, groupTemplate){
+], function(groupTemplate){
     'use strict';
 
     return {

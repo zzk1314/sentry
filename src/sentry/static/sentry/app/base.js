@@ -11,6 +11,8 @@ define([
 ], function(Backbone, $, _, appCharts, appConfig, appModels, appUtils, appViews){
     'use strict';
 
+    console.log(appUtils);
+
     var BasePage = Backbone.View.extend({
 
         defaults: {

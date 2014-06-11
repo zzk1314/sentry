@@ -5,12 +5,12 @@ define([
     'underscore',
 
     'app/charts',
-    'app/config',
     'app/collections',
+    'app/config',
     'app/models',
     'app/templates',
     'app/utils'
-], function(Backbone, moment, $, _, appCharts, appConfig, appCollections, appModels, appTemplates, appUtils){
+], function(Backbone, moment, $, _, appCharts, appCollections, appConfig, appModels, appTemplates, appUtils){
     'use strict';
 
     var views = {};
@@ -39,9 +39,10 @@ define([
 
         render: function(){
             var data = this.model.toJSON();
-            data.projectUrl = appConfig.urlPrefix + '/' + appConfig.teamId +
+            data.projectUrl = appConfig.urlPrefix + '/' + appConfig.selectedTeam.slug +
                 '/' + data.project.slug + '/';
             data.loggerUrl = data.projectUrl + '?logger=' + data.logger;
+            data.utils = appUtils;
 
             this.$el.html(this.template(data));
             this.$el.attr('data-id', this.model.id);

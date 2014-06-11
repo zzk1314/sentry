@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # andialbrecht <albrecht.andi@gmail.com>, 2012
 # André Hagenbruch <ahagenbruch@googlemail.com>, 2013
@@ -96,7 +96,7 @@ msgstr "Gelöst"
 msgid "Muted"
 msgstr "Stummgeschaltet"
 
-#: constants.py:101 templates/sentry/layouts/base.html:107
+#: constants.py:101 templates/sentry/layout.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Administrator"
@@ -315,7 +315,7 @@ msgstr "Es gab einen internen Server Fehler während Ihre Anfrage verarbeitet wu
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "Sie können diesen Fehler als <strong>%(id)s</strong> referenzieren."
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
 msgid "Dashboard"
 msgstr "Arbeitsplatz"
 
@@ -374,28 +374,28 @@ msgstr "Suche"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "Es wurde keine Nachricht mit der eingetragenen ID gefunden."
 
-#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Konto"
 
-#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "Teams"
 
-#: templates/sentry/layouts/base.html:110
+#: templates/sentry/layout.html:110
 msgid "Logout"
 msgstr "Logout"
 
-#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
+#: templates/sentry/layout.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Login"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Contribute"
 msgstr "Mitarbeiten"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Translate"
 msgstr "Übersetzen"
 

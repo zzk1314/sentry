@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Benjamin Oertel <ben@punchtab.com>, 2012
 # Germain Carré <germaincarre@yahoo.fr>, 2012
@@ -93,7 +93,7 @@ msgstr "Résolu"
 msgid "Muted"
 msgstr "Silencieux"
 
-#: constants.py:101 templates/sentry/layouts/base.html:107
+#: constants.py:101 templates/sentry/layout.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Administration"
@@ -312,7 +312,7 @@ msgstr "Une erreur interne est survenuependant le traitement de votre requête."
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "Vous pouvez référencer cette erreur avec l'id suivant: <strong>%(id)s</strong>"
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
@@ -371,28 +371,28 @@ msgstr "Recherche"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "Impossible de trouver un message avec l'ID que vous avez entré."
 
-#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Compte"
 
-#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "Équipes"
 
-#: templates/sentry/layouts/base.html:110
+#: templates/sentry/layout.html:110
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
+#: templates/sentry/layout.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Connexion"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Contribute"
 msgstr "Contribuer"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Translate"
 msgstr "Traduire"
 

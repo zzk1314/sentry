@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # ghostishev, 2013
 # 3lnc <slam.3lnc@live.com>, 2013
@@ -92,7 +92,7 @@ msgstr "Вирішено"
 msgid "Muted"
 msgstr ""
 
-#: constants.py:101 templates/sentry/layouts/base.html:107
+#: constants.py:101 templates/sentry/layout.html:107
 #: templates/sentry/bases/admin.html:5 web/forms/__init__.py:47
 msgid "Admin"
 msgstr "Адмін"
@@ -311,7 +311,7 @@ msgstr "Під час Вашого запиту виникла внутрішн�
 msgid "You may reference this error as <strong>%(id)s</strong>."
 msgstr "Ви можете посилатися на цю помилку, як <strong>%(id)s</strong>."
 
-#: templates/sentry/dashboard.html:5 templates/sentry/layouts/base.html:129
+#: templates/sentry/dashboard.html:5 templates/sentry/layout.html:129
 msgid "Dashboard"
 msgstr "Головна"
 
@@ -370,28 +370,28 @@ msgstr "Пошук"
 msgid "We were unable to find a message matching the ID you entered."
 msgstr "За цим ID повідомлення не знайдене."
 
-#: templates/sentry/layouts/base.html:104 templates/sentry/bases/account.html:31
+#: templates/sentry/layout.html:104 templates/sentry/bases/account.html:31
 msgid "Account"
 msgstr "Аккаунт"
 
-#: templates/sentry/layouts/base.html:105 templates/sentry/bases/admin.html:17
+#: templates/sentry/layout.html:105 templates/sentry/bases/admin.html:17
 msgid "Teams"
 msgstr "Команди"
 
-#: templates/sentry/layouts/base.html:110
+#: templates/sentry/layout.html:110
 msgid "Logout"
 msgstr "Вихід"
 
-#: templates/sentry/layouts/base.html:114 templates/sentry/login.html:6
+#: templates/sentry/layout.html:114 templates/sentry/login.html:6
 #: templates/sentry/login.html.py:34
 msgid "Login"
 msgstr "Вхід"
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Contribute"
 msgstr ""
 
-#: templates/sentry/layouts/base.html:170
+#: templates/sentry/layout.html:170
 msgid "Translate"
 msgstr "Перекласти"
 
