@@ -1,4 +1,4 @@
-{% extends "sentry/layouts/base.html" %}
+{% extends "sentry/layout.html" %}
 
 {% load i18n %}
 
@@ -9,6 +9,9 @@
     <ul class="nav nav-tabs">
         <li>
             <a href="{% url 'sentry-stream' project.team.slug project.slug %}">{% trans "Stream" %}</a>
+        </li>
+        <li>
+            <a href="{% url 'sentry-explore' project.team.slug project.slug %}">{% trans "Explore" %}</a>
         </li>
         <li class="active">
             <a href="{% url 'sentry-manage-project' project.team.slug project.slug %}">{% trans "Settings" %}</a>

@@ -6,7 +6,11 @@ sentry.permissions
 :license: BSD, see LICENSE for more details.
 """
 from functools import wraps
+
 from django.conf import settings
+
+import six
+
 from sentry.constants import MEMBER_OWNER
 from sentry.plugins import plugins
 from sentry.utils.cache import cached_for_request
@@ -21,7 +25,7 @@ class Permission(object):
         return self.name
 
     def __eq__(self, other):
-        return unicode(self) == unicode(other)
+        return six.text_type(self) == six.text_type(other)
 
 
 class Permissions(object):
@@ -208,6 +212,22 @@ def can_add_project_key(user, project):
         return False
 
     result = plugins.first('has_perm', user, 'add_project_key', project)
+    if result is False:
+        return False
+
+    return True
+
+
+@requires_login
+def can_edit_project_key(user, project):
+    if user.is_superuser:
+        return True
+
+    # must be an owner of the team
+    if project.team and not project.team.member_set.filter(user=user, type=MEMBER_OWNER).exists():
+        return False
+
+    result = plugins.first('has_perm', user, 'edit_project_key', project)
     if result is False:
         return False
 

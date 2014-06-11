@@ -27,11 +27,10 @@ from django.utils.importlib import import_module
 from exam import Exam
 from nydus.db import create_cluster
 from rest_framework.test import APITestCase as BaseAPITestCase
-from sudo.settings import COOKIE_NAME as SUDO_COOKIE_NAME
-from sudo.utils import grant_sudo_privileges
 
 from sentry.constants import MODULE_ROOT
 from sentry.models import ProjectOption
+from sentry.rules import EventState
 from sentry.utils import json
 
 from .fixtures import Fixtures
@@ -74,7 +73,6 @@ class BaseTestCase(Fixtures, Exam):
 
         login(request, user)
         request.user = user
-        sudo_token = grant_sudo_privileges(request)
 
         # Save the session values.
         request.session.save()
@@ -90,7 +88,6 @@ class BaseTestCase(Fixtures, Exam):
             'expires': None,
         }
         self.client.cookies[session_cookie].update(cookie_data)
-        self.client.cookies[SUDO_COOKIE_NAME] = sudo_token
 
     def login(self):
         self.login_as(self.user)
@@ -227,6 +224,9 @@ class APITestCase(BaseTestCase, BaseAPITestCase):
 class RuleTestCase(TestCase):
     rule_cls = None
 
+    def get_event(self):
+        return self.event
+
     def get_rule(self, data=None):
         return self.rule_cls(
             project=self.project,
@@ -238,11 +238,17 @@ class RuleTestCase(TestCase):
             event = self.event
         kwargs.setdefault('is_new', True)
         kwargs.setdefault('is_regression', True)
-        assert rule.passes(event, **kwargs) is True
+        kwargs.setdefault('is_sample', True)
+        kwargs.setdefault('rule_is_active', False)
+        state = EventState(**kwargs)
+        assert rule.passes(event, state) is True
 
     def assertDoesNotPass(self, rule, event=None, **kwargs):
         if event is None:
             event = self.event
         kwargs.setdefault('is_new', True)
         kwargs.setdefault('is_regression', True)
-        assert rule.passes(event, **kwargs) is False
+        kwargs.setdefault('is_sample', True)
+        kwargs.setdefault('rule_is_active', False)
+        state = EventState(**kwargs)
+        assert rule.passes(event, state) is False

@@ -37,7 +37,11 @@ setup-git:
 build: locale
 
 clean:
-	rm -r src/sentry/static/CACHE
+	@echo "--> Cleaning static cache"
+	rm -rf src/sentry/static/CACHE
+	@echo "--> Cleaning pyc files"
+	find . -name "*.pyc" -delete
+	@echo ""
 
 locale:
 	cd src/sentry && sentry makemessages -i static -l en
@@ -88,7 +92,7 @@ lint: lint-python lint-js
 
 lint-python:
 	@echo "--> Linting Python files"
-	PYFLAKES_NODOCTEST=1 flake8 src/sentry
+	PYFLAKES_NODOCTEST=1 flake8 src/sentry tests
 	@echo ""
 
 lint-js:

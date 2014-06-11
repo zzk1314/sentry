@@ -103,7 +103,11 @@ def list_rules(request, team, project):
 @csrf_protect
 def create_or_edit_rule(request, team, project, rule_id=None):
     if rule_id:
-        rule = Rule.objects.get(project=project, id=rule_id)
+        try:
+            rule = Rule.objects.get(project=project, id=rule_id)
+        except Rule.DoesNotExist:
+            path = reverse('sentry-project-rules', args=[team.slug, project.slug])
+            return HttpResponseRedirect(path)
     else:
         rule = Rule(project=project)
 
@@ -112,18 +116,19 @@ def create_or_edit_rule(request, team, project, rule_id=None):
         'action_match': rule.data.get('action_match'),
     }
 
-    for num, node in enumerate(rule.data.get('conditions', [])):
-        prefix = 'condition[%d]' % (num,)
-        for key, value in node.iteritems():
-            form_data[prefix + '[' + key + ']'] = value
+    if request.POST:
+        for key, value in request.POST.iteritems():
+            form_data[key] = value
+    else:
+        for num, node in enumerate(rule.data.get('conditions', [])):
+            prefix = 'condition[%d]' % (num,)
+            for key, value in node.iteritems():
+                form_data[prefix + '[' + key + ']'] = value
 
-    for num, node in enumerate(rule.data.get('actions', [])):
-        prefix = 'action[%d]' % (num,)
-        for key, value in node.iteritems():
-            form_data[prefix + '[' + key + ']'] = value
-
-    for key, value in request.POST.iteritems():
-        form_data[key] = value
+        for num, node in enumerate(rule.data.get('actions', [])):
+            prefix = 'action[%d]' % (num,)
+            for key, value in node.iteritems():
+                form_data[prefix + '[' + key + ']'] = value
 
     validator = RuleFormValidator(project, form_data)
     if request.POST and validator.is_valid():
@@ -171,3 +176,21 @@ def create_or_edit_rule(request, team, project, rule_id=None):
     })
 
     return render_to_response('sentry/projects/rules/new.html', context, request)
+
+
+@has_access(MEMBER_OWNER)
+@csrf_protect
+def remove_rule(request, team, project, rule_id):
+    path = reverse('sentry-project-rules', args=[team.slug, project.slug])
+
+    try:
+        rule = Rule.objects.get(project=project, id=rule_id)
+    except Rule.DoesNotExist:
+        return HttpResponseRedirect(path)
+
+    rule.delete()
+
+    messages.add_message(request, messages.SUCCESS,
+        _('The rule was removed.'))
+
+    return HttpResponseRedirect(path)

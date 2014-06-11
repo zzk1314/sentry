@@ -36,44 +36,6 @@ SORT_OPTIONS = SortedDict((
     ('avgtime', _('Average Time Spent')),
 ))
 
-SORT_CLAUSES = {
-    'priority': 'sentry_groupedmessage.score',
-    'date': 'EXTRACT(EPOCH FROM sentry_groupedmessage.last_seen)',
-    'new': 'EXTRACT(EPOCH FROM sentry_groupedmessage.first_seen)',
-    'freq': 'sentry_groupedmessage.times_seen',
-    'tottime': 'sentry_groupedmessage.time_spent_total',
-    'avgtime': '(sentry_groupedmessage.time_spent_total / sentry_groupedmessage.time_spent_count)',
-}
-SCORE_CLAUSES = SORT_CLAUSES.copy()
-
-SQLITE_SORT_CLAUSES = SORT_CLAUSES.copy()
-SQLITE_SORT_CLAUSES.update({
-    'date': "(julianday(sentry_groupedmessage.last_seen) - 2440587.5) * 86400.0",
-    'new': "(julianday(sentry_groupedmessage.first_seen) - 2440587.5) * 86400.0",
-})
-SQLITE_SCORE_CLAUSES = SQLITE_SORT_CLAUSES.copy()
-
-MYSQL_SORT_CLAUSES = SORT_CLAUSES.copy()
-MYSQL_SORT_CLAUSES.update({
-    'date': 'UNIX_TIMESTAMP(sentry_groupedmessage.last_seen)',
-    'new': 'UNIX_TIMESTAMP(sentry_groupedmessage.first_seen)',
-})
-MYSQL_SCORE_CLAUSES = MYSQL_SORT_CLAUSES.copy()
-
-ORACLE_SORT_CLAUSES = SCORE_CLAUSES.copy()
-ORACLE_SORT_CLAUSES.update({
-    'date': "(cast(sentry_groupedmessage.last_seen as date)-TO_DATE('01/01/1970 00:00:00', 'MM-DD-YYYY HH24:MI:SS')) * 24 * 60 * 60",
-    'new': "(cast(sentry_groupedmessage.first_seen as date)-TO_DATE('01/01/1970 00:00:00', 'MM-DD-YYYY HH24:MI:SS')) * 24 * 60 * 60",
-})
-ORACLE_SCORE_CLAUSES = ORACLE_SORT_CLAUSES.copy()
-
-MSSQL_SORT_CLAUSES = SCORE_CLAUSES.copy()
-MSSQL_SORT_CLAUSES.update({
-    'date': "DATEDIFF(s, '1970-01-01T00:00:00', sentry_groupedmessage.last_seen)",
-    'new': "DATEDIFF(s, '1970-01-01T00:00:00', sentry_groupedmessage.first_seen)",
-})
-MSSQL_SCORE_CLAUSES = MSSQL_SORT_CLAUSES.copy()
-
 SEARCH_SORT_OPTIONS = SortedDict((
     ('score', _('Score')),
     ('date', _('Last Seen')),
@@ -82,6 +44,9 @@ SEARCH_SORT_OPTIONS = SortedDict((
 
 STATUS_VISIBLE = 0
 STATUS_HIDDEN = 1
+
+STATUS_ACTIVE = 0
+STATUS_INACTIVE = 1
 
 STATUS_UNRESOLVED = 0
 STATUS_RESOLVED = 1
@@ -193,24 +158,15 @@ DEFAULT_LOGGER_NAME = 'root'
 DEFAULT_ALERT_PROJECT_THRESHOLD = (500, 25)  # 500%, 25 events
 DEFAULT_ALERT_GROUP_THRESHOLD = (1000, 25)  # 1000%, 25 events
 
-# The maximum number of events which can be requested as JSON
-MAX_JSON_RESULTS = 1000
-
 # Default paginator value
 EVENTS_PER_PAGE = 15
 
 # Default sort option for the group stream
 DEFAULT_SORT_OPTION = 'date'
 
-# Default sort option for the search results
-SEARCH_DEFAULT_SORT_OPTION = 'date'
-
 # Setup languages for only available locales
 LANGUAGE_MAP = dict(settings.LANGUAGES)
 LANGUAGES = [(k, LANGUAGE_MAP[k]) for k in get_all_languages() if k in LANGUAGE_MAP]
-
-# Timeout (in seconds) for fetching remote source files (e.g. JS)
-SOURCE_FETCH_TIMEOUT = 5
 
 # TODO(dcramer): We eventually want to make this user-editable
 TAG_LABELS = {
@@ -226,7 +182,12 @@ TAG_LABELS = {
 # TODO(dcramer): once this is more flushed out we want this to be extendable
 SENTRY_RULES = (
     'sentry.rules.actions.notify_event.NotifyEventAction',
+    'sentry.rules.conditions.every_event.EveryEventCondition',
     'sentry.rules.conditions.first_seen_event.FirstSeenEventCondition',
     'sentry.rules.conditions.regression_event.RegressionEventCondition',
     'sentry.rules.conditions.tagged_event.TaggedEventCondition',
+    'sentry.rules.conditions.event_frequency.EventFrequencyCondition',
 )
+
+# methods as defined by http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html + PATCH
+HTTP_METHODS = ('GET', 'POST', 'PUT', 'OPTIONS', 'HEAD', 'DELETE', 'TRACE', 'CONNECT', 'PATCH')

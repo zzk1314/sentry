@@ -1,4 +1,4 @@
-{% extends "sentry/layouts/base.html" %}
+{% extends "sentry/layout.html" %}
 
 {% load i18n %}
 
@@ -22,5 +22,14 @@
         <li{% if SUBSECTION == 'groups' %} class="active"{% endif %}>
             <a href="{% url 'sentry-manage-access-groups' team.slug %}">{% trans "Access Groups" %}</a>
         </li>
+        {% if selectedTeam.permission.admin %}
+            <li class="divider"></li>
+            <li{% if SUBSECTION == 'transfer' %} class="active"{% endif %}>
+                <a>{% trans "Transfer Ownership" %}</a>
+            </li>
+            <li{% if SUBSECTION == 'delete' %} class="active"{% endif %}>
+                <a>{% trans "Delete Team" %}</a>
+            </li>
+        {% endif %}
     </ul>
 {% endblock %}

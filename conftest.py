@@ -14,6 +14,8 @@ def pytest_configure(config):
     if not settings.configured:
         os.environ['DJANGO_SETTINGS_MODULE'] = 'sentry.conf.server'
 
+    os.environ['RECAPTCHA_TESTING'] = 'True'
+
     test_db = os.environ.get('DB', 'sqlite')
     if test_db == 'mysql':
         settings.DATABASES['default'].update({
@@ -63,10 +65,18 @@ def pytest_configure(config):
     # Need a predictable key for tests that involve checking signatures
     settings.SENTRY_KEY = 'abc123'
     settings.SENTRY_PUBLIC = False
+
     # This speeds up the tests considerably, pbkdf2 is by design, slow.
     settings.PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
+    # Replace real sudo middleware with our mock sudo middleware
+    # to assert that the user is always in sudo mode
+    middleware = list(settings.MIDDLEWARE_CLASSES)
+    sudo = middleware.index('sentry.middleware.sudo.SudoMiddleware')
+    middleware[sudo] = 'tests.middleware.SudoMiddleware'
+    settings.MIDDLEWARE_CLASSES = tuple(middleware)
 
     # enable draft features
     settings.SENTRY_ENABLE_EXPLORE_CODE = True
@@ -77,8 +87,11 @@ def pytest_configure(config):
 
     settings.SENTRY_ALLOW_ORIGIN = '*'
 
-    settings.SENTRY_TSDB = 'sentry.tsdb.redis.RedisTSDB'
+    settings.SENTRY_TSDB = 'sentry.tsdb.inmemory.InMemoryTSDB'
     settings.SENTRY_TSDB_OPTIONS = {}
+
+    settings.RECAPTCHA_PUBLIC_KEY = 'a' * 40
+    settings.RECAPTCHA_PRIVATE_KEY = 'b' * 40
 
     # django mail uses socket.getfqdn which doesn't play nice if our
     # networking isn't stable
@@ -90,3 +103,8 @@ def pytest_configure(config):
 
     from sentry.testutils.cases import flush_redis
     flush_redis()
+
+
+def pytest_runtest_teardown(item):
+    from sentry.app import tsdb
+    tsdb.flush()

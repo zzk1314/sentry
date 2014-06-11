@@ -10,11 +10,14 @@ sentry.templatetags.sentry_helpers
 
 import os.path
 import pytz
+import six
+
 
 from collections import namedtuple
 from datetime import timedelta
 from paging.helpers import paginate as paginate_func
 from pkg_resources import parse_version as Version
+from six.moves import range
 from urllib import quote
 
 from django import template
@@ -64,13 +67,13 @@ def pprint(value, break_after=10):
 
     value = to_unicode(value)
     return mark_safe(u'<span></span>'.join(
-        [escape(value[i:(i + break_after)]) for i in xrange(0, len(value), break_after)]
+        [escape(value[i:(i + break_after)]) for i in range(0, len(value), break_after)]
     ))
 
 
 @register.filter
 def is_url(value):
-    if not isinstance(value, basestring):
+    if not isinstance(value, six.string_types):
         return False
     if not value.startswith(('http://', 'https://')):
         return False
