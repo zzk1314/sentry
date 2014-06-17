@@ -50,7 +50,7 @@ def save_event(cache_key=None, data=None, **kwargs):
     Saves an event to the database.
     """
     from sentry.app import cache
-    from sentry.models import Group
+    from sentry.event_manager import EventManager
 
     if cache_key:
         data = cache.get(cache_key)
@@ -58,8 +58,11 @@ def save_event(cache_key=None, data=None, **kwargs):
     if data is None:
         return
 
+    project = data.pop('project')
+
     try:
-        Group.objects.save_data(data.pop('project'), data)
+        manager = EventManager(data)
+        manager.save(project)
     finally:
         if cache_key:
             cache.delete(cache_key)
