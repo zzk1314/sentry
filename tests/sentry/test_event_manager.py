@@ -6,7 +6,7 @@ import logging
 
 from mock import Mock, patch
 
-from sentry.event_manager import EventManager, get_checksum_from_event
+from sentry.event_manager import EventManager, get_hashes_for_event
 from sentry.models import Event, Group, Project, EventMapping
 from sentry.testutils import TestCase
 
@@ -109,7 +109,7 @@ class EventManagerTest(TestCase):
         assert group.message == event2.message
 
 
-class GetChecksumFromEventTest(TestCase):
+class GetHashesFromEventTest(TestCase):
     @patch('sentry.interfaces.stacktrace.Stacktrace.get_composite_hash')
     @patch('sentry.interfaces.http.Http.get_composite_hash')
     def test_stacktrace_wins_over_http(self, http_comp_hash, stack_comp_hash):
@@ -130,7 +130,9 @@ class GetChecksumFromEventTest(TestCase):
             },
             message='Foo bar',
         )
-        checksum = get_checksum_from_event(event)
+        checksums = get_hashes_for_event(event)
+        assert len(checksums) == 1
+        checksum = checksums[0]
         stack_comp_hash.assert_called_once_with(interfaces=event.interfaces)
         assert not http_comp_hash.called
         assert checksum == '3858f62230ac3c915f300c664312c63f'

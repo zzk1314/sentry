@@ -48,16 +48,21 @@ def time_limit(silence):  # ~ 3600 per hour
     return settings.SENTRY_MAX_SAMPLE_TIME
 
 
-def get_checksum_from_event(event):
+def md5_from_hash(hash_bits):
+    result = md5()
+    for bit in hash_bits:
+        result.update(to_string(bit))
+    return result.hexdigest()
+
+
+def get_hashes_for_event(event):
     interfaces = event.interfaces
     for interface in interfaces.itervalues():
-        result = interface.get_composite_hash(interfaces=event.interfaces)
-        if result:
-            hash = md5()
-            for r in result:
-                hash.update(to_string(r))
-            return hash.hexdigest()
-    return md5(to_string(event.message)).hexdigest()
+        result = interface.compute_hashes(interfaces=event.interfaces)
+        if not result:
+            continue
+        return map(md5_from_hash, result)
+    return [md5_from_hash([event.message])]
 
 
 if not settings.SENTRY_SAMPLE_DATA:
@@ -235,10 +240,13 @@ class EventManager(object):
         )
 
         # Calculate the checksum from the first highest scoring interface
-        if not checksum:
-            checksum = get_checksum_from_event(event)
+        if checksum:
+            hashes = [checksum]
+        else:
+            hashes = get_hashes_for_event(event)
 
-        event.checksum = checksum
+        # TODO(dcramer): remove checksum usage
+        event.checksum = hashes[0]
 
         group_kwargs = kwargs.copy()
         group_kwargs.update({
@@ -269,6 +277,7 @@ class EventManager(object):
             self._save_aggregate,
             event=event,
             tags=tags,
+            hashes=hashes,
             **group_kwargs
         )
         if result is None:
@@ -355,12 +364,10 @@ class EventManager(object):
             group=group,
         )
 
-    def _save_aggregate(self, event, tags, **kwargs):
+    def _save_aggregate(self, event, tags, hashes, **kwargs):
         date = event.datetime
         time_spent = event.time_spent
         project = event.project
-
-        hashes = kwargs.pop('hashes', [event.checksum])
 
         # attempt to find a matching hash
         existing_hashes = self._find_hashes(project, hashes)

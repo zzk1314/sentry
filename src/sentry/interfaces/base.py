@@ -74,6 +74,12 @@ class Interface(object):
     def get_hash(self):
         return []
 
+    def compute_hashes(self, interfaces):
+        result = self.get_composite_hash(interfaces=interfaces)
+        if not result:
+            return []
+        return [result]
+
     def get_slug(self):
         return type(self).__name__.lower()
 
