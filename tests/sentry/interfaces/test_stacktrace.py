@@ -6,7 +6,6 @@ import mock
 
 from exam import fixture
 
-from sentry.interfaces.exception import Exception
 from sentry.interfaces.stacktrace import (
     Frame, Stacktrace, get_context, trim_frames
 )
@@ -201,27 +200,6 @@ class StacktraceTest(TestCase):
         })
         result = interface.get_hash()
         self.assertEquals(result, ['foo.py', 'foo bar'])
-
-    def test_get_composite_hash_uses_exception_if_present(self):
-        interface = Stacktrace.to_python(dict(frames=[{
-            'context_line': 'foo bar',
-            'lineno': 1,
-            'filename': 'foo.py',
-            'function': 'bar'
-        }]))
-        interface_exc = Exception.to_python(dict(type='exception', value='bar'))
-        result = interface.get_composite_hash({
-            'sentry.interfaces.Exception': interface_exc,
-        })
-        self.assertEquals(result[-1], 'exception')
-
-    def test_get_composite_hash_uses_exception_value_if_no_type_or_stack(self):
-        interface = Stacktrace(frames=[])
-        interface_exc = Exception.to_python(dict(type='bar'))
-        result = interface.get_composite_hash({
-            'sentry.interfaces.Exception': interface_exc,
-        })
-        self.assertEquals(result[-1], 'bar')
 
     @mock.patch('sentry.interfaces.stacktrace.Stacktrace.get_stacktrace')
     def test_to_string_returns_stacktrace(self, get_stacktrace):

@@ -423,16 +423,6 @@ class Stacktrace(Interface):
         data['frames_omitted'] = data.pop('frames_omitted', None)
         return data
 
-    def get_composite_hash(self, interfaces):
-        output = self.get_hash()
-        if 'sentry.interfaces.Exception' in interfaces:
-            exc = interfaces['sentry.interfaces.Exception'][0]
-            if exc.type:
-                output.append(exc.type)
-            elif not output:
-                output = exc.get_hash()
-        return output
-
     def get_hash(self):
         frames = self.frames
 
