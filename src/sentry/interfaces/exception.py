@@ -185,14 +185,33 @@ class Exception(Interface):
             output.extend(value.get_hash())
         return output
 
-    def get_composite_hash(self, interfaces):
+    def compute_hashes(self, interfaces):
+        system_hash = self.get_composite_hash(
+            interfaces=interfaces,
+            system_frames=True,
+        )
+        if not system_hash:
+            return []
+
+        app_hash = self.get_composite_hash(
+            interfaces=interfaces,
+            system_frames=False,
+        )
+        if system_hash == app_hash or not app_hash:
+            return [system_hash]
+
+        return [system_hash, app_hash]
+
+    def get_composite_hash(self, interfaces, system_frames=True):
         # optimize around the fact that some exceptions might have stacktraces
         # while others may not and we ALWAYS want stacktraces over values
         output = []
         for value in self.values:
             if not value.stacktrace:
                 continue
-            stack_hash = value.stacktrace.get_hash()
+            stack_hash = value.stacktrace.get_hash(
+                system_frames=system_frames,
+            )
             if stack_hash:
                 output.extend(stack_hash)
                 output.append(value.type)

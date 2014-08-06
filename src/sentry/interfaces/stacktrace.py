@@ -423,12 +423,15 @@ class Stacktrace(Interface):
         data['frames_omitted'] = data.pop('frames_omitted', None)
         return data
 
-    def get_hash(self):
+    def get_hash(self, system_frames=True):
         frames = self.frames
 
         # TODO(dcramer): this should apply only to JS
         if len(frames) == 1 and frames[0].lineno == 1 and frames[0].function in ('?', None):
             return []
+
+        if not system_frames:
+            frames = [f for f in frames if f.in_app] or frames
 
         output = []
         for frame in frames:
