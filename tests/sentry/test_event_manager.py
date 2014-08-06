@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import logging
 
-from mock import Mock, patch
+from mock import patch
 
 from sentry.event_manager import EventManager, get_hashes_for_event
 from sentry.models import Event, Group, Project, EventMapping
@@ -50,7 +50,6 @@ class EventManagerTest(TestCase):
         with self.assertRaises(Project.DoesNotExist):
             event = manager.save(2)
 
-    @patch('sentry.event_manager.send_group_processors', Mock())
     @patch('sentry.manager.GroupManager.add_tags')
     def test_tags_as_list(self, add_tags):
         manager = EventManager(self.make_event(tags=[('foo', 'bar')]))
@@ -58,7 +57,6 @@ class EventManagerTest(TestCase):
 
         assert data['tags'] == [('foo', 'bar')]
 
-    @patch('sentry.event_manager.send_group_processors', Mock())
     @patch('sentry.manager.GroupManager.add_tags')
     def test_tags_as_dict(self, add_tags):
         manager = EventManager(self.make_event(tags={'foo': 'bar'}))
@@ -66,7 +64,6 @@ class EventManagerTest(TestCase):
 
         assert data['tags'] == [('foo', 'bar')]
 
-    @patch('sentry.event_manager.send_group_processors', Mock())
     def test_platform_is_saved(self):
         manager = EventManager(self.make_event(platform='python'))
         event = manager.save(1)

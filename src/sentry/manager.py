@@ -19,8 +19,6 @@ from sentry.constants import MAX_TAG_VALUE_LENGTH, MEMBER_USER
 from sentry.db.models import BaseManager
 from sentry.utils.db import attach_foreignkey
 
-UNSAVED = dict()
-
 
 class UserManager(BaseManager, UserManager):
     pass

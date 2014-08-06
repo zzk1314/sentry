@@ -24,10 +24,10 @@ from sentry.constants import (
 )
 from sentry.models import Event, EventMapping, Group, GroupHash, Project
 from sentry.plugins import plugins
-from sentry.processors.base import send_group_processors
 from sentry.signals import regression_signal
 from sentry.tasks.index import index_event
 from sentry.tasks.merge import merge_group
+from sentry.tasks.post_process import post_process_group
 from sentry.utils.db import get_db_engine
 from sentry.utils.safe import safe_execute, trim, trim_dict
 
@@ -310,7 +310,7 @@ class EventManager(object):
         transaction.commit_unless_managed(using=using)
 
         if not raw:
-            send_group_processors(
+            post_process_group.delay(
                 group=group,
                 event=event,
                 is_new=is_new or is_regression,  # backwards compat
