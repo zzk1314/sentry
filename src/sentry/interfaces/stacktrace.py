@@ -423,6 +423,17 @@ class Stacktrace(Interface):
         data['frames_omitted'] = data.pop('frames_omitted', None)
         return data
 
+    def compute_hashes(self):
+        system_hash = self.get_hash(system_frames=True)
+        if not system_hash:
+            return []
+
+        app_hash = self.get_hash(system_frames=False)
+        if system_hash == app_hash or not app_hash:
+            return [system_hash]
+
+        return [system_hash, app_hash]
+
     def get_hash(self, system_frames=True):
         frames = self.frames
 

@@ -68,14 +68,11 @@ class Interface(object):
     def get_alias(self):
         return self.get_slug()
 
-    def get_composite_hash(self, interfaces):
-        return self.get_hash()
-
     def get_hash(self):
         return []
 
-    def compute_hashes(self, interfaces):
-        result = self.get_composite_hash(interfaces=interfaces)
+    def compute_hashes(self):
+        result = self.get_hash()
         if not result:
             return []
         return [result]

@@ -179,30 +179,18 @@ class Exception(Interface):
     def get_path(self):
         return 'sentry.interfaces.Exception'
 
-    def get_hash(self):
-        output = []
-        for value in self.values:
-            output.extend(value.get_hash())
-        return output
-
-    def compute_hashes(self, interfaces):
-        system_hash = self.get_composite_hash(
-            interfaces=interfaces,
-            system_frames=True,
-        )
+    def compute_hashes(self):
+        system_hash = self.get_hash(system_frames=True)
         if not system_hash:
             return []
 
-        app_hash = self.get_composite_hash(
-            interfaces=interfaces,
-            system_frames=False,
-        )
+        app_hash = self.get_hash(system_frames=False)
         if system_hash == app_hash or not app_hash:
             return [system_hash]
 
         return [system_hash, app_hash]
 
-    def get_composite_hash(self, interfaces, system_frames=True):
+    def get_hash(self, system_frames=True):
         # optimize around the fact that some exceptions might have stacktraces
         # while others may not and we ALWAYS want stacktraces over values
         output = []
@@ -218,7 +206,7 @@ class Exception(Interface):
 
         if not output:
             for value in self.values:
-                output.extend(value.get_composite_hash(interfaces))
+                output.extend(value.get_hash())
 
         return output
 

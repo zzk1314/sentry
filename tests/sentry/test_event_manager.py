@@ -107,12 +107,12 @@ class EventManagerTest(TestCase):
 
 
 class GetHashesFromEventTest(TestCase):
-    @patch('sentry.interfaces.stacktrace.Stacktrace.get_composite_hash')
-    @patch('sentry.interfaces.http.Http.get_composite_hash')
+    @patch('sentry.interfaces.stacktrace.Stacktrace.compute_hashes')
+    @patch('sentry.interfaces.http.Http.compute_hashes')
     def test_stacktrace_wins_over_http(self, http_comp_hash, stack_comp_hash):
         # this was a regression, and a very important one
-        http_comp_hash.return_value = ['baz']
-        stack_comp_hash.return_value = ['foo', 'bar']
+        http_comp_hash.return_value = [['baz']]
+        stack_comp_hash.return_value = [['foo', 'bar']]
         event = Event(
             data={
                 'sentry.interfaces.Stacktrace': {
@@ -130,6 +130,6 @@ class GetHashesFromEventTest(TestCase):
         checksums = get_hashes_for_event(event)
         assert len(checksums) == 1
         checksum = checksums[0]
-        stack_comp_hash.assert_called_once_with(interfaces=event.interfaces)
+        stack_comp_hash.assert_called_once_with()
         assert not http_comp_hash.called
         assert checksum == '3858f62230ac3c915f300c664312c63f'

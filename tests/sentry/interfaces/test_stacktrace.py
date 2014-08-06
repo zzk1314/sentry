@@ -114,6 +114,19 @@ class StacktraceTest(TestCase):
         result = interface.get_hash(system_frames=True)
         assert result == ['foo.py', 1, 'bar.py', 1]
 
+    def test_compute_hashes(self):
+        interface = Stacktrace.to_python(dict(frames=[{
+            'lineno': 1,
+            'filename': 'foo.py',
+            'in_app': True,
+        }, {
+            'lineno': 1,
+            'filename': 'bar.py',
+            'in_app': None,
+        }]))
+        result = interface.compute_hashes()
+        assert result == [['foo.py', 1, 'bar.py', 1], ['foo.py', 1]]
+
     def test_get_hash_with_only_required_vars(self):
         interface = Frame.to_python({
             'lineno': 1,
