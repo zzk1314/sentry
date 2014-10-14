@@ -6,6 +6,141 @@
 
 {% block controller %}TeamDashboardCtrl{% endblock %}
 
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% url 'sentry-media' 'sentry' 'vendor/chartjs/Chart.min.js' %}" type="text/javascript"></script>
+
+  <script type="text/javascript">
+    $(function() {
+
+    // Hero chart
+
+    var hero_data = {
+      labels: ["January", "February", "March", "April", "May", "June", "July"],
+      datasets: [
+          {
+              label: "Events",
+              fillColor: "rgba(220,220,220,0.2)",
+              strokeColor: "rgba(220,220,220,1)",
+              pointColor: "rgba(220,220,220,1)",
+              pointStrokeColor: "#32383F",
+              pointHighlightFill: "#32383F",
+              pointHighlightStroke: "#fff",
+              data: [65, 59, 80, 81, 56, 55, 40]
+          },
+          {
+              label: "Resolved",
+              fillColor: "rgba(151,187,205,0.2)",
+              strokeColor: "rgba(151,187,205,1)",
+              pointColor: "rgba(151,187,205,1)",
+              pointStrokeColor: "#32383F",
+              pointHighlightFill: "#32383F",
+              pointHighlightStroke: "#fff",
+              data: [28, 48, 40, 19, 86, 27, 90]
+          }
+        ]
+      };
+
+      var ctx1 = document.getElementById("hero-chart").getContext("2d");
+      var myLineChart = new Chart(ctx1).Line(hero_data, {
+        bezierCurve: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        scaleGridLineColor: "rgba(255, 255, 255, .05)",
+        scaleFontColor: "rgba(255, 255, 255, .6)",
+      });
+
+      // Pie charts
+
+      var doughnut_1_data = [
+          {
+              value: 300,
+              color:"#F7464A",
+              highlight: "#FF5A5E",
+              label: "Red"
+          },
+          {
+              value: 50,
+              color: "#46BFBD",
+              highlight: "#5AD3D1",
+              label: "Green"
+          },
+          {
+              value: 100,
+              color: "#FDB45C",
+              highlight: "#FFC870",
+              label: "Yellow"
+          }
+      ]
+
+      var ctx2 = document.getElementById("doughnut_1").getContext("2d");
+      var doughnutOne = new Chart(ctx2).Doughnut(doughnut_1_data, {
+        responsive: true
+      });
+
+      var doughnut_2_data = [
+          {
+              value: 300,
+              color:"#F7464A",
+              highlight: "#FF5A5E",
+              label: "Red"
+          },
+          {
+              value: 50,
+              color: "#46BFBD",
+              highlight: "#5AD3D1",
+              label: "Green"
+          },
+          {
+              value: 100,
+              color: "#FDB45C",
+              highlight: "#FFC870",
+              label: "Yellow"
+          }
+      ]
+
+      var ctx3 = document.getElementById("doughnut_2").getContext("2d");
+      var doughnutTwo = new Chart(ctx3).Doughnut(doughnut_2_data, {
+        responsive: true
+      });
+
+      var doughnut_3_data = [
+          {
+              value: 300,
+              color:"#F7464A",
+              highlight: "#FF5A5E",
+              label: "Red"
+          },
+          {
+              value: 50,
+              color: "#46BFBD",
+              highlight: "#5AD3D1",
+              label: "Green"
+          },
+          {
+              value: 100,
+              color: "#FDB45C",
+              highlight: "#FFC870",
+              label: "Yellow"
+          }
+      ]
+
+      var ctx4 = document.getElementById("doughnut_3").getContext("2d");
+      var doughnutThree = new Chart(ctx4).Doughnut(doughnut_3_data, {
+        responsive: true
+      });
+
+    });
+  </script>
+{% endblock %}
+
+{% block page_header_block %}
+<div class="hero-chart-container">
+  <canvas id="hero-chart"></canvas>
+</div>
+
+{% endblock %}
+
 {% block content %}
     <div class="main">
         {% block alerts %}
@@ -13,20 +148,35 @@
         {% endblock %}
         {% block main %}
             <div class="dashboard">
-                {% if project_list %}
-                    <div class="box">
-                      <div class="box-header">
-                        <h3>Last 7 days</h3>
-                      </div>
-                        <div class="box-content with-padding">
-                            <div id="chart" class="chart" data-api-url="{% url 'sentry-api-0-team-stats' team.id %}">
-                                <div class="sparkline">
-                                    <noscript>{% trans "Get yourself some JavaScripts dood" %}</noscript>
-                                    <span class="loading">{% trans "Loading historical data..." %}</span>
-                                </div>
-                            </div>
-                        </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="box">
+                    <div class="box-header">Something lol</div>
+                    <div class="box-content" style="padding:20px 0">
+                      <canvas id="doughnut_1"></canvas>
                     </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="box">
+                    <div class="box-header">Something lol</div>
+                    <div class="box-content" style="padding:20px 0">
+                      <canvas id="doughnut_2"></canvas>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="box">
+                    <div class="box-header">Something lol</div>
+                    <div class="box-content" style="padding:20px 0">
+                      <canvas id="doughnut_3"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+                {% if project_list %}
                     <div class="row">
                         <div class="col-md-6">
                             <div class="box">
