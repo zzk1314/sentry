@@ -345,28 +345,37 @@ var Stream = React.createClass({
 
     return (
       <div>
-        <StreamFilters
-          query={this.state.query}
-          sort={this.state.sort}
-          defaultQuery={this.props.defaultQuery}
-          onSortChange={this.onSortChange}
-          onFilterChange={this.onFilterChange}
-          onSearch={this.onSearch} />
-          <div className="group-header">
-            <Sticky>
-              <StreamActions
-                orgId={params.orgId}
-                projectId={params.projectId}
-                onSelectStatsPeriod={this.onSelectStatsPeriod}
-                onRealtimeChange={this.onRealtimeChange}
-                realtimeActive={this.state.realtimeActive}
-                statsPeriod={this.state.statsPeriod}
-                groupIds={this.state.groupIds} />
-            </Sticky>
+        <div className="stream-row show-sideba">
+          <div className="stream-content">
+            <StreamFilters
+              query={this.state.query}
+              sort={this.state.sort}
+              defaultQuery={this.props.defaultQuery}
+              onSortChange={this.onSortChange}
+              onFilterChange={this.onFilterChange}
+              onSearch={this.onSearch} />
+              <div className="group-header">
+                <Sticky>
+                  <StreamActions
+                    orgId={params.orgId}
+                    projectId={params.projectId}
+                    onSelectStatsPeriod={this.onSelectStatsPeriod}
+                    onRealtimeChange={this.onRealtimeChange}
+                    realtimeActive={this.state.realtimeActive}
+                    statsPeriod={this.state.statsPeriod}
+                    groupIds={this.state.groupIds} />
+                </Sticky>
+              </div>
+              {this.renderStreamBody()}
+              <Pagination pageLinks={this.state.pageLinks} onPage={this.onPage} />
           </div>
-          {this.renderStreamBody()}
-          <Pagination pageLinks={this.state.pageLinks} onPage={this.onPage} />
-
+          <div className="stream-sidebar">
+            <h6>Status</h6>
+            <select className="form-control select2"><option>Search...</option></select>
+            <h6>Level</h6>
+            <select className="form-control select2"><option>Search...</option></select>
+          </div>
+        </div>
       </div>
     );
   }

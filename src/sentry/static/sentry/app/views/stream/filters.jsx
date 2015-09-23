@@ -89,6 +89,7 @@ var StreamFilters = React.createClass({
               query={this.props.query}
               onSearch={this.props.onSearch}
               />
+            <a className="btn btn-default toggle-stream-sidebar"><span className="icon-arrow-left"></span></a>
           </div>
         </div>
       </div>
