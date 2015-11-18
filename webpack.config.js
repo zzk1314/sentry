@@ -52,7 +52,16 @@ var config = {
         test: /\.jsx?$/,
         loader: "babel-loader",
         include: path.join(__dirname, staticPrefix),
-        exclude: /(vendor|node_modules)/
+        exclude: /(vendor|node_modules)/,
+        query: {
+          plugins: ['babel-gettext-plugin'],
+          extra: {
+            gettext: {
+              fileName: 'javascript.po',
+              baseDirectory: path.join(__dirname, 'src/sentry')
+            }
+          }
+        }
       },
       {
         test: /\.json$/,
