@@ -15,7 +15,7 @@ var config = {
   context: path.join(__dirname, staticPrefix),
   entry: {
     // js
-    "app": "app",
+    "app": ["app"],
     "vendor": [
       "babel-core/polyfill",
       "bootstrap/js/dropdown",
@@ -43,7 +43,7 @@ var config = {
     // css
     // NOTE: this will also create an empty "sentry.js" file
     // TODO: figure out how to not generate this
-    "sentry": "less/sentry.less"
+    "sentry": ["less/sentry.less"],
 
   },
   module: {
@@ -70,6 +70,10 @@ var config = {
     ]
   },
   plugins: [
+    new webpack.DllPlugin({
+      path: path.join(distPath, "[name]-manifest.json"),
+      name: "[name]",
+    }),
     new webpack.optimize.CommonsChunkPlugin("vendor", "vendor.js"),
     new webpack.optimize.DedupePlugin(),
     new webpack.ProvidePlugin({
@@ -79,7 +83,7 @@ var config = {
       "root.jQuery": "jquery",
       Raven: "raven-js"
     }),
-    new ExtractTextPlugin("[name].css")
+    new ExtractTextPlugin("[name].css"),
   ],
   resolve: {
     alias: {
@@ -93,7 +97,7 @@ var config = {
     path: distPath,
     filename: "[name].js",
     libraryTarget: "var",
-    library: "exports",
+    library: "[name]",
     sourceMapFilename: "[name].js.map",
   },
   devtool: 'source-map'
