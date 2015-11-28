@@ -175,7 +175,7 @@ const ProjectReleases = React.createClass({
           </div>
         </div>
         {this.renderStreamBody()}
-        <Pagination pageLinks={this.state.pageLinks} onPage={this.onPage} />
+        <Pagination pageLinks={this.state.pageLinks} />
       </div>
     );
   }
