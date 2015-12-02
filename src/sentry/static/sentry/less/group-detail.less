@@ -198,7 +198,7 @@
     .list-unstyled;
 
     li:first-child {
-      background: darken(@bgColor, 2);
+      background: @white-darker;
       color: darken(@gray, 10);
       border-radius: 2px;
       .square(28px);
@@ -314,7 +314,7 @@
     color: @gray-dark;
 
     > span {
-      background: @bgColor;
+      background: @white-dark;
       padding-right: 7px;
     }
 
@@ -620,7 +620,7 @@
         &.sentry {
           color: @gray;
           font-size: 16px;
-          background: @bgColor;
+          background: @white-dark;
           top: -4px;
         }
       }
@@ -629,7 +629,7 @@
         color: lighten(@gray, 25);
         margin-left: 5px;
         float: right;
-        background: @bgColor;
+        background: @white-dark;
         padding-left: 8px;
       }
 
@@ -641,7 +641,7 @@
       .activity-item-content {
         display: inline;
         padding-right: 8px;
-        background: @bgColor;
+        background: @white-dark;
       }
     }
   }
@@ -721,7 +721,7 @@
     position: relative;
 
     > span {
-      background: @bgColor;
+      background: @white-dark;
       padding-right: 7px;
     }
 
@@ -1366,7 +1366,7 @@ pre.val, span.val {
   }
 
   a.val-toggle-link {
-    background: @linkColor;
+    background: @link-color;
     border-radius: 2px;
     color: white;
     font-weight: bold;
@@ -1378,7 +1378,7 @@ pre.val, span.val {
     display: inline-block;
 
     &:hover {
-      background: @linkColorHover;
+      background: @link-color-hover;
     }
   }
 

@@ -7,7 +7,6 @@ body {
   -webkit-font-smoothing: antialiased;
   .transition(.1s padding ease-in-out);
   overflow-x: hidden;
-  background: @bgColor;
   // padding-left: @sidebar-width;
 }
 
@@ -61,7 +60,7 @@ body.auth {
 */
 
 header {
-  background-color: #515C6F;
+  background-color: @header-bg-color;
   color: #fff;
   .clearfix();
   font-size: 15px;
@@ -300,7 +299,7 @@ footer {
 
 @media print {
     body {
-        color: @black;
+        color: @gray-darkest;
     }
     header {
         display: none;

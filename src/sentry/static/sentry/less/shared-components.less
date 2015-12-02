@@ -53,7 +53,7 @@
 
   &:hover, &:focus, &:active {
     color: #34343f;
-    background-color: darken(@bgColor, .5);
+    background-color: @white-darker;
     border-color: darken(@trim, 6);
   }
 }
@@ -491,7 +491,7 @@ table.integrations {
   .auto-tag-operating-systems,
   .auto-tag-urls {
     .integration-icon {
-      background: @sentry-orange;
+      background: @red-orange;
 
       &:after {
         content: "\e603";
@@ -865,7 +865,7 @@ table.integrations {
 
     .search-input {
       border: 1px solid lighten(@trim, 4);
-      background: @bgColor;
+      background: @white-dark;
       color: @gray-light;
     }
 
@@ -989,7 +989,7 @@ table.integrations {
     }
 
     &:hover, &.active {
-      background: @headerBgColor;
+      background: @white-dark;
       border-color: @trim;
 
       & + li {
@@ -1024,7 +1024,7 @@ table.integrations {
 
 .project-dropdown {
   .dropdown-toggle {
-    border: 1px solid darken(@trim, 6);
+    border: 1px solid @trim;
     box-shadow: 0 1px 0 rgba(0, 0, 0, .03);
     border-radius: 3px;
     height: 20px;
@@ -1039,8 +1039,8 @@ table.integrations {
     vertical-align: middle;
 
     &:hover {
-      background: darken(@bgColor, .5);
-      border-color: darken(@trim, 6);
+      background: @white-darker;
+      border-color: @gray-lightest;
     }
 
     .icon-arrow-down {
@@ -1177,7 +1177,7 @@ table.integrations {
     padding-left: 10px;
     height: 100%;
     text-align: left;
-    color: @linkColor;
+    color: @link-color;
     .legendLabel {
       padding: 0 5px;
     }
@@ -1358,7 +1358,7 @@ table.integrations {
     }
 
     .tag-description {
-      background-color: @bgColor;
+      background-color: @white-dark;
       position: absolute;
       text-align: right;
       top: -1px;
@@ -1632,7 +1632,7 @@ table.integrations {
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
 
   .box-header {
-    background: @headerBgColor;
+    background: @white-dark;
     color: @gray-dark;
     line-height: 1;
     padding: 0 20px;
@@ -2024,7 +2024,7 @@ table.integrations {
 }
 
 .nav-pills > li.active > a {
-  background-color: lighten(@linkColor, 10%);
+  background-color: @blue;
 }
 
 .nav-small {
@@ -2653,7 +2653,7 @@ ul.radio-inputs {
         font-size: 13px;
         margin-top: 10px;
         padding: 0 0 0 15px;
-        border-left: 4px solid @sentry-orange;
+        border-left: 4px solid @red-orange;
       }
 
       .chat-avatar {
@@ -2699,7 +2699,7 @@ ul.radio-inputs {
 .well {
   border: 1px solid @trim;
   box-shadow: none;
-  background: @bgColor;
+  background: @white-dark;
   padding: 15px 20px;
   margin-bottom: 20px;
   border-radius: 3px;
@@ -2952,7 +2952,7 @@ ul.tag-list {
  */
 
  .error-level {
-   background: lighten(@gray, 30);
+   background: @gray-light;
  }
 
  &.level-info .error-level {
@@ -2962,7 +2962,7 @@ ul.tag-list {
    background: @yellow;
  }
  &.level-error .error-level {
-   background: @sentry-orange;
+   background: @red-orange;
  }
  &.level-fatal .error-level {
    background: @red;
