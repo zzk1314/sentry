@@ -187,13 +187,23 @@
   .btn {
     height: 38px;
     background: #fff;
-    border-color: darken(@trim, 5);
-    color: @gray;
+    border-color: @gray-lighter;
+    color: @gray-dark;
     font-weight: 400;
 
     &.active {
       font-weight: bold;
       text-shadow: 0 -1px 0 rgba(0,0,0, .15);
+
+      &:hover {
+        background: @blue-dark;
+        border-color: darken(@blue-dark, 20);
+      }
+    }
+
+    &:hover {
+      color: @gray-darker;
+      background: @white-dark;
     }
 
     &:active {
@@ -1020,12 +1030,13 @@ table.integrations {
 
 .project-select > a {
   font-weight: 600;
+  color: @gray-darker;
 }
 
 .project-dropdown {
   .dropdown-toggle {
-    border: 1px solid @trim;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, .03);
+    border: 1px solid @gray-lighter;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
     border-radius: 3px;
     height: 20px;
     width: 21px;
@@ -1040,7 +1051,7 @@ table.integrations {
 
     &:hover {
       background: @white-darker;
-      border-color: @gray-lightest;
+      border-color: @gray-light;
     }
 
     .icon-arrow-down {
@@ -1358,7 +1369,7 @@ table.integrations {
     }
 
     .tag-description {
-      background-color: @white-dark;
+      background-color: @white;
       position: absolute;
       text-align: right;
       top: -1px;
@@ -1371,7 +1382,7 @@ table.integrations {
 
     .tag-percentage {
       margin-right: 6px;
-      color: lighten(@gray, 30%);
+      color: @gray-light;
       display: inline-block;
       vertical-align: middle;
     }
@@ -1633,7 +1644,7 @@ table.integrations {
 
   .box-header {
     background: @white-dark;
-    color: @gray-dark;
+    color: @gray-darker;
     line-height: 1;
     padding: 0 20px;
     border-radius: 3px 3px 0 0;
@@ -1679,9 +1690,9 @@ table.integrations {
     }
 
     a {
-      color: @gray;
+      color: @gray-dark;
       &:hover {
-        color: darken(@gray, 20);
+        color: @gray-darker;
       }
     }
 
@@ -1696,7 +1707,7 @@ table.integrations {
       line-height: 1.2;
 
       small {
-        color: @gray;
+        color: @gray-dark;
         font-size: 14px;
       }
     }
@@ -1771,7 +1782,7 @@ table.integrations {
     }
 
     h1, h2, h3, h4, h5, h6 {
-      color: @gray-dark;
+      color: @gray-darker;
     }
   }
 
@@ -2043,7 +2054,7 @@ table.integrations {
   margin-bottom: 8px;
   text-transform: uppercase;
   font-size: 12px;
-  color: lighten(@gray, 20);
+  color: @gray-light;
   letter-spacing: 0.1px;
 
   .btn-xs {
@@ -2065,12 +2076,12 @@ table.integrations {
     display: block;
     border: 0;
     background: none;
-    color: @gray;
+    color: @gray-dark;
     position: relative;
 
     &:hover, &:active, &:focus {
       background: none;
-      color: @gray-dark;
+      color: @gray-darkest;
     }
   }
 
@@ -2116,13 +2127,13 @@ table.integrations {
       padding: 0 0 10px;
       border: 0;
       background: none;
-      color: lighten(@gray, 10);
+      color: @gray-dark;
       min-width: 30px;
       text-align: center;
 
       &:hover, &:active, &:focus {
         background: none;
-        color: @gray-dark;
+        color: @gray-darker;
       }
     }
 
@@ -2135,7 +2146,7 @@ table.integrations {
         border: 0;
         border-bottom: 4px solid @blue;
         background: none;
-        color: @gray-dark;
+        color: @gray-darkest;
         font-weight: 400;
       }
     }
@@ -2143,7 +2154,7 @@ table.integrations {
 
   > li.markdown {
     float: right;
-    color: lighten(@gray, 10);
+    color: @gray;
     margin-right: 0;
 
     > .icon-markdown {
@@ -2260,7 +2271,7 @@ table.integrations {
 */
 
 .badge {
-  background: lighten(@gray, 15);
+  background: @gray;
   color: #fff;
   font-size: 75%;
   font-weight: 600;
@@ -2282,10 +2293,10 @@ table.integrations {
   }
 
   &.badge-soft {
-    color: @gray-light;
+    color: @gray;
     top: 0;
     line-height: 18px;
-    border: 1px solid #ddd;
+    border: 1px solid @gray-lighter;
     background: inherit;
   }
 }

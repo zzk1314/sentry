@@ -16,7 +16,7 @@
 .organization-home {
   .count {
     font-size: 36px;
-    color: lighten(@gray, 10);
+    color: @gray-dark;
     margin: 20px 0 30px;
 
     &.rejected {
@@ -42,35 +42,35 @@
 
   .box-header {
     .actions {
-        a {
-          font-size: 13px;
-          margin-left: 20px;
-          font-weight: bold;
-          padding-top: 7px;
-          display: inline-block;
-          color: lighten(@gray, 15);
-
-          &:hover {
-            color: @gray;
-          }
-        }
-
-        .icon-plus {
-          top: 1px;
-          font-size: 16px;
-        }
-
-        .icon-settings {
-          top: 1px;
-        }
-      }
-
       a {
+        font-size: 13px;
+        margin-left: 20px;
+        font-weight: bold;
+        padding-top: 7px;
+        display: inline-block;
         color: @gray;
+
         &:hover {
-          color: darken(@gray, 20);
+          color: @gray-dark;
         }
       }
+
+      .icon-plus {
+        top: 1px;
+        font-size: 16px;
+      }
+
+      .icon-settings {
+        top: 1px;
+      }
+    }
+
+    a {
+      color: @gray;
+      &:hover {
+        color: @gray-dark;
+      }
+    }
   }
 
   .box-content {
@@ -203,6 +203,14 @@ table.project-list {
   margin-bottom: 0;
   font-size: 16px;
 
+  h5 a {
+    color: @gray-darker;
+
+    &:hover {
+      color: @gray-darkest;
+    }
+  }
+
   tbody tr {
     td {
       border: 0;
@@ -212,10 +220,6 @@ table.project-list {
 
       &:first-child {
         width: auto;
-
-        a {
-          color: @gray-dark;
-        }
       }
 
       &.project-chart {
@@ -224,10 +228,6 @@ table.project-list {
           height: 20px;
         }
       }
-    }
-
-    &:hover td a {
-      color: @gray-darkest;
     }
   }
 }

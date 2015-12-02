@@ -13,8 +13,8 @@
     content: "";
     display: block;
     top: -20px;
-    left: -1000px;
-    right: -1000px;
+    left: 0;
+    right: 0;
     bottom: -1px;
     background: #fff;
     border-bottom: 1px solid @trim;
@@ -22,7 +22,7 @@
   }
 
   h3 {
-    color: @gray-dark;
+    color: @gray-darker;
     font-size: 22px;
     margin: 0 0 8px;
     text-overflow: ellipsis;
@@ -230,14 +230,14 @@
   font-size: 14px;
 
   a {
-    color: lighten(@gray, 6);
+    color: @gray-dark;
     &:hover {
-      color: darken(@gray, 16);
+      color: @gray-darker;
     }
   }
 
   .icon {
-    color: lighten(@gray, 30);
+    color: @gray-lighter;
     font-size: 16px;
     margin-right: 7px;
     position: relative;
@@ -314,7 +314,7 @@
     color: @gray-dark;
 
     > span {
-      background: @white-dark;
+      background: @white;
       padding-right: 7px;
     }
 
@@ -671,6 +671,10 @@
   .icon-skip-forward, .icon-skip-back {
     position: relative;
     top: 1px;
+  }
+
+  time {
+    color: @gray-dark;
   }
 
   .json-link {
