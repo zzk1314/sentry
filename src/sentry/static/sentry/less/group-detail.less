@@ -420,7 +420,7 @@
       padding: 15px 0 0 15px;
       overflow: auto;
 
-      .placeholder(lighten(@gray, 28));
+      .placeholder(@gray-lighter);
 
       &:focus {
         outline: 0;
@@ -593,7 +593,7 @@
     .activity-item {
       position: relative;
       font-size: 13px;
-      color: lighten(@gray, 10);
+      color: @gray-dark;
 
       &:before {
         position: absolute;
@@ -602,8 +602,9 @@
         top: 11px;
         left: 0;
         right: 0;
-        border-top: 1px solid lighten(@trim, 8);
+        border-top: 1px solid @trim;
         z-index: -1;
+        opacity: .6;
       }
 
       .avatar {
@@ -618,30 +619,30 @@
         display: inline-block;
 
         &.sentry {
-          color: @gray;
+          color: @gray-darker;
           font-size: 16px;
-          background: @white-dark;
+          background: @white;
           top: -4px;
         }
       }
 
       time {
-        color: lighten(@gray, 25);
+        color: @gray-light;
         margin-left: 5px;
         float: right;
-        background: @white-dark;
+        background: @white;
         padding-left: 8px;
       }
 
       .activity-author {
         font-weight: 600;
-        color: @gray;
+        color: @gray-darker;
       }
 
       .activity-item-content {
         display: inline;
         padding-right: 8px;
-        background: @white-dark;
+        background: @white;
       }
     }
   }
