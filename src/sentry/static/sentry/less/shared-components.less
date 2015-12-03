@@ -10,7 +10,7 @@
   border-radius: 3px;
   font-weight: 600;
   padding: 8px 16px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 
   .transition(all .1s);
 
@@ -48,14 +48,19 @@
 
 .btn-default {
   color: @gray-dark;
-  background-color: #fff;
-  border-color: darken(@trim, 3);
+  background: #fff;
+  border-color: @gray-lighter;
 
   &:hover, &:focus, &:active {
-    color: #34343f;
+    color: @gray-darker;
     background-color: @white-darker;
-    border-color: darken(@trim, 6);
+    border-color: @gray-light;
   }
+}
+
+.open > .dropdown-toggle.btn-default, .open > .dropdown-toggle.btn-default:hover, .open > .dropdown-toggle.btn-default:active {
+  background: @white-darker;
+  box-shadow: inset 0 1px 1px rgba(0,0,0, .05);
 }
 
 .btn-primary {
@@ -1303,7 +1308,7 @@ table.integrations {
     }
 
     &.first-seen > span {
-      background: @purple;
+      background: @pink;
       left: -13px;
     }
 
@@ -1875,7 +1880,7 @@ table.integrations {
 }
 
 .alert-error {
-  background: @red;
+  background: @red-light;
   color: #fff;
   border: 0;
 
