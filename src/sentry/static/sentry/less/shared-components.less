@@ -1816,16 +1816,16 @@ table.integrations {
 }
 
 .alert {
-  background: #FBFAF4;
-  color: #866938;
-  border: 1px solid #E2D2AD;
+  background: #FFFDF7;
+  color: rgba(0,0,0, .7);
+  border: 1px solid #E7D695;
   font-weight: 400;
   padding: 10px 20px;
   border-radius: 0;
   margin: 0;
   font-size: 15px;
   line-height: 1.4;
-  box-shadow: 0 1px 1px rgba(0,0,0, .03);
+  box-shadow: 0 1px 1px rgba(0,0,0, .05);
 
   p:last-child {
     margin: 0;
@@ -1836,6 +1836,7 @@ table.integrations {
     margin: 3px 8px 0 3px;
     display: block;
     font-size: 15px;
+    opacity: .5;
   }
 
   .icon-sentry-logo {
@@ -1843,14 +1844,13 @@ table.integrations {
   }
 
   .close {
-    opacity: .5;
     font-weight: 600;
     position: absolute;
     top: -6px;
     right: 8px;
     box-shadow: none;
-    .transition(opacity .15s);
-    color: #ddd;
+    .transition(color .15s);
+    color: rgba(0,0,0, .25);
     background: 0;
     border: 0;
     font-size: 22px;
@@ -1858,9 +1858,7 @@ table.integrations {
 
     &:hover {
       box-shadow: none;
-      font-weight: bold;
-      color: #fff;
-      opacity: 1;
+      color: rgba(0,0,0, .5);
     }
   }
   a {
@@ -1875,38 +1873,21 @@ table.integrations {
   &.alert-block {
     margin-bottom: 20px;
     border-radius: 3px;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
   }
 }
 
 .alert-error {
-  background: @red-light;
-  color: #fff;
-  border: 0;
+  background: #FEF7F6;
+  border-color: #E8B8B2;
 
   .icon:before {
     content: "\e615";
   }
-
-  &.alert-block {
-    border: 1px solid #DAB9BB;
-    background: #FDF7F7;
-    color: #865254;
-
-    a {
-      color: #6D292D;
-
-      &:hover {
-        color: #481b1e;
-      }
-    }
-  }
 }
 
 .alert-info {
-  background: #F4FBFF;
-  color: #214B61;
-  border-color: #A3C7DA;
+  background: #F4FAFE;
+  border-color: #A0CDEC;
 
   .icon {
     display: none;
@@ -1914,9 +1895,8 @@ table.integrations {
 }
 
 .alert-success {
-  background: @green;
-  color: #fff;
-  border: 0;
+  background: #F7FBF8;
+  border-color: #ACCFB3;
 
   .icon:before {
     content: "\e60a";
