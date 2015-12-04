@@ -1804,6 +1804,40 @@ table.integrations {
 }
 
 /**
+ * Global Messages
+ * ============================================================================
+ */
+
+ .messages-container {
+   .alert {
+     color: #fff;
+     font-weight: bold;
+     background: @yellow-light;
+     border: 0;
+
+     .close {
+       color: rgba(255,255,255, .5);
+
+       &:hover {
+         color: rgba(255,255,255, .8);
+       }
+     }
+   }
+
+   .alert-success {
+     background: @green-light;
+   }
+
+   .alert-info {
+     background: @blue-light;
+   }
+
+   .alert-error {
+     background: @red-light;
+   }
+ }
+
+/**
 * Alerts
 * ============================================================================
 */
@@ -1836,7 +1870,7 @@ table.integrations {
     margin: 3px 8px 0 3px;
     display: block;
     font-size: 15px;
-    opacity: .5;
+    opacity: .65;
   }
 
   .icon-sentry-logo {
