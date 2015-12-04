@@ -6,23 +6,11 @@
 .group-detail {
   position: relative;
   margin: 0 0 20px;
+  border-bottom: 1px solid @trim;
   clear: both;
 
-  &:before {
-    position: absolute;
-    content: "";
-    display: block;
-    top: -20px;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    background: #fff;
-    border-bottom: 1px solid @trim;
-    z-index: -1;
-  }
-
   h3 {
-    color: @gray-darker;
+    color: @gray-darkest;
     font-size: 22px;
     margin: 0 0 8px;
     text-overflow: ellipsis;
