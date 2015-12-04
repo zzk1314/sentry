@@ -14,10 +14,21 @@
 }
 
 .organization-home {
+
+  .nav-header {
+    padding: 0 0 10px;
+    margin: 0;
+
+    &.with-divider {
+      border-top: 1px solid @trim;
+      padding-top: 30px;
+    }
+  }
+
   .count {
     font-size: 36px;
     color: @gray-dark;
-    margin: 20px 0 30px;
+    margin: 10px 0 20px;
 
     &.rejected {
       color: @red;
@@ -300,7 +311,6 @@ table.project-list {
 
   .stats-link {
     display: block;
-    margin-top: -15px;
     font-size: 85%;
   }
 }
