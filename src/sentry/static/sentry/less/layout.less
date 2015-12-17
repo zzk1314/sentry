@@ -56,6 +56,93 @@ body.auth {
   position: relative;
   padding-left: 15px;
   padding-right: 15px;
+  width: 100% !important;
+}
+
+/**
+ * Global Sidebar
+ * Displayed on wider viewports via responsive media queries
+ * ============================================================================
+ */
+
+.global-sidebar {
+  position: fixed;
+  top: 0;
+  left: -80px;
+  bottom: 0;
+  width: 80px;
+  background: @gray-darker;
+
+  .transition(.1s left ease-in-out);
+
+  a {
+    color: @gray-lighter;
+    text-shadow: 0 1px 1px rgba(0,0,0, .22);
+    &:hover {
+      color: @white;
+    }
+  }
+
+  .logo {
+    font-size: 22px;
+    display: block;
+    text-align: center;
+    padding: 15px 0 5px;
+    margin-bottom: -6px;
+  }
+
+  ul {
+    .list-unstyled;
+    margin: 0 0 -8px;
+
+    li {
+      a {
+        font-size: 20px;
+        display: block;
+        text-align: center;
+        padding: 10px 0;
+        line-height: 1;
+        position: relative;
+
+        .badge {
+          font-size: 11px;
+          position: absolute;
+          top: 4px;
+          right: 13px;
+          text-shadow: none;
+          box-shadow: 0 0 0 3px @gray-darker;
+        }
+
+        .icon-av_timer {
+          font-size: 27px;
+        }
+      }
+
+      &:nth-child(2) {
+        margin: 4px 0 -3px;
+      }
+    }
+  }
+
+  hr {
+    border-top-color: @gray-darkest;
+    margin: 15px 28px;
+  }
+
+  .global-sidebar-user-nav {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    padding: 0 0 20px;
+
+    img {
+      .square(20px);
+      border-radius: 3px;
+      box-shadow: 0 1px 1px rgba(0,0,0, .3);
+    }
+  }
+
 }
 
 /**
@@ -322,15 +409,22 @@ footer {
 * ============================================================================
 */
 
-@media(max-width:1200px) {
-  .container {
-    width: 100% !important;
+@media (min-width: 768px) {
+  body {
+    padding-left: 80px;
   }
-}
-
-@media (min-width: 1300px) {
+  header {
+    display: none;
+  }
+  .sub-header {
+    margin-top: 0;
+  }
+  .global-sidebar {
+    left: 0;
+  }
   .container {
-    width: 1250px !important;
+    padding-left: 40px;
+    padding-right: 40px;
   }
 }
 

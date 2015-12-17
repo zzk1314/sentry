@@ -128,6 +128,32 @@ const OrganizationDetails = React.createClass({
     return (
       <DocumentTitle title={this.getTitle()}>
         <div className="app">
+          <div className="global-sidebar">
+            <a href="" className="logo"><span className="icon-sentry-logo" /></a>
+            <hr />
+            <ul>
+              <li>
+                <a href="#">
+                  <span className="icon-user" />
+                  <span className="badge">12</span>
+                </a>
+              </li>
+              <li><a href="#"><span className="icon-bookmark-2" /></a></li>
+              <li><a href="#"><span className="icon-av_timer" /></a></li>
+            </ul>
+            <hr />
+            <div className="global-sidebar-user-nav">
+              <ul>
+                <li><a href="#"><span className="icon-question"/></a></li>
+                <li><a href="#"><span className="icon-globe" /></a></li>
+                <li className="dropdown">
+                  <a href="#" className="dropdown-toggle">
+                    <img src="https://github.com/ckj.png" />
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
           {this.state.hooks}
           <Header orgId={params.orgId}/>
           {this.props.children}
