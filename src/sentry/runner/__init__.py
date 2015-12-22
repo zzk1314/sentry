@@ -132,5 +132,28 @@ def call_command(name, obj=None, **kwargs):
             click.echo('Aborted!', err=True)
 
 
+def patch_import():
+    import __builtin__
+    import time
+    old = __builtin__.__import__
+
+    def patched(*args, **kwargs):
+        import_line = ""
+
+        if len(args) > 3 and args[3]:
+            import_line = "from %s import %s" % (args[0], ", ".join(args[3]))
+        else:
+            import_line = "import %s" % args[0]
+
+        start = time.time()
+        mod = old(*args, **kwargs)
+        end = time.time()
+        if end - start > 0.2:
+            print('%s: %.2fms' % (import_line, (end - start) * 1000))
+        return mod
+    __builtin__.__import__ = patched
+
+
 def main():
+    patch_import()
     cli(prog_name=get_prog(), obj={}, max_content_width=100)
