@@ -21,10 +21,10 @@ SourceMap = namedtuple('SourceMap', ['dst_line', 'dst_col', 'src', 'src_line', '
 SourceMapIndex = namedtuple('SourceMapIndex', ['states', 'keys', 'sources', 'content'])
 
 # Mapping of base64 letter -> integer value.
-B64 = dict(
-    (c, i) for i, c in
-    enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
-)
+# This weird list is being allocated for faster lookups
+B64 = [-1] * 123
+for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):
+    B64[ord(c)] = i
 
 
 def parse_vlq(segment):
@@ -39,7 +39,7 @@ def parse_vlq(segment):
 
     cur, shift = 0, 0
     for c in segment:
-        val = B64[c]
+        val = B64[ord(c)]
         # Each character is 6 bits:
         # 5 of value and the high bit is the continuation.
         val, cont = val & 0b11111, val >> 5
