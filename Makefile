@@ -179,7 +179,7 @@ travis-lint-dist: travis-noop
 travis-test-sqlite: test-python-coverage
 travis-test-postgres: test-python-coverage
 travis-test-js: test-js
-travis-test-ci: test-ci
+travis-test-cli: test-cli
 travis-test-dist:
 	SENTRY_BUILD=$(TRAVIS_COMMIT) SENTRY_LIGHT_BUILD=0 python setup.py sdist bdist_wheel
 	@ls -lh dist/
