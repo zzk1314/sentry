@@ -3,6 +3,7 @@ import ApiMixin from '../mixins/apiMixin';
 import Alerts from '../components/alerts';
 import AlertActions from '../actions/alertActions.jsx';
 import ConfigStore from '../stores/configStore';
+import Help from '../components/help';
 import Indicators from '../components/indicators';
 import InstallWizard from './installWizard';
 import LoadingIndicator from '../components/loadingIndicator';
@@ -91,6 +92,7 @@ const App = React.createClass({
         <Alerts className="messages-container" />
         <Indicators className="indicators-container" />
         {this.props.children}
+        <Help className="help-container" />
       </div>
     );
   }
