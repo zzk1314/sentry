@@ -25,11 +25,33 @@ def exception_from_apple_error_or_diagnosis(error, diagnosis=None):
         }
 
 
-def inject_apple_backtrace(data, frames, diagnosis=None, error=None):
+def inject_apple_backtrace(data, frames, diagnosis=None, error=None,
+                           system=None):
+    # TODO:
+    #   in-app (based on global/project dsym?)
+    #   instruction_offset:
+    #       image + offset
+    #       symbol if found + offset
+    #   pad out addresses in UI
+    #   user report stacktraces from unity
+
+    if system:
+        app_uuid = system.get('app_uuid').lower()
+    else:
+        app_uuid = None
+
     converted_frames = []
     for frame in frames:
         fn = frame.get('filename')
+        in_app = False
+
+        if app_uuid is not None:
+            frame_uuid = frame.get('uuid')
+            if frame_uuid == app_uuid:
+                in_app = True
+
         converted_frames.append({
+            'in_app': in_app,
             'abs_path': fn,
             'filename': fn and posixpath.basename(fn) or None,
             # This can come back as `None` from the symbolizer, in which
@@ -38,6 +60,10 @@ def inject_apple_backtrace(data, frames, diagnosis=None, error=None):
             # function needs to be provided.
             'function': frame['symbol_name'] or '<unknown>',
             'package': frame['object_name'],
+            'symbol_addr': hex(frame['symbol_addr']),
+            'instruction_addr': hex(frame['instruction_addr']),
+            'instruction_offset':
+                frame['instruction_addr'] - frame['symbol_addr'],
             'lineno': frame.get('line'),
         })
 
@@ -78,7 +104,7 @@ def preprocess_apple_crash_event(data):
     with sym.driver:
         bt = sym.symbolize_backtrace(crashed_thread['backtrace']['contents'])
         inject_apple_backtrace(data, bt, crash.get('diagnosis'),
-                               crash.get('error'))
+                               crash.get('error'), crash_report.get('system'))
 
     return data
 

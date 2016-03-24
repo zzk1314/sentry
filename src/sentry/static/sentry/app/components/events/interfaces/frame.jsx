@@ -11,7 +11,8 @@ import {t} from '../../../locale';
 const Frame = React.createClass({
   propTypes: {
     data: React.PropTypes.object.isRequired,
-    isExpanded: React.PropTypes.bool
+    platform: React.PropTypes.string,
+    isExpanded: React.PropTypes.bool,
   },
 
   mixins: [
@@ -92,7 +93,7 @@ const Frame = React.createClass({
     return out;
   },
 
-  renderTitle() {
+  renderDefaultTitle() {
     let data = this.props.data;
     let title = [];
 
@@ -200,6 +201,67 @@ const Frame = React.createClass({
     return context;
   },
 
+  renderExpander() {
+    if (!this.isExpandable()) {
+      return null;
+    }
+    return (
+      <a
+        title={t('Toggle context')}
+        onClick={this.toggleContext}
+        className="btn btn-sm btn-default btn-toggle">
+        <span className={this.state.isExpanded ? 'icon-minus' : 'icon-plus'}/>
+      </a>
+    );
+  },
+
+  renderDefaultLine() {
+    return (
+      <p>
+        {this.renderTitle()}
+        {this.renderExpander()}
+      </p>
+    );
+  },
+
+  renderCocoaLine() {
+    let data = this.props.data;
+    /*
+        <div className="location col-sm-2">
+          <code>{data.filename}</code>
+          {defined(data.lineNo) && data.lineNo != 0 &&
+            <code>:{data.lineNo}</code>}
+          {defined(data.colNo) &&
+            <code>:{data.colNo}</code>}
+        </div>
+        */
+    return (
+      <div className="row">
+        <div className="package col-sm-2">
+          {data.package}
+        </div>
+        <div className="address col-sm-2">
+          {data.instructionAddr}
+        </div>
+        <div className="function col-sm-4">
+          {data.function || '<unknown>'}
+          {' + ' + data.instructionOffset}
+          {this.renderExpander()}
+        </div>
+      </div>
+    );
+  },
+
+  renderLine() {
+    switch (this.props.platform) {
+      case 'objc':
+      case 'cocoa':
+        return this.renderCocoaLine();
+      default:
+        return this.renderDefaultLine();
+    }
+  },
+
   render() {
     let data = this.props.data;
 
@@ -208,22 +270,13 @@ const Frame = React.createClass({
       'system-frame': !data.inApp,
       'frame-errors': data.errors,
     });
+    let props = {className: className};
 
     let context = this.renderContext();
 
     return (
-      <li className={className}>
-        <p>{this.renderTitle()}
-          {this.isExpandable() ?
-            <a
-              title={t('Toggle context')}
-              onClick={this.toggleContext}
-              className="btn btn-sm btn-default btn-toggle">
-              <span className={this.state.isExpanded ? 'icon-minus' : 'icon-plus'}/>
-            </a>
-            : ''
-          }
-        </p>
+      <li {...props}>
+        {this.renderLine()}
         {context}
       </li>
     );
