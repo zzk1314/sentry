@@ -97,18 +97,24 @@ def find_users(username, with_valid_password=True):
 
 
 def login(request, user, passed_2fa=False):
+    """Logs the user in with the current session. This also handles 2FA flows.
+    The return value is `True` if the user was actually logged in or `False`
+    if the session was primed to go through the 2FA flow.
+    """
     has_2fa = Authenticator.objects.user_has_2fa(user)
     if has_2fa and not passed_2fa:
         request.session['_pending_2fa'] = [user.id, time.time()]
-    else:
-        # If there is no authentication backend, just attach the first
-        # one and hope it goes through.  This apparently is a thing we
-        # have been doing for a long time, just moved it to a more
-        # reasonable place.
-        if not hasattr(user, 'backend'):
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-        _login(request, user)
-        log_auth_success(request, user.username)
+        return False
+
+    # If there is no authentication backend, just attach the first
+    # one and hope it goes through.  This apparently is a thing we
+    # have been doing for a long time, just moved it to a more
+    # reasonable place.
+    if not hasattr(user, 'backend'):
+        user.backend = settings.AUTHENTICATION_BACKENDS[0]
+    _login(request, user)
+    log_auth_success(request, user.username)
+    return True
 
 
 def log_auth_success(request, username):
