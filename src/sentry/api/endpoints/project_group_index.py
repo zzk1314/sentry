@@ -346,6 +346,7 @@ class ProjectGroupIndexEndpoint(ProjectEndpoint):
 
             now = timezone.now()
 
+            total_created = 0
             for group in group_list:
                 try:
                     with transaction.atomic():
@@ -359,8 +360,9 @@ class ProjectGroupIndexEndpoint(ProjectEndpoint):
                     ), False
 
                 if created:
+                    total_created += 1
                     activity = Activity.objects.create(
-                        project=group.project,
+                        project=project,
                         group=group,
                         type=Activity.SET_RESOLVED_IN_RELEASE,
                         user=acting_user,
@@ -376,6 +378,14 @@ class ProjectGroupIndexEndpoint(ProjectEndpoint):
                 status=GroupStatus.RESOLVED,
                 resolved_at=now,
             )
+
+            if total_created:
+                buffer.incr(OrganizationStat, {
+                    'value': len(total_created),
+                }, {
+                    'organization': project.organization,
+                    'stat': OrganizationStatName.resolved_issues,
+                })
 
             result.update({
                 'status': 'resolved',
@@ -403,12 +413,19 @@ class ProjectGroupIndexEndpoint(ProjectEndpoint):
                     group.status = GroupStatus.RESOLVED
                     group.resolved_at = now
                     activity = Activity.objects.create(
-                        project=group.project,
+                        project=project,
                         group=group,
                         type=Activity.SET_RESOLVED,
                         user=acting_user,
                     )
                     activity.send_notification()
+
+                buffer.incr(OrganizationStat, {
+                    'value': len(group_list),
+                }, {
+                    'organization': project.organization,
+                    'stat': OrganizationStatName.resolved_issues,
+                })
 
             result['statusDetails'] = {}
 
