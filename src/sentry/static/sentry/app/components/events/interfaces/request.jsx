@@ -6,7 +6,6 @@ import {getCurlCommand} from './utils';
 import {t} from '../../../locale';
 
 import RequestActions from './requestActions';
-import Truncate from '../../../components/truncate';
 
 const RequestInterface = React.createClass({
   propTypes: {
@@ -55,10 +54,6 @@ const RequestInterface = React.createClass({
       fullUrl = fullUrl + '#' + data.fragment;
     }
 
-    // lol
-    let parsedUrl = document.createElement('a');
-    parsedUrl.href = fullUrl;
-
     let children = [];
 
     if (!this.isPartial()) {
@@ -82,31 +77,12 @@ const RequestInterface = React.createClass({
       );
     }
 
-    children.push(
-      <h3 key="title">
-        <a href={fullUrl} title={fullUrl}>
-          <span className="path"><strong>{data.method || 'GET'}</strong>
-            <Truncate value={parsedUrl.pathname} maxLength={36} leftTrim={true} />
-          </span>
-          <span className="external-icon">
-            <em className="icon-open" />
-          </span>
-        </a>
-        <small style={{marginLeft: 10}} className="host">{parsedUrl.hostname}</small>
-      </h3>
-    );
-
-    let title = (
-      <div>{children}</div>
-    );
-
     return (
       <GroupEventDataSection
           group={group}
           event={evt}
           type={this.props.type}
-          title={title}
-          wrapTitle={false}
+          title={t('HTTP Request')}
           className="request">
         {view === 'curl' ?
           <pre>{getCurlCommand(data)}</pre>

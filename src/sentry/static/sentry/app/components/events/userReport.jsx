@@ -1,7 +1,7 @@
 import React from 'react';
 import Avatar from '../../components/avatar';
 import TimeSince from '../../components/timeSince';
-import utils from '../../utils';
+import {nl2br, urlize, escape} from '../../utils';
 
 
 const EventUserReport = React.createClass({
@@ -21,7 +21,7 @@ const EventUserReport = React.createClass({
               <div className="activity-bubble">
                 <TimeSince date={report.dateCreated} />
                 <div className="activity-author">{report.name} <small>{report.email}</small></div>
-                <p dangerouslySetInnerHTML={{__html: utils.nl2br(utils.urlize(utils.escape(report.comments)))}} />
+                <p dangerouslySetInnerHTML={{__html: nl2br(urlize(escape(report.comments)))}} />
               </div>
             </li>
           </ul>

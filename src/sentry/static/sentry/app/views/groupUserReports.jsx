@@ -7,7 +7,7 @@ import GroupState from '../mixins/groupState';
 import LoadingError from '../components/loadingError';
 import LoadingIndicator from '../components/loadingIndicator';
 import TimeSince from '../components/timeSince';
-import utils from '../utils';
+import {nl2br, urlize, escape} from '../utils';
 import {t} from '../locale';
 
 const GroupUserReports = React.createClass({
@@ -77,7 +77,7 @@ const GroupUserReports = React.createClass({
     }
 
     let children = this.state.reportList.map((item, itemIdx) => {
-      let body = utils.nl2br(utils.urlize(utils.escape(item.comments)));
+      let body = nl2br(urlize(escape(item.comments)));
 
       return (
         <li className="activity-note" key={itemIdx}>

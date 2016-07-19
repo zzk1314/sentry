@@ -1,5 +1,5 @@
 import React from 'react';
-import utils from '../utils';
+import parseLinkHeader from '../utils/parseLinkHeader';
 import {Link} from 'react-router';
 import {t} from '../locale';
 
@@ -18,7 +18,7 @@ const Pagination = React.createClass({
       return null;
     }
 
-    let links = utils.parseLinkHeader(this.props.pageLinks);
+    let links = parseLinkHeader(this.props.pageLinks);
 
     let previousPageClassName = 'btn btn-default btn-lg prev';
     if (links.previous.results === false) {

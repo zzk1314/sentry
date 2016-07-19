@@ -12,7 +12,7 @@ import EventSdk from './sdk';
 import EventDevice from './device';
 import EventUserReport from './userReport';
 import PropTypes from '../../proptypes';
-import utils from '../../utils';
+import {objectIsEmpty} from '../../utils';
 import {t} from '../../locale';
 
 import ExceptionInterface from './interfaces/exception';
@@ -96,7 +96,7 @@ const EventEntries = React.createClass({
     });
 
     let hasContext = (
-      !utils.objectIsEmpty(evt.user) || !utils.objectIsEmpty(evt.contexts)
+      !objectIsEmpty(evt.user) || !objectIsEmpty(evt.contexts)
     );
 
     let hasContextSummary = (
@@ -110,7 +110,7 @@ const EventEntries = React.createClass({
             group={group}
             event={evt} />
         }
-        {!utils.objectIsEmpty(evt.errors) &&
+        {!objectIsEmpty(evt.errors) &&
           <EventErrors
             group={group}
             event={evt} />
@@ -131,22 +131,22 @@ const EventEntries = React.createClass({
             group={group}
             event={evt} />
         }
-        {!utils.objectIsEmpty(evt.context) &&
+        {!objectIsEmpty(evt.context) &&
           <EventExtraData
             group={group}
             event={evt} />
         }
-        {!utils.objectIsEmpty(evt.packages) &&
+        {!objectIsEmpty(evt.packages) &&
           <EventPackageData
             group={group}
             event={evt} />
         }
-        {!utils.objectIsEmpty(evt.device) &&
+        {!objectIsEmpty(evt.device) &&
           <EventDevice
             group={group}
             event={evt} />
         }
-        {!utils.objectIsEmpty(evt.sdk) &&
+        {!objectIsEmpty(evt.sdk) &&
           <EventSdk
             group={group}
             event={evt} />

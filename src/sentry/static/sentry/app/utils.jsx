@@ -1,7 +1,7 @@
 import _ from 'underscore';
 
 /*eslint no-use-before-define:0*/
-const modelsEqual = function(obj1, obj2) {
+export function modelsEqual(obj1, obj2) {
   if (!obj1 && !obj2)
     return true;
   if (obj1.id && !obj2)
@@ -9,9 +9,9 @@ const modelsEqual = function(obj1, obj2) {
   if (obj2.id && !obj1)
     return false;
   return obj1.id === obj2.id;
-};
+}
 
-const arrayIsEqual = function(arr, other, deep) {
+export function arrayIsEqual(arr, other, deep) {
   // if the other array is a falsy value, return
   if (!arr && !other) {
     return true;
@@ -29,9 +29,9 @@ const arrayIsEqual = function(arr, other, deep) {
   for (let i = 0, l = Math.max(arr.length, other.length); i < l; i++) {
     return valueIsEqual(arr[i], other[i], deep);
   }
-};
+}
 
-const valueIsEqual = function(value, other, deep) {
+export function valueIsEqual(value, other, deep) {
   if (value === other) {
     return true;
   } else if (_.isArray(value) || _.isArray(other)) {
@@ -44,9 +44,9 @@ const valueIsEqual = function(value, other, deep) {
     }
   }
   return false;
-};
+}
 
-const objectMatchesSubset = function(obj, other, deep){
+export function objectMatchesSubset(obj, other, deep){
   let k;
 
   if (deep !== true) {
@@ -64,19 +64,19 @@ const objectMatchesSubset = function(obj, other, deep){
     }
   }
   return true;
-};
+}
 
 // XXX(dcramer): the previous mechanism of using _.map here failed
 // miserably if a param was named 'length'
-const objectToArray = function(obj) {
+export function objectToArray(obj) {
   let result = [];
   for (let key in obj) {
     result.push([key, obj[key]]);
   }
   return result;
-};
+}
 
-const compareArrays = function(arr1, arr2, compFunc) {
+export function compareArrays(arr1, arr2, compFunc) {
   if (arr1 === arr2) {
     return true;
   }
@@ -103,106 +103,94 @@ const compareArrays = function(arr1, arr2, compFunc) {
     }
   }
   return true;
-};
+}
 
-export default {
-  getQueryParams() {
-    let hashes, hash;
-    let vars = {}, href = window.location.href;
+export function defined(item) {
+  return !_.isUndefined(item) && item !== null;
+}
 
-    if (href.indexOf('?') == -1)
-      return vars;
+export function getQueryParams() {
+  let hashes, hash;
+  let vars = {}, href = window.location.href;
 
-    hashes = href.slice(
-      href.indexOf('?') + 1,
-      (href.indexOf('#') != -1 ? href.indexOf('#') : href.length)
-    ).split('&');
-
-    hashes.forEach((chunk) => {
-      hash = chunk.split('=');
-      if (!hash[0] && !hash[1]) {
-        return;
-      }
-
-      vars[decodeURIComponent(hash[0])] = (hash[1] ? decodeURIComponent(hash[1]).replace(/\+/, ' ') : '');
-    });
-
+  if (href.indexOf('?') == -1)
     return vars;
-  },
 
-  sortArray(arr, score_fn) {
-    arr.sort((a, b) => {
-      let a_score = score_fn(a), b_score = score_fn(b);
+  hashes = href.slice(
+    href.indexOf('?') + 1,
+    (href.indexOf('#') != -1 ? href.indexOf('#') : href.length)
+  ).split('&');
 
-      for (let i = 0; i < a_score.length; i++) {
-        if (a_score[i] > b_score[i]) {
-          return 1;
-        }
-        if (a_score[i] < b_score[i]) {
-          return -1;
-        }
-      }
-      return 0;
-    });
-
-    return arr;
-  },
-
-  objectIsEmpty(obj) {
-    for (let prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
-        return false;
-      }
+  hashes.forEach((chunk) => {
+    hash = chunk.split('=');
+    if (!hash[0] && !hash[1]) {
+      return;
     }
 
+    vars[decodeURIComponent(hash[0])] = (hash[1] ? decodeURIComponent(hash[1]).replace(/\+/, ' ') : '');
+  });
+
+  return vars;
+}
+
+export function sortArray(arr, score_fn) {
+  arr.sort((a, b) => {
+    let a_score = score_fn(a), b_score = score_fn(b);
+
+    for (let i = 0; i < a_score.length; i++) {
+      if (a_score[i] > b_score[i]) {
+        return 1;
+      }
+      if (a_score[i] < b_score[i]) {
+        return -1;
+      }
+    }
+    return 0;
+  });
+
+  return arr;
+}
+
+export function objectIsEmpty(obj) {
+  if (!defined(obj))
     return true;
-  },
 
-  trim(str) {
-    return str.replace(/^\s+|\s+$/g,'');
-  },
+  for (let prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
+      return false;
+    }
+  }
 
-  defined(item) {
-    return !_.isUndefined(item) && item !== null;
-  },
+  return true;
+}
 
-  nl2br(str) {
-    return str.replace(/(?:\r\n|\r|\n)/g, '<br />');
-  },
+export function trim(str) {
+  return str.replace(/^\s+|\s+$/g,'');
+}
 
-  isUrl(str) {
-    return !!str && _.isString(str) && (str.indexOf('http://') === 0 || str.indexOf('https://') === 0);
-  },
+export function nl2br(str) {
+  return str.replace(/(?:\r\n|\r|\n)/g, '<br />');
+}
 
-  escape(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  },
+export function isUrl(str) {
+  return !!str && _.isString(str) && (str.indexOf('http://') === 0 || str.indexOf('https://') === 0);
+}
 
-  percent(value, totalValue, precise) {
-    return value / totalValue * 100;
-  },
+export function escape(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-  urlize(str) {
-    // TODO
-    return str;
-  },
+export function percent(value, totalValue, precise) {
+  return value / totalValue * 100;
+}
 
-  toTitleCase(str) {
-    return str.replace(/\w\S*/g, (txt) => {
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-  },
+export function urlize(str) {
+  // TODO
+  return str;
+}
 
-  arrayIsEqual: arrayIsEqual,
-  objectMatchesSubset: objectMatchesSubset,
-  compareArrays: compareArrays,
-  modelsEqual: modelsEqual,
-  valueIsEqual: valueIsEqual,
-  parseLinkHeader: require('./utils/parseLinkHeader'),
-  objectToArray: objectToArray,
-
-  Collection: require('./utils/collection'),
-  PendingChangeQueue: require('./utils/pendingChangeQueue'),
-  StreamManager: require('./utils/streamManager'),
-  CursorPoller: require('./utils/cursorPoller'),
-};
+export function toTitleCase(str) {
+  return str.replace(/\w\S*/g, (txt) => {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+}

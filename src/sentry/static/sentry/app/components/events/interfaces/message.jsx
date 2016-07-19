@@ -2,7 +2,7 @@ import React from 'react';
 
 import EventDataSection from '../eventDataSection';
 import PropTypes from '../../../proptypes';
-import utils from '../../../utils';
+import {nl2br, urlize, escape} from '../../../utils';
 import {t} from '../../../locale';
 
 const MessageInterface = React.createClass({
@@ -22,7 +22,7 @@ const MessageInterface = React.createClass({
           type="message"
           title={t('Message')}>
         <pre className="plain" dangerouslySetInnerHTML={{
-          __html: utils.nl2br(utils.urlize(utils.escape(data.formatted || data.message)))
+          __html: nl2br(urlize(escape(data.formatted || data.message)))
         }} />
         {data.params && !data.formatted &&
           <div>

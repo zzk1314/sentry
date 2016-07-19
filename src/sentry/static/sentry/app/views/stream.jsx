@@ -8,6 +8,7 @@ import classNames from 'classnames';
 import _ from 'underscore';
 
 import ApiMixin from '../mixins/apiMixin';
+import CursorPoller from '../utils/cursorPoller';
 import GroupStore from '../stores/groupStore';
 import LoadingError from '../components/loadingError';
 import LoadingIndicator from '../components/loadingIndicator';
@@ -18,8 +19,9 @@ import StreamActions from './stream/actions';
 import StreamTagActions from '../actions/streamTagActions';
 import StreamTagStore from '../stores/streamTagStore';
 import StreamFilters from './stream/filters';
+import StreamManager from '../utils/streamManager';
 import StreamSidebar from './stream/sidebar';
-import utils from '../utils';
+import {valueIsEqual} from '../utils';
 import {logAjaxError} from '../utils/logging';
 import parseLinkHeader from '../utils/parseLinkHeader';
 import {t, tct} from '../locale';
@@ -81,8 +83,8 @@ const Stream = React.createClass({
   componentWillMount() {
     this.props.setProjectNavSection('stream');
 
-    this._streamManager = new utils.StreamManager(GroupStore);
-    this._poller = new utils.CursorPoller({
+    this._streamManager = new StreamManager(GroupStore);
+    this._poller = new CursorPoller({
       success: this.onRealtimePoll
     });
 
@@ -395,7 +397,7 @@ const Stream = React.createClass({
 
   onRealtimePoll(data, links) {
     this._streamManager.unshift(data);
-    if (!utils.valueIsEqual(this.state.pageLinks, links, true)) {
+    if (!valueIsEqual(this.state.pageLinks, links, true)) {
       this.setState({
         pageLinks: links,
       });
@@ -404,7 +406,7 @@ const Stream = React.createClass({
 
   onGroupChange() {
     let groupIds = this._streamManager.getAllItems().map((item) => item.id);
-    if (!utils.valueIsEqual(groupIds, this.state.groupIds)) {
+    if (!valueIsEqual(groupIds, this.state.groupIds)) {
       this.setState({
         groupIds: groupIds
       });

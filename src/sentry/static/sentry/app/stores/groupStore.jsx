@@ -2,7 +2,7 @@ import jQuery from 'jquery';
 import Reflux from 'reflux';
 import GroupActions from '../actions/groupActions';
 import IndicatorStore from '../stores/indicatorStore';
-import utils from '../utils';
+import PendingChangeQueue from '../utils/pendingChangeQueue';
 import {t} from '../locale';
 import _ from 'underscore';
 
@@ -19,7 +19,7 @@ const GroupStore = Reflux.createStore({
   init() {
     this.items = [];
     this.statuses = {};
-    this.pendingChanges = new utils.PendingChangeQueue();
+    this.pendingChanges = new PendingChangeQueue();
   },
 
   reset() {

@@ -2,7 +2,7 @@ import React from 'react';
 import DateTime from '../../components/dateTime';
 import TimeSince from '../../components/timeSince';
 import Version from '../../components/version';
-import utils from '../../utils';
+import {defined} from '../../utils';
 import {t} from '../../locale';
 
 const SeenInfo = React.createClass({
@@ -23,7 +23,7 @@ const SeenInfo = React.createClass({
         <dd key={1}><TimeSince date={date} /></dd>
         <dt key={2}>{t('Date')}:</dt>
         <dd key={3}><DateTime date={date} seconds={true} /></dd>
-        {utils.defined(release) && [
+        {defined(release) && [
           <dt key={4}>{t('Release')}:</dt>,
           <dd key={5}><Version orgId={this.props.orgId} projectId={this.props.projectId} version={release.version} /></dd>
         ]}

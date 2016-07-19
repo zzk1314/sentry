@@ -9,7 +9,8 @@ import LoadingError from '../components/loadingError';
 import LoadingIndicator from '../components/loadingIndicator';
 import ProjectState from '../mixins/projectState';
 import StreamGroup from '../components/stream/group';
-import utils from '../utils';
+import StreamManager from '../utils/streamManager';
+import {valueIsEqual} from '../utils';
 import {t} from '../locale';
 
 const GroupList = React.createClass({
@@ -46,13 +47,13 @@ const GroupList = React.createClass({
   },
 
   componentWillMount() {
-    this._streamManager = new utils.StreamManager(GroupStore);
+    this._streamManager = new StreamManager(GroupStore);
 
     this.fetchData();
   },
 
   shouldComponentUpdate(nextProps, nextState) {
-    return !utils.valueIsEqual(this.state, nextState, true);
+    return !valueIsEqual(this.state, nextState, true);
   },
 
   componentDidUpdate(prevProps) {
@@ -106,7 +107,7 @@ const GroupList = React.createClass({
 
   onGroupChange() {
     let groupIds = this._streamManager.getAllItems().map((item) => item.id);
-    if (!utils.valueIsEqual(groupIds, this.state.groupIds)) {
+    if (!valueIsEqual(groupIds, this.state.groupIds)) {
       this.setState({
         groupIds: groupIds
       });

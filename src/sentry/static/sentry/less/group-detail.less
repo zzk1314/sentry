@@ -1746,6 +1746,34 @@ pre.val, span.val {
   }
 }
 
+.expander {
+  padding: 20px 0;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+
+  > span {
+    background: @white;
+    padding: 0 10px;
+  }
+
+  &.expanded a {
+    display: none;
+  }
+
+  &:before {
+    display: block;
+    position: absolute;
+    content: "";
+    border-top: 1px solid lighten(@trim, 3);
+    left: 0;
+    right: 0;
+    top: 50%;
+    z-index: -1;
+  }
+}
+
+
 /**
 * Exceptions and Threads
 * ============================================================================

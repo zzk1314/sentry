@@ -8,7 +8,7 @@ import LoadingIndicator from '../components/loadingIndicator';
 import Pagination from '../components/pagination';
 import CompactIssue from '../components/compactIssue';
 import TimeSince from '../components/timeSince';
-import utils from '../utils';
+import {nl2br, urlize, escape} from '../utils';
 import {t} from '../locale';
 
 const ProjectUserReports = React.createClass({
@@ -167,7 +167,7 @@ const ProjectUserReports = React.createClass({
   renderResults() {
     let {orgId, projectId} = this.props.params;
     let children = this.state.reportList.map((item, itemIdx) => {
-      let body = utils.nl2br(utils.urlize(utils.escape(item.comments)));
+      let body = nl2br(urlize(escape(item.comments)));
       let issue = item.issue;
 
       return (

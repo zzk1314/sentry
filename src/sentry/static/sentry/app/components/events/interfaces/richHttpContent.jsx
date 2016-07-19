@@ -1,16 +1,21 @@
 import React from 'react';
+import queryString from 'query-string';
 
-import ClippedBox from '../../clippedBox';
 import KeyValueList from './keyValueList';
 import ContextData from '../../contextData';
-
+import Truncate from '../../truncate';
 import {objectIsEmpty} from '../../../utils';
-import queryString from 'query-string';
 import {t} from '../../../locale';
 
 const RichHttpContent = React.createClass({
   propTypes: {
     data: React.PropTypes.object.isRequired
+  },
+
+  getInitialState() {
+    return {
+      expanded: false,
+    };
   },
 
   /**
@@ -58,47 +63,118 @@ const RichHttpContent = React.createClass({
     try {
       // Sentry API abbreviates long query string values, sometimes resulting in
       // an un-parsable querystring ... stay safe kids
-      return <KeyValueList data={this.objectToSortedTupleArray(queryString.parse(data))}/>;
+      return <KeyValueList data={this.objectToSortedTupleArray(queryString.parse(data))} />;
     } catch (e) {
       return <pre>{data}</pre>;
     }
   },
 
+  onExpand() {
+    this.setState({
+      expanded: true,
+    });
+  },
+
   render(){
     let data = this.props.data;
+
+    let fullUrl = data.url;
+    if (data.query) {
+      fullUrl = fullUrl + '?' + data.query;
+    }
+    if (data.fragment) {
+      fullUrl = fullUrl + '#' + data.fragment;
+    }
+
+    let headers = data.headers || {};
+
+    let moreData = (
+      data.query || data.data || data.cookies || data.headers || data.env
+    );
+
+    let expanded = this.state.expanded;
+
     return (
       <div>
-        {data.query &&
-          <ClippedBox title={t('Query String')}>
-            {this.getQueryStringOrRaw(data.query)}
-          </ClippedBox>
-        }
-        {data.fragment &&
-          <ClippedBox title={t('Fragment')}>
-            <pre>{data.fragment}</pre>
-          </ClippedBox>
-        }
+        <table className="table key-value">
+          <tbody>
+            <tr key="method">
+              <td className="key">Method</td>
+              <td className="value"><pre>{data.method || 'GET'}</pre></td>
+            </tr>
+            <tr key="url">
+              <td className="key">URL</td>
+              <td className="value">
+                <pre><a href={fullUrl}><Truncate value={fullUrl} maxLength={200} leftTrim={true} /></a></pre>
+              </td>
+            </tr>
+            {data.fragment &&
+              <tr key="fragment">
+                <td className="key">Fragment</td>
+                <td className="value"><pre>{data.fragment}</pre></td>
+              </tr>
+            }
+            {headers.Referer &&
+              <tr key="referer">
+                <td className="key">Referer</td>
+                <td className="value"><pre>{headers.Referer}</pre></td>
+              </tr>
+            }
+            {headers['User-Agent'] &&
+              <tr key="referer">
+                <td className="key">User-Agent</td>
+                <td className="value"><pre>{headers['User-Agent']}</pre></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        {moreData &&
+          <div>
+            <div key="e" className={'expander ' + (expanded && 'expanded')}>
+              <span>
+                <a onClick={this.onExpand} className="show-more btn btn-primary btn-xs">
+                  {t('Show more')}
+                </a>
+              </span>
+            </div>
+            <div key="d" style={{display: expanded ? 'block' : 'none'}}>
+              <table className="table key-value">
+                <tbody>
+                {data.query &&
+                  <tr key="query">
+                    <td className="key">{t('Query String')}</td>
+                    <td className="value">{this.getQueryStringOrRaw(data.query)}</td>
+                  </tr>
+                }
+                {data.data &&
+                  <tr key="data">
+                    <td className="key">{t('Body')}</td>
+                    <td className="value">{this.getBodySection(data)}</td>
+                  </tr>
+                }
 
-        {data.data &&
-          <ClippedBox title={t('Body')}>
-            {this.getBodySection(data)}
-          </ClippedBox>
-        }
-
-        {data.cookies && !objectIsEmpty(data.cookies) &&
-          <ClippedBox title={t('Cookies')} defaultCollapsed>
-            <KeyValueList data={data.cookies} />
-          </ClippedBox>
-        }
-        {!objectIsEmpty(data.headers) &&
-          <ClippedBox title={t('Headers')}>
-            <KeyValueList data={data.headers} />
-          </ClippedBox>
-        }
-        {!objectIsEmpty(data.env) &&
-          <ClippedBox title={t('Environment')} defaultCollapsed>
-            <KeyValueList data={this.objectToSortedTupleArray(data.env)}/>
-          </ClippedBox>
+                {data.cookies && !objectIsEmpty(data.cookies) &&
+                  <tr key="cookies">
+                    <td className="key">{t('Cookies')}</td>
+                    <td className="value"><ContextData data={data.cookies} /></td>
+                  </tr>
+                }
+                {!objectIsEmpty(headers) &&
+                  <tr key="headers">
+                    <td className="key">{t('Headers')}</td>
+                    <td className="value"><ContextData data={headers} /></td>
+                  </tr>
+                }
+                {!objectIsEmpty(data.env) &&
+                  <tr key="env">
+                    <td className="key">{t('Environment')}</td>
+                    <td className="value"><ContextData data={this.objectToSortedTupleArray(data.env)}/></td>
+                  </tr>
+                }
+                </tbody>
+              </table>
+            </div>
+          </div>
         }
       </div>
     );
