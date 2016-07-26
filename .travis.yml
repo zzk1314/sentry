@@ -31,6 +31,7 @@ env:
     - SENTRY_SKIP_BACKEND_VALIDATION=1
     - SELENIUM_DRIVER=firefox
 install:
+  - make clean
   - make travis-install-$TEST_SUITE
   - pip freeze
 script:
