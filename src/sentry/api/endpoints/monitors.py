@@ -2,7 +2,9 @@ import time
 
 from rest_framework.response import Response
 
+from sentry.api.paginator import OffsetPaginator
 from sentry.api.base import Endpoint
+from sentry.api.bases import ProjectEndpoint
 from sentry.api.serializers import serialize
 from sentry.models import Monitor
 from sentry.api.exceptions import ResourceDoesNotExist
@@ -51,3 +53,31 @@ class FailMonitorEndpoint(MonitorEndpoint):
             output=request.DATA.get('output')
         )
         return Response(serialize(monitor))
+
+
+class ProjectMonitorsEndpoint(ProjectEndpoint):
+
+    def get(self, request, project):
+        """
+        List a Project's Monitors
+        `````````````````````````
+
+        Retrieve a list of monitors for a given project.
+
+        :pparam string organization_slug: the slug of the organization the
+                                          release belongs to.
+        :pparam string project_slug: the slug of the project to list the
+                                     dsym files of.
+        :auth: required
+        """
+        monitors_list = Monitor.objects.filter(
+            project=project
+        )
+
+        return self.paginate(
+            request=request,
+            queryset=monitors_list,
+            order_by='-label',
+            paginator_cls=OffsetPaginator,
+            on_results=lambda x: serialize(x, request.user),
+        )

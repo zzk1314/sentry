@@ -84,7 +84,7 @@ from .endpoints.user_details import UserDetailsEndpoint
 from .endpoints.useravatar import UserAvatarEndpoint
 from .endpoints.user_organizations import UserOrganizationsEndpoint
 from .endpoints.monitors import StartMonitorEndpoint, CompleteMonitorEndpoint, \
-    FailMonitorEndpoint
+    FailMonitorEndpoint, ProjectMonitorsEndpoint
 
 
 urlpatterns = patterns(
@@ -255,6 +255,9 @@ urlpatterns = patterns(
     url(r'^projects/(?P<organization_slug>[^\/]+)/(?P<project_slug>[^\/]+)/files/dsyms/unknown/$',
         UnknownDSymFilesEndpoint.as_view(),
         name='sentry-api-0-unknown-dsym-files'),
+    url(r'^projects/(?P<organization_slug>[^\/]+)/(?P<project_slug>[^\/]+)/monitors/$',
+        ProjectMonitorsEndpoint.as_view(),
+        name='sentry-api-0-project-monitors'),
     url(r'^projects/(?P<organization_slug>[^\/]+)/(?P<project_slug>[^\/]+)/rules/$',
         ProjectRulesEndpoint.as_view(),
         name='sentry-api-0-project-rules'),

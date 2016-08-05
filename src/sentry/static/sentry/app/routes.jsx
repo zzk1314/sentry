@@ -41,6 +41,7 @@ import ProjectDebugSymbols from './views/projectDebugSymbols';
 import ProjectSettings from './views/projectSettings';
 import ProjectUserReports from './views/projectUserReports';
 import ProjectUserReportSettings from './views/projectUserReportSettings';
+import ProjectMonitors from './views/projectMonitors';
 import ReleaseAllEvents from './views/releaseAllEvents';
 import ReleaseArtifacts from './views/releaseArtifacts';
 import ReleaseDetails from './views/releaseDetails';
@@ -118,6 +119,7 @@ let routes = (
           <Route path="saved-searches/" component={errorHandler(ProjectSavedSearches)} />
           <Route path="debug-symbols/" component={errorHandler(ProjectDebugSymbols)} />
           <Route path="user-feedback/" component={errorHandler(ProjectUserReportSettings)} />
+          <Route path="monitors/" component={errorHandler(ProjectMonitors)} />
           <Route path="csp/" component={errorHandler(ProjectCspSettings)} />
         </Route>
         <Redirect from="group/:groupId/" to="issues/:groupId/" />
