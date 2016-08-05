@@ -50,6 +50,8 @@ const CompactIssueHeader = React.createClass({
         return metadata.value;
       case 'csp':
         return metadata.message;
+      case 'monitor':
+        return metadata.label;
       default:
         return '';
     }

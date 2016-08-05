@@ -1,5 +1,7 @@
 import React from 'react';
 
+import {getMetadataTitle, getMetadataSubtitle} from '../events/monitor';
+
 const GroupTitle = React.createClass({
   propTypes: {
     data: React.PropTypes.object.isRequired,
@@ -16,6 +18,9 @@ const GroupTitle = React.createClass({
     } else if (data.type == 'csp') {
       title = metadata.directive;
       subtitle = metadata.uri;
+    } else if (data.type == 'monitor') {
+      title = getMetadataTitle(metadata);
+      subtitle = getMetadataSubtitle(metadata);
     } else if (data.type == 'default') {
       title = metadata.title;
     }

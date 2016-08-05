@@ -725,6 +725,8 @@ SENTRY_INTERFACES = {
     'threads': 'sentry.interfaces.threads.Threads',
     'debug_meta': 'sentry.interfaces.debug_meta.DebugMeta',
     'sentry.interfaces.Exception': 'sentry.interfaces.exception.Exception',
+    'sentry.interfaces.Command': 'sentry.interfaces.command.Command',
+    'sentry.interfaces.MonitorStatus': 'sentry.interfaces.monitorstatus.MonitorStatus',
     'sentry.interfaces.Message': 'sentry.interfaces.message.Message',
     'sentry.interfaces.Stacktrace': 'sentry.interfaces.stacktrace.Stacktrace',
     'sentry.interfaces.Template': 'sentry.interfaces.template.Template',

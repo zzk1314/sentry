@@ -83,6 +83,8 @@ from .endpoints.user_index import UserIndexEndpoint
 from .endpoints.user_details import UserDetailsEndpoint
 from .endpoints.useravatar import UserAvatarEndpoint
 from .endpoints.user_organizations import UserOrganizationsEndpoint
+from .endpoints.monitors import StartMonitorEndpoint, CompleteMonitorEndpoint, \
+    FailMonitorEndpoint
 
 
 urlpatterns = patterns(
@@ -336,6 +338,17 @@ urlpatterns = patterns(
     url(r'^events/(?P<event_id>\d+)/$',
         EventDetailsEndpoint.as_view(),
         name='sentry-api-0-event-details'),
+
+    # Monitors
+    url(r'^monitors/(?P<monitor_token>[^/]+)/start/$',
+        StartMonitorEndpoint.as_view(),
+        name='sentry-api-0-monitor-start'),
+    url(r'^monitors/(?P<monitor_token>[^/]+)/complete/$',
+        CompleteMonitorEndpoint.as_view(),
+        name='sentry-api-0-monitor-complete'),
+    url(r'^monitors/(?P<monitor_token>[^/]+)/fail/$',
+        FailMonitorEndpoint.as_view(),
+        name='sentry-api-0-monitor-fail'),
 
     # Installation Global Endpoints
     url(r'^system/global-dsyms/$',

@@ -362,7 +362,8 @@ class EventManager(object):
 
         # the SDKs currently do not describe event types, and we must infer
         # them from available attributes
-        data['type'] = eventtypes.infer(data).key
+        if 'type' not in data:
+            data['type'] = eventtypes.infer(data).key
 
         data['version'] = self.version
 

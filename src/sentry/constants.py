@@ -155,6 +155,7 @@ CLIENT_RESERVED_ATTRS = (
     'platform',
     'release',
     'environment',
+    'type',
 )
 
 DEFAULT_SCRUBBED_FIELDS = (
