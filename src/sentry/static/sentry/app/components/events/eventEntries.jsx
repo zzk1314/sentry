@@ -23,6 +23,8 @@ import TemplateInterface from './interfaces/template';
 import CspInterface from './interfaces/csp';
 import BreadcrumbsInterface from './interfaces/breadcrumbs';
 import ThreadsInterface from './interfaces/threads';
+import CommandInterface from './interfaces/command';
+import MonitorStatusInterface from './interfaces/monitorstatus';
 
 export const INTERFACES = {
   exception: ExceptionInterface,
@@ -33,6 +35,8 @@ export const INTERFACES = {
   csp: CspInterface,
   breadcrumbs: BreadcrumbsInterface,
   threads: ThreadsInterface,
+  command: CommandInterface,
+  monitorstatus: MonitorStatusInterface,
 };
 
 const EventEntries = React.createClass({

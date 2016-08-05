@@ -33,14 +33,16 @@ class Command(Interface):
             executable=trim(data.get('executable'), 255),
             args=args,
             exit_code=exit_code,
-            env=trim(data.get('environ')),
+            output=trim(data.get('output'), 65000),
+            env=trim(data.get('environ') or {}),
         )
 
     def get_api_context(self, is_public=False):
         return {
             'executable': self.executable,
             'args': self.args,
-            'exit_code': self.exit_code,
+            'exitCode': self.exit_code,
+            'output': self.output,
             'env': self.env,
         }
 
