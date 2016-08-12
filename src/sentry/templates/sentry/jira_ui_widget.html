@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+     <link rel="stylesheet" href="//aui-cdn.atlassian.com/aui-adg/5.9.12/css/aui.min.css" media="all">
+ </head>
+ <body class="aui-page-hybrid">
+    <section id="content" role="main">
+        <section class="aui-page-panel-item">
+            <div class="aui-group">
+                <div id="main-content" class="aui-item">
+                    {% if request.user.is_authenticated %}
+                        showing issues for {{ request.user.email }}
+                    {% else %}
+                        <a href="{{ login_url }}" target="_blank">sign into Sentry</a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </section>
+     <script id="connect-loader">
+        (function() {
+            function doStuff() {
+                var issueKey = '{{ issue_key }}';
+                AP.require('request', function(request) {
+                    request({
+                        url: '/rest/api/latest/issue/' + issueKey,
+                        success: function(responseText) {
+                            var issue = JSON.parse(responseText);
+                            var reporter = issue.fields.reporter;
+                        },
+                        error: function() {
+                        }
+                    });
+                });
+            }
+
+            var getUrlParam = function (param) {
+                var codedParam = (new RegExp(param + '=([^&]*)')).exec(window.location.search)[1];
+                return decodeURIComponent(codedParam);
+            };
+
+            var baseUrl = getUrlParam('xdm_e') + getUrlParam('cp');
+            var options = document.getElementById('connect-loader').getAttribute('data-options');
+            var script = document.createElement("script");
+            script.onload = doStuff;
+            script.src = baseUrl + '/atlassian-connect/all-debug.js';
+
+            if(options) {
+                script.setAttribute('data-options', options);
+            }
+
+            document.getElementsByTagName("head")[0].appendChild(script);
+        })();
+     </script>
+     <script type="text/javascript">
+        var loggedIn = {{ logged_in }};
+        var hidden, visibilityChange;
+        if (typeof document.hidden !== 'undefined') { // Opera 12.10 and Firefox 18 and later support
+            hidden = 'hidden';
+            visibilityChange = 'visibilitychange';
+        } else if (typeof document.mozHidden !== 'undefined') {
+            hidden = 'mozHidden';
+            visibilityChange = 'mozvisibilitychange';
+        } else if (typeof document.msHidden !== 'undefined') {
+          hidden = 'msHidden';
+          visibilityChange = 'msvisibilitychange';
+        } else if (typeof document.webkitHidden !== 'undefined') {
+          hidden = 'webkitHidden';
+          visibilityChange = 'webkitvisibilitychange';
+        }
+        (function() {
+            document.addEventListener(visibilityChange, function() {
+                // see if they've logged in while away from tab
+                if (!loggedIn && !document[hidden]) {
+                    window.location.reload();
+                }
+            });
+        })();
+     </script>
+ </body>
+</html>
