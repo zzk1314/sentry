@@ -27,8 +27,8 @@
                         success: function(responseText) {
                             var issue = JSON.parse(responseText);
                             var reporter = issue.fields.reporter;
-                        },
-                        error: function() {
+                            var email = reporter.emailAddress;
+                            console.log(email);
                         }
                     });
                 });
