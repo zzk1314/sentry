@@ -9,6 +9,8 @@ class InputField extends FormField {
   constructor(props) {
     super(props);
 
+    this.onChange = this.onChange.bind(this);
+
     this.state.value = this.valueFromProps(props);
   }
 
@@ -54,7 +56,7 @@ class InputField extends FormField {
           type={this.getType()}
           className="form-control"
           placeholder={this.props.placeholder}
-          onChange={this.onChange.bind(this)}
+          onChange={this.onChange}
           disabled={this.props.disabled}
           ref="input"
           required={this.props.required}
@@ -62,8 +64,12 @@ class InputField extends FormField {
     );
   }
 
+  getClassName() {
+    return 'control-group';
+  }
+
   render() {
-    let className = 'control-group';
+    let className = this.getClassName();
     if (this.props.error) {
       className += ' has-error';
     }
@@ -77,7 +83,7 @@ class InputField extends FormField {
             </span>
           }
           {this.getField()}
-          {this.props.help &&
+          {defined(this.props.help) &&
             <p className="help-block">{this.props.help}</p>
           }
           {this.props.error &&

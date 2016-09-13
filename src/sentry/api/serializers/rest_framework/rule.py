@@ -30,10 +30,14 @@ class RuleNodeField(serializers.WritableField):
             msg = "Invalid node. Could not find '%s'"
             raise ValidationError(msg % data['id'])
 
-        if not cls(self.context['project'], data).validate_form():
+        if not cls(self.context['project'], data.get('data', {})).validate_form():
             raise ValidationError('Node did not pass validation')
 
-        return data
+        result = {
+            'id': data['id'],
+        }
+        result.update(data.get('data', {}))
+        return result
 
 
 class RuleSerializer(serializers.Serializer):

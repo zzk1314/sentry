@@ -6,18 +6,13 @@ import RuleNode from './ruleNode';
 const RuleNodeList = React.createClass({
   propTypes: {
     initialItems: React.PropTypes.array,
-    nodes: React.PropTypes.array.isRequired
+    nodes: React.PropTypes.array.isRequired,
+    onChange: React.PropTypes.func.isRequired,
   },
 
   getInitialState() {
-    let counter = 0;
-    let initialItems = (this.props.initialItems || []).map(item => {
-      return {...item, key_attr: counter++};
-    });
-
     return {
-      items: initialItems,
-      counter: counter
+      items: this.props.initialItems || [],
     };
   },
 
@@ -37,23 +32,27 @@ const RuleNodeList = React.createClass({
 
     this.state.items.push({
       id: nodeId,
-      // Since RuleNode item state is stored outside of React (using innerHTML),
-      // need to make sure elements aren't accidentally re-rendered. So, give each
-      // row a consistent key using a counter that initializes at 0 when RuleNodeList
-      // is mounted.
-      key_attr: this.state.counter
     });
     this.setState({
       items: this.state.items,
-      counter: this.state.counter + 1
     });
+    this.props.onChange(this.state.items);
   },
 
-  onDeleteRow(idx, e) {
+  onChangeRow(idx, data) {
+    this.state.items[idx].data = data;
+    this.setState({
+      items: this.state.items,
+    });
+    this.props.onChange(this.state.items);
+  },
+
+  onDeleteRow(idx) {
     this.state.items.splice(idx, 1);
     this.setState({
-      items: this.state.items
+      items: this.state.items,
     });
+    this.props.onChange(this.state.items);
   },
 
   getNode(id) {
@@ -63,24 +62,24 @@ const RuleNodeList = React.createClass({
   render() {
     return (
       <div className={this.props.className}>
-        <table className="node-list table" style={{marginBottom: '10px'}}>
-          <tbody>
-            {this.state.items.map((item, idx) => {
-              return (
-                <RuleNode key={item.key_attr}
-                  node={this.getNode(item.id)}
-                  onDelete={this.onDeleteRow.bind(this, idx)}
-                  data={item} />
-              );
-            })}
-          </tbody>
-        </table>
+        <ul className="node-list" style={{marginBottom: '10px'}}>
+          {this.state.items.map((item, idx) => {
+            return (
+              <RuleNode
+                key={idx}
+                node={this.getNode(item.id)}
+                onChange={this.onChangeRow.bind(this, idx)}
+                onDelete={this.onDeleteRow.bind(this, idx)}
+                data={item} />
+            );
+          })}
+        </ul>
         <fieldset className="node-selector">
           <SelectInput onChange={this.onAddRow} style={{width: '100%'}}>
             <option key="blank" />
             {this.props.nodes.map((node) => {
               return (
-                <option value={node.id} key={node.id}>{node.label}</option>
+                <option value={node.id} key={node.id}>{node.nameRaw}</option>
               );
             })}
           </SelectInput>

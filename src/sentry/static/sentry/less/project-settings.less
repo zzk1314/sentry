@@ -3,27 +3,6 @@
 * ============================================================================
 */
 
-.rule-form {
-  vertical-align: middle;
-  height: 48px;
-}
-
-.rule-form input[type="text"], .rule-form input[type="number"] {
-  .form-control;
-  display: inline-block;
-  padding: 3px 8px;
-  width: auto;
-  vertical-align: middle;
-  position: relative;
-  top: -1px;
-  line-height: 1.5;
-  margin: 0 6px;
-}
-
-.rule-form .select2-container {
-  margin: 0 6px;
-}
-
 .rules-list {
   h6 {
     margin-bottom: 15px;
@@ -91,11 +70,46 @@
   }
 }
 
-.rule-action-list, .rule-condition-list {
-  .select2-container {
-    max-width: 40%;
-  }
+.rule-detail .node-list {
+  padding-left: 0;
+  list-style: none;
 
+  li {
+    border: 1px solid lighten(@trim, 4);
+    margin-bottom: 5px;
+    padding: 10px 10px 0;
+    font-size: 14px;
+
+    h6 {
+      margin: 0 0 10px;
+    }
+
+    .pull-right {
+      margin-top: -5px;
+    }
+
+    &:nth-child(odd) {
+      background: @white-darker;
+    }
+
+
+    form {
+      margin: 0 -10px 0;
+      padding: 10px 10px 0;
+      border-top: 1px solid @trim;
+      font-size: 14px;
+
+      .control-group {
+        .controls label {
+          width: 125px;
+          max-width: 125px;
+        }
+      }
+    }
+  }
+}
+
+.rule-action-list, .rule-condition-list {
   .node-selector .select2-container {
     width: 100%;
     max-width: 100%;
