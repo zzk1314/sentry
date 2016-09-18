@@ -1,3 +1,4 @@
+// @flow
 import jQuery from 'jquery';
 
 import plugins from './plugins';

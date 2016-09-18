@@ -1,0 +1,11 @@
+[ignore]
+.*/__tests__/.*
+<PROJECT_ROOT>/tests/.*
+
+[include]
+<PROJECT_ROOT>/node_modules/
+<PROJECT_ROOT>/static/app/
+
+[libs]
+
+[options]
