@@ -1,6 +1,6 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import $ from 'jquery';
+import {History} from 'react-router';
+import jQuery from 'jquery';
 import ApiMixin from '../../mixins/apiMixin';
 import IndicatorStore from '../../stores/indicatorStore';
 import SelectInput from '../../components/selectInput';
@@ -10,15 +10,15 @@ import RuleNodeList from './ruleNodeList';
 
 const RuleEditor = React.createClass({
   propTypes: {
-    actions: React.PropTypes.array.isRequired,
-    conditions: React.PropTypes.array.isRequired,
+    config: React.PropTypes.object.isRequired,
+    orgId: React.PropTypes.string.isRequired,
+    projectId: React.PropTypes.string.isRequired,
     rule: React.PropTypes.object.isRequired,
-    project: React.PropTypes.object.isRequired,
-    organization: React.PropTypes.object.isRequired
   },
 
   mixins: [
-    ApiMixin
+    ApiMixin,
+    History
   ],
 
   getInitialState() {
@@ -30,15 +30,15 @@ const RuleEditor = React.createClass({
 
   componentDidUpdate() {
     if (this.state.error) {
-      $(document.body).scrollTop($(ReactDOM.findDOMNode(this.refs.form)).offset().top);
+      jQuery(document.body).scrollTop(jQuery(this.refs.form).offset().top);
     }
   },
 
   serializeNode(node) {
     let result = {};
-    $(node).find('input, select').each((_, el) => {
+    jQuery(node).find('input, select').each((_, el) => {
       if (el.name) {
-        result[el.name] = $(el).val();
+        result[el.name] = jQuery(el).val();
       }
     });
     return result;
@@ -46,7 +46,7 @@ const RuleEditor = React.createClass({
 
   onSubmit(e) {
     e.preventDefault();
-    let form = $(ReactDOM.findDOMNode(this.refs.form));
+    let form = jQuery(this.refs.form);
     let conditions = [];
     form.find('.rule-condition-list .rule-form').each((_, el) => {
       conditions.push(this.serializeNode(el));
@@ -55,18 +55,16 @@ const RuleEditor = React.createClass({
     form.find('.rule-action-list .rule-form').each((_, el) => {
       actions.push(this.serializeNode(el));
     });
-    let actionMatch = $(ReactDOM.findDOMNode(this.refs.actionMatch)).val();
-    let name = $(ReactDOM.findDOMNode(this.refs.name)).val();
+    let actionMatch = jQuery(this.refs.actionMatch).val();
+    let name = jQuery(this.refs.name).val();
     let data = {
       actionMatch: actionMatch,
       actions: actions,
       conditions: conditions,
       name: name
     };
-    let rule = this.props.rule;
-    let project = this.props.project;
-    let org = this.props.organization;
-    let endpoint = `/projects/${org.slug}/${project.slug}/rules/`;
+    let {orgId, projectId, rule} = this.props;
+    let endpoint = `/projects/${orgId}/${projectId}/rules/`;
     if (rule.id) {
       endpoint += rule.id + '/';
     }
@@ -76,7 +74,7 @@ const RuleEditor = React.createClass({
       method: (rule.id ? 'PUT' : 'POST'),
       data: data,
       success: () => {
-        window.location.href = '../';
+        this.history.pushState(null, `/${orgId}/${projectId}/settings/alerts/rules/`, {});
       },
       error: (response) => {
         this.setState({
@@ -97,7 +95,7 @@ const RuleEditor = React.createClass({
   },
 
   render() {
-    let rule = this.props.rule;
+    let {config, rule} = this.props;
     let {loading, error} = this.state;
     let {actionMatch, actions, conditions, name} = rule;
 
@@ -144,7 +142,7 @@ const RuleEditor = React.createClass({
               <p className="error">{t('Ensure at least one condition is enabled and all required fields are filled in.')}</p>
             }
 
-            <RuleNodeList nodes={this.props.conditions}
+            <RuleNodeList nodes={config.conditions}
               initialItems={conditions}
               className="rule-condition-list"
               onChange={this.onConditionsChange} />
@@ -155,7 +153,7 @@ const RuleEditor = React.createClass({
               <p className="error">{t('Ensure at least one condition is enabled and all required fields are filled in.')}</p>
             }
 
-            <RuleNodeList nodes={this.props.actions}
+            <RuleNodeList nodes={config.actions}
               initialItems={actions}
               className="rule-action-list"
               onChange={this.onActionsChange} />

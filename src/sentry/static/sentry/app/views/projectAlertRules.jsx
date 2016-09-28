@@ -1,4 +1,5 @@
 import React from 'react';
+import {Link} from 'react-router';
 
 import ApiMixin from '../mixins/apiMixin';
 import IndicatorStore from '../stores/indicatorStore';
@@ -58,14 +59,14 @@ const RuleRow = React.createClass({
       <div className="box">
         <div className="box-header">
           <div className="pull-right">
-            <a className="btn btn-sm btn-default"
-                href={editLink}>{t('Edit Rule')}</a>
+            <Link className="btn btn-sm btn-default"
+                  to={editLink}>{t('Edit Rule')}</Link>
             <a className="btn btn-sm btn-default"
                onClick={this.onDelete}>
               <span className="icon-trash" style={{marginRight: 3}} />
             </a>
           </div>
-          <h3><a href={editLink}>{data.name}</a></h3>
+          <h3><Link to={editLink}>{data.name}</Link></h3>
         </div>
         <div className="box-content with-padding">
           <div className="row">
@@ -202,11 +203,11 @@ const ProjectAlertRules = React.createClass({
     let {orgId, projectId} = this.props.params;
     return (
       <div>
-        <a href={`/${orgId}/${projectId}/settings/alerts/rules/new/`}
-           className="btn pull-right btn-primary btn-sm">
+        <Link to={`/${orgId}/${projectId}/settings/alerts/rules/new/`}
+              className="btn pull-right btn-primary btn-sm">
           <span className="icon-plus" />
           {t('New Alert Rule')}
-        </a>
+        </Link>
         <h2>{t('Alerts')}</h2>
 
         <ul className="nav nav-tabs" style={{borderBottom: '1px solid #ddd'}}>

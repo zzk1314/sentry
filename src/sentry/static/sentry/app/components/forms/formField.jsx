@@ -5,6 +5,10 @@ class FormField extends React.Component {
     super(props);
     this.state = {};
   }
+
+  getField() {
+    return null;
+  }
 }
 
 FormField.propTypes = {
