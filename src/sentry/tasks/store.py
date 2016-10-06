@@ -23,9 +23,7 @@ error_logger = logging.getLogger('sentry.errors.events')
 
 @instrumented_task(
     name='sentry.tasks.store.preprocess_event',
-    queue='events',
-    time_limit=65,
-    soft_time_limit=60,
+    queue='events.preprocess_event',
 )
 def preprocess_event(cache_key=None, data=None, start_time=None, **kwargs):
     from sentry.plugins import plugins
@@ -35,6 +33,43 @@ def preprocess_event(cache_key=None, data=None, start_time=None, **kwargs):
 
     if data is None:
         metrics.incr('events.failed', tags={'reason': 'cache', 'stage': 'pre'})
+        error_logger.error('preprocess.failed.empty', extra={'cache_key': cache_key})
+        return
+
+    project = data['project']
+    Raven.tags_context({
+        'project': project,
+    })
+
+    for plugin in plugins.all(version=2):
+        processors = safe_execute(plugin.get_event_preprocessors, _with_transaction=False)
+        for processor in (processors or ()):
+            # We found the first processor, so bail our and pass along to another phase
+            # of the pipeline
+            process_event.delay(cache_key=cache_key, data=data, start_time=start_time)
+            return
+
+    if cache_key:
+        default_cache.set(cache_key, data, 3600)
+        data = None
+
+    save_event.delay(cache_key=cache_key, data=data, start_time=start_time)
+
+
+@instrumented_task(
+    name='sentry.tasks.store.process_event',
+    queue='events.process_event',
+    time_limit=65,
+    soft_time_limit=60,
+)
+def process_event(cache_key=None, data=None, start_time=None, **kwargs):
+    from sentry.plugins import plugins
+
+    if cache_key:
+        data = default_cache.get(cache_key)
+
+    if data is None:
+        metrics.incr('events.failed', tags={'reason': 'cache', 'stage': 'work'})
         error_logger.error('preprocess.failed.empty', extra={'cache_key': cache_key})
         return
 
@@ -65,7 +100,7 @@ def preprocess_event(cache_key=None, data=None, start_time=None, **kwargs):
 
 @instrumented_task(
     name='sentry.tasks.store.save_event',
-    queue='events')
+    queue='events.save_event')
 def save_event(cache_key=None, data=None, start_time=None, **kwargs):
     """
     Saves an event to the database.
