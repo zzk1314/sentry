@@ -46,16 +46,23 @@ const OrganizationSelector = React.createClass({
 
     let features = ConfigStore.get('features');
 
-    let classNames = 'org-selector divider-bottom';
+    let classNames = 'org-selector';
     if(this.props.currentPanel == 'org-selector') {
       classNames += ' active';
     }
 
     return (
-      <div className={classNames}>
-        <a className="active-org" onClick={this.props.togglePanel}>
+      <li className={classNames}>
+        <a className="active-org" >
           <LetterAvatar displayName={activeOrg.name} identifier={activeOrg.slug}/>
         </a>
+
+        <a href={this.getLinkNode(activeOrg, activeOrg.name)} className="nav-label">{activeOrg.name}</a>
+        <p className="m-a-0">
+          <a href={`/organizations/${activeOrg.slug}/settings/`}>
+            <span className="icon-settings"/> {t('Settings')}
+          </a>
+        </p>
 
         {this.props.showPanel && this.props.currentPanel == 'org-selector' &&
           <SidebarPanel
@@ -87,7 +94,7 @@ const OrganizationSelector = React.createClass({
             </ul>
           </SidebarPanel>
         }
-      </div>
+      </li>
     );
   }
 });

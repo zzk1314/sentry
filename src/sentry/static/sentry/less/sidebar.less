@@ -70,33 +70,7 @@
   }
 
   .org-selector {
-    padding: 15px 0;
     position: relative;
-
-    .hover-bar-container {
-      position: absolute;
-      width: 32px;
-      height: 3px;
-      bottom: -2px;
-      border-radius: 2px;
-      overflow: hidden;
-
-      .hover-bar {
-        width: 0;
-        height: 3px;
-        background: rgba(255,255,255, .35);
-        -webkit-transition: width 500ms ease;
-      }
-    }
-
-    &:hover {
-      .hover-bar-container {
-        background: #625c69;
-      }
-      .hover-bar {
-        width: 100%;
-      }
-    }
 
     &.active{
       &:before {
@@ -249,10 +223,14 @@
       text-align: center;
       margin: 0 0 5px;
 
+      .nav-label {
+        display: none;
+      }
+
       > a {
         color: #b9b2d0;
         display: block;
-        width: 32px;
+        // width: 32px;
         line-height: 32px;
 
         .icon {
@@ -393,6 +371,75 @@
       color: #fff;
       background: rgba(0,0,0, .3);
     }
+  }
+}
+
+// Navbar expanded
+
+.navbar-expanded .navbar {
+  width: @sidebar-expanded-width;
+
+  .navbar-nav {
+    align-items: flex-start;
+
+    > li {
+      position: relative;
+      padding-left: 42px;
+      min-height: 30px;
+
+      .active-org, .icon, .user-settings {
+        .square(32px);
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+
+      .user-settings {
+        min-height: 32px;
+      }
+
+      .nav-label {
+        font-size: 14px;
+        display: block;
+        margin-top: 9px;
+        line-height: 1;
+      }
+    }
+
+    .org-selector {
+      text-align: left;
+
+      .nav-label {
+        color: @white;
+        margin-top: 0;
+        font-size: 15px;
+        font-weight: bold;
+      }
+
+      > p {
+        font-size: 13px;
+
+        .icon-settings, .icon-users {
+          font-size: 11px;
+          opacity: .6;
+        }
+
+        a {
+          color: @white-darkest;
+          opacity: .75;
+
+          .transition(.2s opacity);
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+    }
+  }
+
+  .anchor-top, .anchor-bottom {
+    width: 100%;
   }
 }
 

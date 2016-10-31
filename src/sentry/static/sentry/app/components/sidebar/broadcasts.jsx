@@ -116,6 +116,7 @@ const Broadcasts = React.createClass({
           {this.getUnseenIds() > 0 &&
             <span className="activity-indicator"/>
           }
+          <span className="nav-label">Updates</span>
         </a>
         {this.props.showPanel && this.props.currentPanel == 'broadcasts' &&
           <SidebarPanel title={t('Recent updates from Sentry')}

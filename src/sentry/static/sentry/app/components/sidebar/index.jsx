@@ -82,6 +82,10 @@ const Sidebar = React.createClass({
     };
   },
 
+  componentWillMount() {
+    $(document.body).addClass('navbar-expanded');
+  },
+
   componentDidMount() {
     $(window).on('hashchange', this.hashChangeHandler);
     $(document).on('click', this.documentClickHandler);
@@ -102,6 +106,7 @@ const Sidebar = React.createClass({
   componentWillUnmount() {
     $(window).off('hashchange', this.hashChangeHandler);
     $(document).off('click', this.documentClickHandler);
+    $(document.body).removeClass('navbar-expanded');
   },
 
   documentClickHandler(evt) {
@@ -156,28 +161,32 @@ const Sidebar = React.createClass({
     }
 
     return (<div>
-      <OrganizationSelector
-        organization={org}
-        showPanel={this.state.showPanel}
-        currentPanel={this.state.currentPanel}
-        togglePanel={()=>this.togglePanel('org-selector')}
-        hidePanel={()=>this.hidePanel()}/>
-
+      <ul className="navbar-nav divider-bottom">
+        <OrganizationSelector
+          organization={org}
+          showPanel={this.state.showPanel}
+          currentPanel={this.state.currentPanel}
+          togglePanel={()=>this.togglePanel('org-selector')}
+          hidePanel={()=>this.hidePanel()}/>
+      </ul>
       {/* Top nav links */}
       <ul className="navbar-nav divider-bottom">
         <li className={this.state.currentPanel == 'assigned' ? 'active' : null }>
-          <a title="Assigned to me">
+          <a title={t('Assigned to me')}>
             <span className="icon icon-user" onClick={()=>this.togglePanel('assigned')} />
+            <span className="nav-label">{t('Assigned to me')}</span>
           </a>
         </li>
         <li className={this.state.currentPanel == 'bookmarks' ? 'active' : null }>
-          <a title="My Bookmarks">
+          <a title={t('My Bookmarks')}>
             <span className="icon icon-star-solid" onClick={()=>this.togglePanel('bookmarks')} />
+            <span className="nav-label">{t('My Bookmarks')}</span>
           </a>
         </li>
         <li className={this.state.currentPanel == 'history' ? 'active' : null }>
-          <a title="Recently Viewed">
+          <a title={t('Recently Viewed')}>
             <span className="icon icon-av_timer" onClick={()=>this.togglePanel('history')} />
+            <span className="nav-label">{t('Recently Viewed')}</span>
           </a>
         </li>
       </ul>
@@ -195,6 +204,7 @@ const Sidebar = React.createClass({
         <li>
           <a title="Support" href={`/organizations/${org.slug}/support/`}>
             <span className="icon icon-support" />
+            <span className="nav-label">Support</span>
           </a>
         </li>
       </ul>
