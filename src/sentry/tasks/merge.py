@@ -143,7 +143,7 @@ def rehash_group_events(group_id, transaction_id=None, **kwargs):
         'model': GroupHash.__name__,
     })
 
-    delete_group.delay(group.id)
+    delete_group.delay(group.id, transaction_id=transaction_id)
 
 
 def _rehash_group_events(group, limit=100):

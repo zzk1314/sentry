@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from datetime import timedelta
+from uuid import uuid4
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -334,7 +335,7 @@ class GroupDetailsEndpoint(GroupEndpoint):
         if updated:
             GroupHash.objects.filter(group=group).delete()
             delete_group.apply_async(
-                kwargs={'object_id': group.id},
+                kwargs={'object_id': group.id, 'transaction_id': uuid4().hex},
                 countdown=3600,
             )
 

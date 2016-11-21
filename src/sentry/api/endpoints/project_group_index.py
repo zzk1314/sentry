@@ -700,7 +700,7 @@ class ProjectGroupIndexEndpoint(ProjectEndpoint):
         GroupHash.objects.filter(group__id__in=group_ids).delete()
         for group in group_list:
             delete_group.apply_async(
-                kwargs={'object_id': group.id},
+                kwargs={'object_id': group.id, 'transaction_id': uuid4().hex},
                 countdown=3600,
             )
 
