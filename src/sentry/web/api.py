@@ -22,6 +22,7 @@ from sentry.coreapi import (
     APIError, APIForbidden, APIRateLimited, ClientApiHelper, CspApiHelper,
     LazyData
 )
+from sentry.logging import eventlogger
 from sentry.models import Project, OrganizationOption, Organization
 from sentry.signals import (
     event_accepted, event_dropped, event_filtered, event_received
@@ -371,10 +372,15 @@ class StoreView(APIView):
 
         org_options = OrganizationOption.objects.get_all_values(project.organization_id)
 
+        el = eventlogger.bind(data)
+
         if org_options.get('sentry:require_scrub_ip_address', False):
             scrub_ip_address = True
+            el.debug(eventlogger.API_SCRUB_IP_ORGANIZATION)
         else:
             scrub_ip_address = project.get_option('sentry:scrub_ip_address', False)
+            if scrub_ip_address:
+                el.debug(eventlogger.API_SCRUB_IP_PROJECT)
 
         event_id = data['event_id']
 
@@ -387,8 +393,11 @@ class StoreView(APIView):
 
         if org_options.get('sentry:require_scrub_data', False):
             scrub_data = True
+            el.debug(eventlogger.API_SCRUB_DATA_ORGANIZATION)
         else:
             scrub_data = project.get_option('sentry:scrub_data', True)
+            if scrub_data:
+                el.debug(eventlogger.API_SCRUB_DATA_PROJECT)
 
         if scrub_data:
             # We filter data immediately before it ever gets into the queue

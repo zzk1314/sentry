@@ -6,6 +6,7 @@ from datetime import datetime
 from django.utils import timezone
 
 from sentry.api.serializers import Serializer, register
+from sentry.logging import eventlogger
 from sentry.models import Event, EventError
 
 
@@ -128,6 +129,7 @@ class EventSerializer(Serializer):
             'dateCreated': obj.datetime,
             'dateReceived': received,
             'errors': errors,
+            'log': map(eventlogger.getMessage, obj.data.get('log', [])),
         }
         return d
 

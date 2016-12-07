@@ -32,6 +32,7 @@ from sentry.constants import (
 from sentry.interfaces.base import get_interface, InterfaceValidationError
 from sentry.interfaces.csp import Csp
 from sentry.event_manager import EventManager
+from sentry.logging import eventlogger
 from sentry.models import EventError, ProjectKey, TagKey, TagValue
 from sentry.tasks.store import preprocess_event
 from sentry.utils import json

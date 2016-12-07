@@ -630,6 +630,7 @@ class SourceProcessor(object):
         )
 
     def process(self, data):
+        self.event_logger = eventlogger.bind(data)
         stacktraces = self.get_stacktraces(data)
         if not stacktraces:
             logger.debug('No stacktrace for event %r', data['event_id'])
