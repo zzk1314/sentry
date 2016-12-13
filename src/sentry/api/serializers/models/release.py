@@ -42,6 +42,8 @@ class ReleaseSerializer(Serializer):
             'data': obj.data,
             'newGroups': obj.new_groups,
             'owner': attrs['owner'],
+            # TODO: this should probably happen in get_attrs
+            'projects': [p['slug'] for p in obj.projects.all().values('slug')]
         }
         if attrs['tag']:
             d.update({

@@ -21,22 +21,23 @@ from sentry.models import (
 
 
 class ReleaseHook(object):
-    def __init__(self, project):
-        self.project = project
+    def __init__(self, organization, projects=None):
+        self.organization = organization
+        self.projects = projects
 
     def _to_email(self, name):
         return re.sub(r'[^a-zA-Z0-9\-_\.]*', '', name).lower() + '@localhost'
 
     def start_release(self, version, **values):
         values.setdefault('date_started', timezone.now())
-        values.setdefault('organization', self.project.organization_id)
         release, created = Release.objects.create_or_update(
             version=version,
-            project=self.project,
+            organization=self.organization,
             values=values
         )
-        if created:
-            release.add_project(self.project)
+        if self.projects:
+            for p in self.projects:
+                release.add_project(p)
 
     # TODO(dcramer): this is being used by the release details endpoint, but
     # it'd be ideal if most if not all of this logic lived there, and this
@@ -47,14 +48,14 @@ class ReleaseHook(object):
 
         Calling this method will remove all existing commit history.
         """
-        project = self.project
+        organization = self.organization
         release, created = Release.objects.get_or_create(
-            project=project,
+            organization=organization,
             version=version,
-            defaults={'organization_id': self.project.organization_id}
         )
-        if created:
-            release.add_project(project)
+        if self.projects:
+            for p in self.projects:
+                release.add_project(p)
 
         with transaction.atomic():
             # TODO(dcramer): would be good to optimize the logic to avoid these
@@ -66,10 +67,10 @@ class ReleaseHook(object):
             authors = {}
             repos = {}
             for idx, data in enumerate(commit_list):
-                repo_name = data.get('repository') or 'project-{}'.format(project.id)
+                repo_name = data.get('repository') or 'organization-{}'.format(organization.id)
                 if repo_name not in repos:
                     repos[repo_name] = repo = Repository.objects.get_or_create(
-                        organization_id=project.organization_id,
+                        organization=organization,
                         name=repo_name,
                     )[0]
                 else:
@@ -83,7 +84,7 @@ class ReleaseHook(object):
                     author = None
                 elif author_email not in authors:
                     authors[author_email] = author = CommitAuthor.objects.get_or_create(
-                        organization_id=project.organization_id,
+                        organization_id=organization.id,
                         email=author_email,
                         defaults={
                             'name': data.get('author_name'),
@@ -95,7 +96,7 @@ class ReleaseHook(object):
                     author = authors[author_email]
 
                 commit = Commit.objects.get_or_create(
-                    organization_id=project.organization_id,
+                    organization_id=organization.id,
                     repository_id=repo.id,
                     key=data['id'],
                     defaults={
@@ -105,9 +106,10 @@ class ReleaseHook(object):
                     }
                 )[0]
 
+                # TODO: deal w project id
                 ReleaseCommit.objects.create(
                     organization_id=project.organization_id,
-                    project_id=project.id,
+                    project_id=self.projects[0].id,
                     release=release,
                     commit=commit,
                     order=idx,
