@@ -18,6 +18,7 @@ import AdminProjects from './views/adminProjects';
 import AdminSettings from './views/adminSettings';
 import AdminUsers from './views/adminUsers';
 import App from './views/app';
+import ExploreLayout from './views/exploreLayout';
 import GroupActivity from './views/groupActivity';
 import GroupDetails from './views/groupDetails';
 import GroupEventDetails from './views/groupEventDetails';
@@ -128,6 +129,8 @@ function routes() {
         <IndexRoute component={errorHandler(OrganizationDashboard)}/>
 
         <Route path="/organizations/:orgId/audit-log/" component={errorHandler(OrganizationAuditLog)} />
+        <Route path="/organizations/:orgId/explore/" component={errorHandler(ExploreLayout)}>
+        </Route>
         <Route path="/organizations/:orgId/repos/" component={errorHandler(OrganizationRepositories)} />
         <Route path="/organizations/:orgId/settings/" component={errorHandler(OrganizationSettings)} />
         <Route path="/organizations/:orgId/teams/" component={errorHandler(OrganizationTeams)} />

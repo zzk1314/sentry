@@ -2,6 +2,7 @@ import React from 'react';
 import $ from 'jquery';
 
 import ApiMixin from '../../mixins/apiMixin';
+import ListLink from '../listLink';
 import OrganizationState from '../../mixins/organizationState';
 import {load as loadIncidents} from '../../actionCreators/incidents';
 
@@ -166,6 +167,10 @@ const Sidebar = React.createClass({
         hidePanel={()=>this.hidePanel()}/>
 
       {/* Top nav links */}
+      <ul className="navbar-nav divider-bottom">
+        <ListLink index={true} to={`/${org.slug}/`}>I</ListLink>
+        <ListLink to={`/organizations/${org.slug}/explore/`}>E</ListLink>
+      </ul>
       <ul className="navbar-nav divider-bottom">
         <li className={this.state.currentPanel == 'assigned' ? 'active' : null }>
           <a title="Assigned to me">
