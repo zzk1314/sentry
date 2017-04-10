@@ -41,6 +41,11 @@ export default React.createClass({
                 <ListLink to={`/organizations/${orgId}/explore/users/geo/`}>{t('Geo')}</ListLink>
                 <ListLink to={`/organizations/${orgId}/explore/users/language/`}>{t('Language')}</ListLink>
               </ul>
+              <h6 className="nav-header">{t('Releases')}</h6>
+              <ul className="nav nav-stacked">
+                <ListLink to={`/organizations/${orgId}/explore/releases/`}>{t('Overview')}</ListLink>
+                <ListLink to={`/organizations/${orgId}/explore/releases/authors/`}>{t('Authors')}</ListLink>
+              </ul>
             </div>
             <div className="col-md-10">
               {this.props.children}
