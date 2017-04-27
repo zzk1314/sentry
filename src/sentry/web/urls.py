@@ -78,7 +78,7 @@ from sentry.web.frontend.remove_team import RemoveTeamView
 from sentry.web.frontend.sudo import SudoView
 from sentry.web.frontend.unsubscribe_issue_notifications import \
     UnsubscribeIssueNotificationsView
-from sentry.web.frontend.user_avatar import UserAvatarPhotoView
+from sentry.web.frontend.user_avatar import UserAvatarPhotoView, UserAvatarMeView
 
 __all__ = ('urlpatterns',)
 
@@ -357,6 +357,9 @@ urlpatterns += patterns(
         ProjectRuleEditView.as_view(),
         name='sentry-edit-project-rule'),
 
+    url(r'^avatar/me/$',
+        UserAvatarMeView.as_view(),
+        name='sentry-user-avatar-me'),
     url(r'^avatar/(?P<avatar_id>[^\/]+)/$',
         UserAvatarPhotoView.as_view(),
         name='sentry-user-avatar-url'),
