@@ -70,11 +70,13 @@ class Map(Attribute):
 class Event(object):
     __slots__ = ['attributes', 'data', 'datetime', 'type']
 
+    data = None
+
     type = None
 
     attributes = ()
 
-    def __init__(self, type=None, datetime=None, **items):
+    def __init__(self, type=None, datetime=None, attributes=None, **items):
         self.datetime = datetime or timezone.now()
         if type is not None:
             self.type = type
@@ -82,13 +84,12 @@ class Event(object):
         if self.type is None:
             raise ValueError('Event is missing type')
 
+        if attributes is not None:
+            self.attributes = attributes
+
         data = {}
         for attr in self.attributes:
             nv = items.pop(attr.name, None)
-            if attr.required and nv is None:
-                raise ValueError(u'{} is required (cannot be None)'.format(
-                    attr.name,
-                ))
             data[attr.name] = attr.extract(nv)
 
         if items:
@@ -98,7 +99,42 @@ class Event(object):
 
         self.data = data
 
+    def __setattr__(self, name, value):
+        # yeah, this is slow
+        # yeah, we'll fix it later
+        if name in ('data', 'datetime', 'type', 'attributes'):
+            return super(Event, self).__setattr__(name, value)
+
+        for attr in self.attributes:
+            if attr.name == name:
+                self.data[name] = attr.extract(value)
+                return
+
+        raise AttributeError(u'Unknown attribute: {}'.format(
+            name,
+        ))
+
+    def __getattr__(self, name):
+        # yeah, this is slow
+        # yeah, we'll fix it later
+        for attr in self.attributes:
+            if attr.name == name:
+                return self.data.get(name)
+
+        raise AttributeError(u'Unknown attribute: {}'.format(
+            name,
+        ))
+
+    def validate(self):
+        for attr in self.attributes:
+            value = self.data.get(attr.name)
+            if attr.required and value is None:
+                raise ValueError(u'{} is required (cannot be None)'.format(
+                    attr.name,
+                ))
+
     def serialize(self):
+        self.validate()
         return dict({
             'timestamp': int(self.datetime.isoformat('%s')),
             'type': self.type,

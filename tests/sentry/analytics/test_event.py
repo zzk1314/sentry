@@ -59,3 +59,8 @@ class EventTest(TestCase):
         assert result.data['map'] == {
             'key': 'value',
         }
+
+    def test_setattr(self):
+        result = ExampleEvent(id='1', map={'key': 'value'}, optional=False)
+        result.optional = True
+        assert result.data['optional'] is True
