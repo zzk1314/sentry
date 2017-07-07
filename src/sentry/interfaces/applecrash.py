@@ -14,6 +14,7 @@ from sentry.interfaces.base import Interface, InterfaceValidationError
 
 
 class AppleCrashReport(Interface):
+
     """
     An apple crash report in JSON format.  This typically gets converted
     into other interfaces as part of the processing.

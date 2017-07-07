@@ -15,6 +15,7 @@ from sentry.utils.safe import trim
 
 
 class Template(Interface):
+
     """
     A rendered template (generally used like a single frame in a stacktrace).
 
@@ -78,17 +79,16 @@ class Template(Interface):
             filename=self.filename,
         )
 
-        result = [
-            'Stacktrace (most recent call last):', '',
-            self.get_traceback(event, context)
-        ]
+        result = ['Stacktrace (most recent call last):', '', self.get_traceback(event, context)]
 
         return '\n'.join(result)
 
     def get_traceback(self, event, context):
         result = [
-            event.message, '',
-            'File "%s", line %s' % (self.filename, self.lineno), '',
+            event.message,
+            '',
+            'File "%s", line %s' % (self.filename, self.lineno),
+            '',
         ]
         result.extend([n[1].strip('\n') for n in context])
 
@@ -96,9 +96,12 @@ class Template(Interface):
 
     def get_api_context(self, is_public=False):
         return {
-            'lineNo': self.lineno,
-            'filename': self.filename,
-            'context': get_context(
+            'lineNo':
+            self.lineno,
+            'filename':
+            self.filename,
+            'context':
+            get_context(
                 lineno=self.lineno,
                 context_line=self.context_line,
                 pre_context=self.pre_context,

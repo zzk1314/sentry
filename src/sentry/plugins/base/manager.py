@@ -32,8 +32,9 @@ class PluginManager(InstanceManager):
 
     def configurable_for_project(self, project, version=1):
         for plugin in self.all(version=version):
-            if not safe_execute(plugin.can_configure_for_project, project,
-                                _with_transaction=False):
+            if not safe_execute(
+                plugin.can_configure_for_project, project, _with_transaction=False
+            ):
                 continue
             yield plugin
 
@@ -45,8 +46,7 @@ class PluginManager(InstanceManager):
 
     def for_project(self, project, version=1):
         for plugin in self.all(version=version):
-            if not safe_execute(plugin.is_enabled, project,
-                                _with_transaction=False):
+            if not safe_execute(plugin.is_enabled, project, _with_transaction=False):
                 continue
             yield plugin
 
@@ -69,10 +69,12 @@ class PluginManager(InstanceManager):
                 result = getattr(plugin, func_name)(*args, **kwargs)
             except Exception as e:
                 logger = logging.getLogger('sentry.plugins.%s' % (type(plugin).slug,))
-                logger.error('%s.process_error', func_name,
-                             exc_info=True,
-                             extra={'exception': e},
-                             )
+                logger.error(
+                    '%s.process_error',
+                    func_name,
+                    exc_info=True,
+                    extra={'exception': e},
+                )
                 continue
 
             if result is not None:

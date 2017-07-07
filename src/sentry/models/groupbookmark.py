@@ -15,6 +15,7 @@ from sentry.db.models import FlexibleForeignKey, Model, BaseManager, sane_repr
 
 
 class GroupBookmark(Model):
+
     """
     Identifies a bookmark relationship between a user and an
     aggregated event (Group).

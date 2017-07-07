@@ -20,7 +20,8 @@ class AuditLogEntrySerializer(Serializer):
                 'actor': actors[six.text_type(item.actor_id)] if item.actor_id else {
                     'name': item.get_actor_name(),
                 },
-            } for item in item_list
+            }
+            for item in item_list
         }
 
     def serialize(self, obj, attrs, user):

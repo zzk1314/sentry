@@ -6,6 +6,7 @@ from .view import ConfigureView
 
 
 class Provider(object):
+
     """
     A provider indicates how authenticate should happen for a given service,
     including its configuration and basic identity management.

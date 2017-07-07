@@ -9,6 +9,7 @@ class NoPermission(permissions.BasePermission):
 
 
 class ScopedPermission(permissions.BasePermission):
+
     """
     Permissions work depending on the type of authentication:
 

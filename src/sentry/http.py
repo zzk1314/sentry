@@ -31,7 +31,6 @@ from sentry.utils.cache import cache
 from sentry.utils.hashlib import md5_text
 from sentry.utils.strings import truncatechars
 
-
 logger = logging.getLogger(__name__)
 
 # TODO(dcramer): we want to change these to be constants so they are easier
@@ -41,20 +40,19 @@ logger = logging.getLogger(__name__)
 MAX_URL_LENGTH = 150
 
 # UrlResult.body **must** be bytes
-UrlResult = namedtuple('UrlResult',
-                       ['url', 'headers', 'body', 'status', 'encoding']
-                       )
-
+UrlResult = namedtuple('UrlResult', ['url', 'headers', 'body', 'status', 'encoding'])
 
 # In case SSL is unavailable (light builds) we can't import this here.
 try:
     from OpenSSL.SSL import ZeroReturnError, Error as OpenSSLError
 except ImportError:
+
     class ZeroReturnError(Exception):
         pass
 
     class OpenSSLError(Exception):
         pass
+
 
 USER_AGENT = 'sentry/{version} (https://sentry.io)'.format(
     version=sentry.VERSION,
@@ -150,7 +148,6 @@ class BlacklistAdapter(HTTPAdapter):
 
 
 class Session(requests.Session):
-
     def request(self, *args, **kwargs):
         kwargs.setdefault('timeout', 30)
         try:
@@ -170,7 +167,6 @@ class Session(requests.Session):
 
 
 class SafeSession(Session):
-
     def __init__(self):
         requests.Session.__init__(self)
         self.headers.update({'User-Agent': USER_AGENT})
@@ -181,9 +177,18 @@ class SafeSession(Session):
 build_session = SafeSession
 
 
-def safe_urlopen(url, method=None, params=None, data=None, json=None,
-                 headers=None, allow_redirects=False, timeout=30,
-                 verify_ssl=True, user_agent=None):
+def safe_urlopen(
+    url,
+    method=None,
+    params=None,
+    data=None,
+    json=None,
+    headers=None,
+    allow_redirects=False,
+    timeout=30,
+    verify_ssl=True,
+    user_agent=None
+):
     """
     A slightly safer version of ``urlib2.urlopen`` which prevents redirection
     and ensures the URL isn't attempting to hit a blacklisted IP range.
@@ -240,18 +245,23 @@ def expose_url(url):
     return url
 
 
-def fetch_file(url, domain_lock_enabled=True, outfile=None,
-               headers=None, allow_redirects=True, verify_ssl=False,
-               timeout=settings.SENTRY_SOURCE_FETCH_SOCKET_TIMEOUT, **kwargs):
+def fetch_file(
+    url,
+    domain_lock_enabled=True,
+    outfile=None,
+    headers=None,
+    allow_redirects=True,
+    verify_ssl=False,
+    timeout=settings.SENTRY_SOURCE_FETCH_SOCKET_TIMEOUT,
+    **kwargs
+):
     """
     Pull down a URL, returning a UrlResult object.
     """
     # lock down domains that are problematic
     if domain_lock_enabled:
         domain = urlparse(url).netloc
-        domain_key = 'source:blacklist:v2:%s' % (
-            md5_text(domain).hexdigest(),
-        )
+        domain_key = 'source:blacklist:v2:%s' % (md5_text(domain).hexdigest(),)
         domain_result = cache.get(domain_key)
         if domain_result:
             domain_result['url'] = url
@@ -358,8 +368,7 @@ def fetch_file(url, domain_lock_enabled=True, outfile=None,
             response.close()
 
     if result[2] != 200:
-        logger.debug('HTTP %s when fetching %r', result[2], url,
-                     exc_info=True)
+        logger.debug('HTTP %s when fetching %r', result[2], url, exc_info=True)
         error = {
             'type': EventError.FETCH_INVALID_HTTP_CODE,
             'value': result[2],

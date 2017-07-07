@@ -17,6 +17,7 @@ from sentry.db.models import (
 
 
 class ProjectBookmark(Model):
+
     """
     Identifies a bookmark relationship between a user and an
     aggregated event (Group).

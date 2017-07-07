@@ -3,9 +3,7 @@ from __future__ import absolute_import
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
-from django.contrib.auth.forms import (
-    UserCreationForm, UserChangeForm, AdminPasswordChangeForm
-)
+from django.contrib.auth.forms import (UserCreationForm, UserChangeForm, AdminPasswordChangeForm)
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect
@@ -17,9 +15,8 @@ from django.template.response import TemplateResponse
 from django.utils.translation import ugettext, ugettext_lazy as _
 from pprint import saferepr
 from sentry.models import (
-    ApiKey, AuthIdentity, AuthProvider, AuditLogEntry, Broadcast,
-    Option, Organization, OrganizationMember, Project,
-    Team, User
+    ApiKey, AuthIdentity, AuthProvider, AuditLogEntry, Broadcast, Option, Organization,
+    OrganizationMember, Project, Team, User
 )
 from sentry.utils.html import escape
 
@@ -32,6 +29,7 @@ class BroadcastAdmin(admin.ModelAdmin):
     list_filter = ('is_active',)
     search_fields = ('title', 'message', 'link')
     readonly_fields = ('upstream_id', 'date_added')
+
 
 admin.site.register(Broadcast, BroadcastAdmin)
 
@@ -57,10 +55,12 @@ admin.site.register(Option, OptionAdmin)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'organization', 'status', 'date_added')
     list_filter = ('status', 'public')
-    search_fields = ('name', 'organization__slug', 'organization__name', 'team__slug',
-                     'team__name', 'slug')
+    search_fields = (
+        'name', 'organization__slug', 'organization__name', 'team__slug', 'team__name', 'slug'
+    )
     raw_id_fields = ('team', 'organization')
     readonly_fields = ('first_event', 'date_added')
+
 
 admin.site.register(Project, ProjectAdmin)
 
@@ -105,8 +105,11 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('name', 'slug')
     fields = ('name', 'slug', 'status')
-    inlines = (OrganizationMemberInline, OrganizationTeamInline,
-               OrganizationProjectInline, OrganizationApiKeyInline)
+    inlines = (
+        OrganizationMemberInline, OrganizationTeamInline, OrganizationProjectInline,
+        OrganizationApiKeyInline
+    )
+
 
 admin.site.register(Organization, OrganizationAdmin)
 
@@ -117,15 +120,16 @@ class AuthProviderAdmin(admin.ModelAdmin):
     raw_id_fields = ('organization', 'default_teams')
     list_filter = ('provider',)
 
+
 admin.site.register(AuthProvider, AuthProviderAdmin)
 
 
 class AuthIdentityAdmin(admin.ModelAdmin):
     list_display = ('user', 'auth_provider', 'ident', 'date_added', 'last_verified')
     list_filter = ('auth_provider__provider',)
-    search_fields = ('user__email', 'user__username',
-                     'auth_provider__organization__name')
+    search_fields = ('user__email', 'user__username', 'auth_provider__organization__name')
     raw_id_fields = ('user', 'auth_provider')
+
 
 admin.site.register(AuthIdentity, AuthIdentityAdmin)
 
@@ -155,28 +159,37 @@ class TeamAdmin(admin.ModelAdmin):
 
         obj.transfer_to(obj.organization)
 
+
 admin.site.register(Team, TeamAdmin)
 
 
 class UserChangeForm(UserChangeForm):
     username = forms.RegexField(
-        label=_("Username"), max_length=128, regex=r"^[\w.@+-]+$",
+        label=_("Username"),
+        max_length=128,
+        regex=r"^[\w.@+-]+$",
         help_text=_("Required. 128 characters or fewer. Letters, digits and "
                     "@/./+/-/_ only."),
         error_messages={
-            'invalid': _("This value may contain only letters, numbers and "
-                         "@/./+/-/_ characters.")},
+            'invalid':
+            _("This value may contain only letters, numbers and "
+              "@/./+/-/_ characters.")
+        },
     )
 
 
 class UserCreationForm(UserCreationForm):
     username = forms.RegexField(
-        label=_("Username"), max_length=128, regex=r"^[\w.@+-]+$",
+        label=_("Username"),
+        max_length=128,
+        regex=r"^[\w.@+-]+$",
         help_text=_("Required. 128 characters or fewer. Letters, digits and "
                     "@/./+/-/_ only."),
         error_messages={
-            'invalid': _("This value may contain only letters, numbers and "
-                         "@/./+/-/_ characters.")}
+            'invalid':
+            _("This value may contain only letters, numbers and "
+              "@/./+/-/_ characters.")
+        }
     )
 
 
@@ -184,10 +197,15 @@ class UserAdmin(admin.ModelAdmin):
     add_form_template = 'admin/auth/user/add_form.html'
     change_user_password_template = None
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('name', 'email')}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (None, {
+            'fields': ('username', 'password')
+        }), (_('Personal info'), {
+            'fields': ('name', 'email')
+        }), (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser')
+        }), (_('Important dates'), {
+            'fields': ('last_login', 'date_joined')
+        }),
     )
     add_fieldsets = (
         (None, {
@@ -215,19 +233,20 @@ class UserAdmin(admin.ModelAdmin):
         """
         defaults = {}
         if obj is None:
-            defaults.update({
-                'form': self.add_form,
-                'fields': admin.util.flatten_fieldsets(self.add_fieldsets),
-            })
+            defaults.update(
+                {
+                    'form': self.add_form,
+                    'fields': admin.util.flatten_fieldsets(self.add_fieldsets),
+                }
+            )
         defaults.update(kwargs)
         return super(UserAdmin, self).get_form(request, obj, **defaults)
 
     def get_urls(self):
         from django.conf.urls import patterns
-        return patterns('',
-                        (r'^(\d+)/password/$',
-                         self.admin_site.admin_view(self.user_change_password))
-                        ) + super(UserAdmin, self).get_urls()
+        return patterns(
+            '', (r'^(\d+)/password/$', self.admin_site.admin_view(self.user_change_password))
+        ) + super(UserAdmin, self).get_urls()
 
     def lookup_allowed(self, lookup, value):
         # See #20078: we don't want to allow any lookups involving passwords.
@@ -253,7 +272,8 @@ class UserAdmin(admin.ModelAdmin):
                     'Your user does not have the "Change user" permission. In '
                     'order to add users, Django requires that your user '
                     'account have both the "Add user" and "Change user" '
-                    'permissions set.')
+                    'permissions set.'
+                )
             raise PermissionDenied
         if extra_context is None:
             extra_context = {}
@@ -263,8 +283,7 @@ class UserAdmin(admin.ModelAdmin):
             'username_help_text': username_field.help_text,
         }
         extra_context.update(defaults)
-        return super(UserAdmin, self).add_view(request, form_url,
-                                               extra_context)
+        return super(UserAdmin, self).add_view(request, form_url, extra_context)
 
     @sensitive_post_parameters_m
     def user_change_password(self, request, id, form_url=''):
@@ -300,10 +319,12 @@ class UserAdmin(admin.ModelAdmin):
             'save_as': False,
             'show_save': True,
         }
-        return TemplateResponse(request,
-                                self.change_user_password_template or
-                                'admin/auth/user/change_password.html',
-                                context, current_app=self.admin_site.name)
+        return TemplateResponse(
+            request,
+            self.change_user_password_template or 'admin/auth/user/change_password.html',
+            context,
+            current_app=self.admin_site.name
+        )
 
     def response_add(self, request, obj, post_url_continue=None):
         """
@@ -318,8 +339,8 @@ class UserAdmin(admin.ModelAdmin):
         # * We are adding a user in a popup
         if '_addanother' not in request.POST and '_popup' not in request.POST:
             request.POST['_continue'] = 1
-        return super(UserAdmin, self).response_add(request, obj,
-                                                   post_url_continue)
+        return super(UserAdmin, self).response_add(request, obj, post_url_continue)
+
 
 admin.site.register(User, UserAdmin)
 
@@ -329,7 +350,10 @@ class AuditLogEntryAdmin(admin.ModelAdmin):
     list_filter = ('event', 'datetime')
     search_fields = ('actor__email', 'organization__name', 'organization__slug')
     raw_id_fields = ('organization', 'actor', 'target_user')
-    readonly_fields = ('organization', 'actor', 'actor_key', 'target_object',
-                       'target_user', 'event', 'ip_address', 'data', 'datetime')
+    readonly_fields = (
+        'organization', 'actor', 'actor_key', 'target_object', 'target_user', 'event',
+        'ip_address', 'data', 'datetime'
+    )
+
 
 admin.site.register(AuditLogEntry, AuditLogEntryAdmin)

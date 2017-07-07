@@ -51,6 +51,7 @@ class UserAgentPlugin(TagPlugin):
 
 
 class BrowserPlugin(UserAgentPlugin):
+
     """
     Automatically adds the 'browser' tag from events containing interface data
     from ``sentry.interfaces.Http``.
@@ -75,10 +76,12 @@ class BrowserPlugin(UserAgentPlugin):
 
         return tag
 
+
 register(BrowserPlugin)
 
 
 class OsPlugin(UserAgentPlugin):
+
     """
     Automatically adds the 'os' tag from events containing interface data
     from ``sentry.interfaces.Http``.
@@ -104,10 +107,12 @@ class OsPlugin(UserAgentPlugin):
 
         return tag
 
+
 register(OsPlugin)
 
 
 class DevicePlugin(UserAgentPlugin):
+
     """
     Automatically adds the 'device' tag from events containing interface data
     from ``sentry.interfaces.Http``.
@@ -118,5 +123,6 @@ class DevicePlugin(UserAgentPlugin):
 
     def get_tag_from_ua(self, ua):
         return ua['device']['family']
+
 
 register(DevicePlugin)

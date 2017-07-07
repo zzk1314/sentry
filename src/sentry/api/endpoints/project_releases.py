@@ -13,7 +13,6 @@ from sentry.api.serializers.rest_framework import CommitSerializer, ListField
 from sentry.models import Activity, Release
 from sentry.plugins.interfaces.releasehook import ReleaseHook
 
-
 BAD_RELEASE_CHARS = '\n\f\t/'
 
 
@@ -52,8 +51,7 @@ class ProjectReleasesEndpoint(ProjectEndpoint):
         query = request.GET.get('query')
 
         queryset = Release.objects.filter(
-            projects=project,
-            organization_id=project.organization_id
+            projects=project, organization_id=project.organization_id
         ).select_related('owner')
 
         if query:

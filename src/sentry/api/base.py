@@ -35,11 +35,7 @@ ONE_DAY = ONE_HOUR * 24
 
 LINK_HEADER = '<{uri}&cursor={cursor}>; rel="{name}"; results="{has_results}"; cursor="{cursor}"'
 
-DEFAULT_AUTHENTICATION = (
-    TokenAuthentication,
-    ApiKeyAuthentication,
-    SessionAuthentication,
-)
+DEFAULT_AUTHENTICATION = (TokenAuthentication, ApiKeyAuthentication, SessionAuthentication,)
 
 logger = logging.getLogger(__name__)
 audit_logger = logging.getLogger('sentry.audit.api')
@@ -62,8 +58,7 @@ class Endpoint(APIView):
 
     def build_cursor_link(self, request, name, cursor):
         querystring = u'&'.join(
-            u'{0}={1}'.format(urlquote(k), urlquote(v))
-            for k, v in six.iteritems(request.GET)
+            u'{0}={1}'.format(urlquote(k), urlquote(v)) for k, v in six.iteritems(request.GET)
             if k != 'cursor'
         )
         base_url = absolute_uri(urlquote(request.path))
@@ -101,10 +96,7 @@ class Endpoint(APIView):
         api_key = request.auth if isinstance(request.auth, ApiKey) else None
 
         entry = AuditLogEntry(
-            actor=user,
-            actor_key=api_key,
-            ip_address=request.META['REMOTE_ADDR'],
-            **kwargs
+            actor=user, actor_key=api_key, ip_address=request.META['REMOTE_ADDR'], **kwargs
         )
 
         # Only create a real AuditLogEntry record if we are passing an event type
@@ -174,8 +166,7 @@ class Endpoint(APIView):
 
             # Get the appropriate handler method
             if request.method.lower() in self.http_method_names:
-                handler = getattr(self, request.method.lower(),
-                                  self.http_method_not_allowed)
+                handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
 
                 (args, kwargs) = self.convert_args(request, *args, **kwargs)
                 self.args = args
@@ -199,8 +190,9 @@ class Endpoint(APIView):
         response['Access-Control-Allow-Origin'] = request.META['HTTP_ORIGIN']
         response['Access-Control-Allow-Methods'] = ', '.join(self.http_method_names)
 
-    def paginate(self, request, on_results=None, paginator_cls=Paginator,
-                 default_per_page=100, **kwargs):
+    def paginate(
+        self, request, on_results=None, paginator_cls=Paginator, default_per_page=100, **kwargs
+    ):
         per_page = int(request.GET.get('per_page', default_per_page))
         input_cursor = request.GET.get('cursor')
         if input_cursor:
@@ -221,10 +213,12 @@ class Endpoint(APIView):
             results = on_results(cursor_result.results)
 
         headers = {}
-        headers['Link'] = ', '.join([
-            self.build_cursor_link(request, 'previous', cursor_result.prev),
-            self.build_cursor_link(request, 'next', cursor_result.next),
-        ])
+        headers['Link'] = ', '.join(
+            [
+                self.build_cursor_link(request, 'previous', cursor_result.prev),
+                self.build_cursor_link(request, 'next', cursor_result.next),
+            ]
+        )
 
         return Response(results, headers=headers)
 

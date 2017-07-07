@@ -27,6 +27,7 @@ class SetRemoteAddrFromForwardedFor(object):
 
 
 class ContentLengthHeaderMiddleware(object):
+
     """
     Ensure that we have a proper Content-Length/Transfer-Encoding header
     """

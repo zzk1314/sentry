@@ -12,6 +12,7 @@ from sentry.utils.cache import cache
 
 
 class AvatarBase(Model):
+
     """
     Base class for UserAvatar and OrganizationAvatar models, which
     associate users/orgs with their avatar preferences/files.
@@ -86,10 +87,7 @@ class AvatarBase(Model):
                 instance.file = photo
                 instance.ident = uuid4().hex
 
-            instance.avatar_type = [
-                i for i, n in cls.AVATAR_TYPES
-                if n == type
-            ][0]
+            instance.avatar_type = [i for i, n in cls.AVATAR_TYPES if n == type][0]
 
             instance.save()
 

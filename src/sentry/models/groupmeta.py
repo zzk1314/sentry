@@ -17,7 +17,6 @@ from sentry.exceptions import CacheNotPopulated
 from sentry.db.models import FlexibleForeignKey, Model, sane_repr
 from sentry.db.models.manager import BaseManager
 
-
 ERR_CACHE_MISISNG = 'Cache not populated for instance id=%s'
 
 
@@ -101,6 +100,7 @@ class GroupMetaManager(BaseManager):
 
 
 class GroupMeta(Model):
+
     """
     Arbitrary key/value store for Groups.
 

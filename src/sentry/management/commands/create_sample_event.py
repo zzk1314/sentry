@@ -33,7 +33,8 @@ class Command(BaseCommand):
                 project = Project.objects.get(slug=p_slug, team__slug=t_slug)
             else:
                 raise CommandError(
-                    'Project must be specified as team-slug/project-slug or a project id')
+                    'Project must be specified as team-slug/project-slug or a project id'
+                )
 
         platform = options['platform']
         event = create_sample_event(project, platform)

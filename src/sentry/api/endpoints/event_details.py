@@ -39,9 +39,7 @@ class EventDetailsEndpoint(Endpoint):
         ID that is reported by the client upon submission.
         """
         try:
-            event = Event.objects.get(
-                id=event_id
-            )
+            event = Event.objects.get(id=event_id)
         except Event.DoesNotExist:
             raise ResourceDoesNotExist
 

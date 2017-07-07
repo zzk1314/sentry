@@ -26,6 +26,7 @@ class BufferMount(type):
 
 @six.add_metaclass(BufferMount)
 class Buffer(Service):
+
     """
     Buffers act as temporary stores for counters. The default implementation is just a passthru and
     does not actually buffer anything.
@@ -44,12 +45,14 @@ class Buffer(Service):
         """
         >>> incr(Group, columns={'times_seen': 1}, filters={'pk': group.pk})
         """
-        process_incr.apply_async(kwargs={
-            'model': model,
-            'columns': columns,
-            'filters': filters,
-            'extra': extra,
-        })
+        process_incr.apply_async(
+            kwargs={
+                'model': model,
+                'columns': columns,
+                'filters': filters,
+                'extra': extra,
+            }
+        )
 
     def process_pending(self):
         return []
@@ -66,10 +69,7 @@ class Buffer(Service):
             except KeyError:
                 pass
 
-        _, created = model.objects.create_or_update(
-            values=update_kwargs,
-            **filters
-        )
+        _, created = model.objects.create_or_update(values=update_kwargs, **filters)
 
         buffer_incr_complete.send_robust(
             model=model,

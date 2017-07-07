@@ -7,6 +7,7 @@ from sentry.utils.safe import trim, trim_dict
 
 
 class Device(Interface):
+
     """
     An interface which describes the device.
 
@@ -17,6 +18,7 @@ class Device(Interface):
     >>>     "arbitrary": "data"
     >>> }
     """
+
     @classmethod
     def to_python(cls, data):
         data = data.copy()

@@ -32,6 +32,7 @@ def _get_implied_category(category, type):
 
 
 class Breadcrumbs(Interface):
+
     """
     This interface stores information that leads up to an error.
 
@@ -67,8 +68,7 @@ class Breadcrumbs(Interface):
         ty = crumb.get('type') or 'default'
         ts = parse_timestamp(crumb.get('timestamp'))
         if ts is None:
-            raise InterfaceValidationError('Unable to determine timestamp '
-                                           'for crumb')
+            raise InterfaceValidationError('Unable to determine timestamp ' 'for crumb')
 
         rv = {
             'type': ty,
@@ -127,6 +127,7 @@ class Breadcrumbs(Interface):
                 'data': x.get('data') or None,
                 'event_id': x.get('event_id'),
             }
+
         return {
             'values': [_convert(v) for v in self.values],
         }

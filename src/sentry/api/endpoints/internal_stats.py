@@ -14,9 +14,7 @@ class InternalStatsEndpoint(Endpoint, StatsMixin):
         key = request.GET['key']
 
         data = tsdb.get_range(
-            model=tsdb.models.internal,
-            keys=[key],
-            **self._parse_args(request)
+            model=tsdb.models.internal, keys=[key], **self._parse_args(request)
         )[key]
 
         return Response(data)

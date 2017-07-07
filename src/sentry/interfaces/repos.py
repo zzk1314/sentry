@@ -8,6 +8,7 @@ from sentry.interfaces.base import Interface, InterfaceValidationError
 
 
 class Repos(Interface):
+
     """
     Details about repositories connected to an event.
 
@@ -22,6 +23,7 @@ class Repos(Interface):
     >>>     }
     >>> }
     """
+
     @classmethod
     def to_python(cls, data):
         result = {}

@@ -11,6 +11,7 @@ from sentry.buffer import Buffer
 
 
 class InProcessBuffer(Buffer):
+
     """
     In-process buffer which computes changes in real-time.
 

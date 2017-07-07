@@ -5,6 +5,7 @@ from string import Formatter
 
 
 class dontexplodedict(object):
+
     """
     A dictionary that won't throw a KeyError and will
     return back a sensible default value to be used in

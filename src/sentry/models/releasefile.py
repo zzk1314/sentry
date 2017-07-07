@@ -15,6 +15,7 @@ from sentry.utils.hashlib import sha1_text
 
 
 class ReleaseFile(Model):
+
     r"""
     A ReleaseFile is an association between a Release and a File.
 
@@ -50,7 +51,8 @@ class ReleaseFile(Model):
         if 'name' in kwargs and 'ident' not in kwargs:
             dist = kwargs.get('dist') or self.dist
             kwargs['ident'] = self.ident = type(self).get_ident(
-                kwargs['name'], dist and dist.name or dist)
+                kwargs['name'], dist and dist.name or dist
+            )
         return super(ReleaseFile, self).update(*args, **kwargs)
 
     @classmethod

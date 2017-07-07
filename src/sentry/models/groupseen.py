@@ -15,6 +15,7 @@ from sentry.db.models import FlexibleForeignKey, Model, sane_repr
 
 
 class GroupSeen(Model):
+
     """
     Track when a group is last seen by a user.
     """

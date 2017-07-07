@@ -23,6 +23,7 @@ logger = logging.getLogger('sentry')
 
 
 class GzippedDictField(models.TextField):
+
     """
     Slightly different from a JSONField in the sense that the default
     value is a dictionary.

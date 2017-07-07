@@ -15,6 +15,7 @@ from sentry.utils.safe import trim
 
 
 class Query(Interface):
+
     """
     A SQL query with an optional string describing the SQL driver, ``engine``.
 
@@ -23,6 +24,7 @@ class Query(Interface):
     >>>     "engine": "psycopg2"
     >>> }
     """
+
     @classmethod
     def to_python(cls, data):
         if not data.get('query'):

@@ -30,6 +30,7 @@ def get_with_prefix(d, k, default=None, delimiter=":"):
 
 
 class Sdk(Interface):
+
     """
     The SDK used to transmit this event.
 
@@ -39,6 +40,7 @@ class Sdk(Interface):
     >>>     "integrations": ["log4j"]
     >>> }
     """
+
     @classmethod
     def to_python(cls, data):
         name = data.get('name')

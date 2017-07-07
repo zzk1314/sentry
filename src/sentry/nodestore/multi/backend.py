@@ -17,6 +17,7 @@ from sentry.utils.imports import import_string
 
 
 class MultiNodeStorage(NodeStorage):
+
     """
     A backend which will write to multiple backends, and read from a random
     choice.

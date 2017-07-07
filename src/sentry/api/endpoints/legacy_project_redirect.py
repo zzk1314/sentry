@@ -35,9 +35,11 @@ class LegacyProjectRedirectEndpoint(Endpoint):
 
         """
         return HttpResponseRedirect(
-            absolute_uri('/api/0/projects/{}/{}/{}'.format(
-                project.organization.slug,
-                project.slug,
-                path or '',
-            ))
+            absolute_uri(
+                '/api/0/projects/{}/{}/{}'.format(
+                    project.organization.slug,
+                    project.slug,
+                    path or '',
+                )
+            )
         )

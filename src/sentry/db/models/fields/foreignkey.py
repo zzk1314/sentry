@@ -26,7 +26,9 @@ class FlexibleForeignKey(ForeignKey):
 if 'south' in settings.INSTALLED_APPS:
     from south.modelsinspector import add_introspection_rules
 
-    add_introspection_rules([], [
-        "^sentry\.db\.models\.fields\.FlexibleForeignKey",
-        "^sentry\.db\.models\.fields\.foreignkey\.FlexibleForeignKey",
-    ])
+    add_introspection_rules(
+        [], [
+            "^sentry\.db\.models\.fields\.FlexibleForeignKey",
+            "^sentry\.db\.models\.fields\.foreignkey\.FlexibleForeignKey",
+        ]
+    )

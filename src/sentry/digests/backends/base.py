@@ -5,7 +5,6 @@ import logging
 from sentry.utils.imports import import_string
 from sentry.utils.services import Service
 
-
 logger = logging.getLogger('sentry.digests')
 
 
@@ -19,6 +18,7 @@ DEFAULT_CODEC = {
 
 
 class InvalidState(Exception):
+
     """
     An error that is raised when an action cannot be performed on a
     timeline in it's current state.
@@ -26,6 +26,7 @@ class InvalidState(Exception):
 
 
 class Backend(Service):
+
     """
     A digest backend coordinates the addition of records to timelines, as well
     as scheduling their digestion (processing.) This allows for summarizations
@@ -57,10 +58,7 @@ class Backend(Service):
     be preempted by a new record being added to the timeline, requiring it to
     be transitioned to "waiting" instead.)
     """
-    __all__ = (
-        'add', 'delete', 'digest', 'enabled', 'maintenance', 'schedule',
-        'validate'
-    )
+    __all__ = ('add', 'delete', 'digest', 'enabled', 'maintenance', 'schedule', 'validate')
 
     def __init__(self, **options):
         # The ``minimum_delay`` option defines the default minimum amount of
@@ -102,7 +100,8 @@ class Backend(Service):
         else:
             if options.get('truncation_chance') is not None:
                 raise TypeError(
-                    'No timeline capacity has been set, "truncation_chance" must be None.')
+                    'No timeline capacity has been set, "truncation_chance" must be None.'
+                )
             else:
                 self.truncation_chance = 0.0
 

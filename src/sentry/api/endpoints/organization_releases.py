@@ -32,10 +32,7 @@ def create_new_org_release_scenario(runner):
 
 @scenario('ListOrganizationReleases')
 def list_org_releases_scenario(runner):
-    runner.request(
-        method='GET',
-        path='/organizations/%s/releases/' % (runner.org.slug,)
-    )
+    runner.request(method='GET', path='/organizations/%s/releases/' % (runner.org.slug,))
 
 
 class ReleaseSerializerWithProjects(ReleaseSerializer):
@@ -135,7 +132,8 @@ class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
             result = serializer.object
 
             allowed_projects = {
-                p.slug: p for p in self.get_allowed_projects(request, organization)
+                p.slug: p
+                for p in self.get_allowed_projects(request, organization)
             }
 
             projects = []
@@ -184,23 +182,26 @@ class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
 
             refs = result.get('refs')
             if not refs:
-                refs = [{
-                    'repository': r['repository'],
-                    'previousCommit': r.get('previousId'),
-                    'commit': r['currentId'],
-                } for r in result.get('headCommits', [])]
+                refs = [
+                    {
+                        'repository': r['repository'],
+                        'previousCommit': r.get('previousId'),
+                        'commit': r['currentId'],
+                    } for r in result.get('headCommits', [])
+                ]
             if refs:
                 if not request.user.is_authenticated():
-                    return Response({
-                        'refs': ['You must use an authenticated API token to fetch refs']
-                    }, status=400)
+                    return Response(
+                        {
+                            'refs': ['You must use an authenticated API token to fetch refs']
+                        },
+                        status=400
+                    )
                 fetch_commits = not commit_list
                 try:
                     release.set_refs(refs, request.user, fetch=fetch_commits)
                 except InvalidRepository as exc:
-                    return Response({
-                        'refs': [exc.message]
-                    }, status=400)
+                    return Response({'refs': [exc.message]}, status=400)
 
             if not created and not new_projects:
                 # This is the closest status code that makes sense, and we want

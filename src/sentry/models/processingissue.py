@@ -12,10 +12,7 @@ from django.db import models
 from django.db.models.aggregates import Count
 from django.utils import timezone
 
-from sentry.db.models import (
-    BaseManager, Model, FlexibleForeignKey, GzippedDictField,
-    sane_repr
-)
+from sentry.db.models import (BaseManager, Model, FlexibleForeignKey, GzippedDictField, sane_repr)
 
 
 def get_processing_issue_checksum(scope, object):
@@ -26,7 +23,6 @@ def get_processing_issue_checksum(scope, object):
 
 
 class ProcessingIssueManager(BaseManager):
-
     def with_num_events(self):
         return self.annotate(num_events=Count('eventprocessingissue'))
 
@@ -60,10 +56,11 @@ class ProcessingIssueManager(BaseManager):
         if there are more.
         """
         from sentry.models import RawEvent
-        rv = list(RawEvent.objects
-                  .filter(project_id=project_id)
-                  .annotate(eventissue_count=Count('eventprocessingissue'))
-                  .filter(eventissue_count=0)[:limit])
+        rv = list(
+            RawEvent.objects.filter(project_id=project_id)
+            .annotate(eventissue_count=Count('eventprocessingissue'))
+            .filter(eventissue_count=0)[:limit]
+        )
         if len(rv) > limit:
             rv = rv[:limit]
             has_more = True
@@ -74,8 +71,7 @@ class ProcessingIssueManager(BaseManager):
         RawEvent.objects.bind_nodes(rv, 'data')
         return rv, has_more
 
-    def record_processing_issue(self, raw_event, scope, object,
-                                type, data=None):
+    def record_processing_issue(self, raw_event, scope, object, type, data=None):
         """Records a new processing issue for the given raw event."""
         data = dict(data or {})
         checksum = get_processing_issue_checksum(scope, object)

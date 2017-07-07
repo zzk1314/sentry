@@ -85,10 +85,7 @@ class ProjectOptionManager(BaseManager):
 
     def reload_cache(self, project_id):
         cache_key = self._make_key(project_id)
-        result = dict(
-            (i.key, i.value)
-            for i in self.filter(project=project_id)
-        )
+        result = dict((i.key, i.value) for i in self.filter(project=project_id))
         cache.set(cache_key, result)
         self.__cache[project_id] = result
         return result
@@ -106,6 +103,7 @@ class ProjectOptionManager(BaseManager):
 
 
 class ProjectOption(Model):
+
     """
     Project options apply only to an instance of a project.
 

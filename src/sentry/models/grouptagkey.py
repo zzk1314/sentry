@@ -11,12 +11,12 @@ from django.db import models
 
 from sentry.constants import MAX_TAG_KEY_LENGTH
 from sentry.db.models import (
-    Model, BoundedPositiveIntegerField, BaseManager, FlexibleForeignKey,
-    sane_repr
+    Model, BoundedPositiveIntegerField, BaseManager, FlexibleForeignKey, sane_repr
 )
 
 
 class GroupTagKey(Model):
+
     """
     Stores a unique tag key name for a group.
 

@@ -14,10 +14,7 @@ from sentry.utils.functional import apply_values
 class GroupSimilarIssuesEndpoint(GroupEndpoint):
     def get(self, request, group):
         # TODO(tkaemming): This should have a limit somewhere.
-        results = filter(
-            lambda (group_id, scores): group_id != group.id,
-            features.query(group)
-        )
+        results = filter(lambda (group_id, scores): group_id != group.id, features.query(group))
 
         serialized_groups = apply_values(
             functools.partial(serialize, user=request.user),
@@ -31,10 +28,7 @@ class GroupSimilarIssuesEndpoint(GroupEndpoint):
             filter(
                 lambda (group_id, scores): group_id is not None,
                 map(
-                    lambda (group_id, scores): (
-                        serialized_groups.get(group_id),
-                        scores,
-                    ),
+                    lambda (group_id, scores): (serialized_groups.get(group_id), scores,),
                     results,
                 ),
             ),

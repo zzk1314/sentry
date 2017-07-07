@@ -7,8 +7,8 @@ import psycopg2 as Database
 from django.db.backends.postgresql_psycopg2.base import DatabaseWrapper
 
 from .decorators import (
-    capture_transaction_exceptions, auto_reconnect_cursor,
-    auto_reconnect_connection, less_shitty_error_messages
+    capture_transaction_exceptions, auto_reconnect_cursor, auto_reconnect_connection,
+    less_shitty_error_messages
 )
 from .operations import DatabaseOperations
 
@@ -16,6 +16,7 @@ __all__ = ('DatabaseWrapper',)
 
 
 class CursorWrapper(object):
+
     """
     A wrapper around the postgresql_psycopg2 backend which handles various events
     from cursors, such as auto reconnects and lazy time zone evaluation.

@@ -32,6 +32,7 @@ def validate_email(value, required=True):
 
 
 class User(Interface):
+
     """
     An interface which describes the authenticated User for a request.
 
@@ -48,6 +49,7 @@ class User(Interface):
     >>>     "optional": "value"
     >>> }
     """
+
     @classmethod
     def to_python(cls, data):
         data = data.copy()

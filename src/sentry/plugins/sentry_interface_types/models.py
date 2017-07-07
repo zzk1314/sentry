@@ -16,6 +16,7 @@ from sentry.plugins.bases.tag import TagPlugin
 
 
 class InterfaceTypePlugin(TagPlugin):
+
     """
     Automatically adds the 'interface_type' tag from events containing referencing
     the class name of each interface (e.g. Http, Stacktrace, Exception).
@@ -31,5 +32,6 @@ class InterfaceTypePlugin(TagPlugin):
 
     def get_tag_values(self, event):
         return [i.rsplit('.', 1)[-1] for i in six.iterkeys(event.interfaces)]
+
 
 register(InterfaceTypePlugin)

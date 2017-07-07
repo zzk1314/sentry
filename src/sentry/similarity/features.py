@@ -13,7 +13,6 @@ from sentry.utils.dates import to_timestamp
 
 logger = logging.getLogger('sentry.similarity')
 
-
 FRAME_ITEM_SEPARATOR = b'\x00'
 FRAME_PAIR_SEPARATOR = b'\x01'
 FRAME_SEPARATOR = b'\x02'
@@ -25,6 +24,7 @@ FRAME_SIGNATURE_KEY = b'\x13'
 
 
 class InsufficientContext(Exception):
+
     """\
     Exception raised when a signature cannot be generated for a frame due to
     insufficient context.
@@ -48,9 +48,7 @@ def get_frame_signature(frame, lines=5):
 
     return struct.pack(
         '>i',
-        mmh3.hash(
-            u'\n'.join(attributes).encode('utf8')
-        ),
+        mmh3.hash(u'\n'.join(attributes).encode('utf8')),
     )
 
 
@@ -71,10 +69,7 @@ def serialize_frame(frame):
     else:
         attributes[FRAME_FUNCTION_KEY] = function_name.encode('utf8')
 
-    scopes = (
-        (FRAME_MODULE_KEY, 'module'),
-        (FRAME_FILENAME_KEY, 'filename'),
-    )
+    scopes = ((FRAME_MODULE_KEY, 'module'), (FRAME_FILENAME_KEY, 'filename'),)
 
     for key, name in scopes:
         value = frame.get(name)
@@ -100,14 +95,15 @@ def get_exception_frames(exception):
         frames = exception['stacktrace']['frames']
     except (TypeError, KeyError):
         logger.info(
-            'Could not extract frames from exception, returning empty sequence.',
-            exc_info=True)
+            'Could not extract frames from exception, returning empty sequence.', exc_info=True
+        )
         frames = []
     else:
         if not isinstance(frames, Sequence):
             logger.info(
                 'Expected frames to be a sequence but got %r, returning empty sequence instead.',
-                type(frames))
+                type(frames)
+            )
             frames = []
 
     return frames
@@ -143,7 +139,8 @@ class ExceptionFeature(object):
                 'Could not extract characteristic(s) from %r due to error: %r',
                 event,
                 error,
-                exc_info=True)
+                exc_info=True
+            )
             return
 
         for exception in exceptions:
@@ -152,13 +149,13 @@ class ExceptionFeature(object):
             except InsufficientContext as error:
                 logger.debug(
                     'Could not extract characteristic(s) from exception in %r due to expected error: %r',
-                    event,
-                    error)
+                    event, error
+                )
             except Exception as error:
                 logger.exception(
                     'Could not extract characteristic(s) from exception in %r due to error: %r',
-                    event,
-                    error)
+                    event, error
+                )
 
 
 class MessageFeature(object):
@@ -173,16 +170,17 @@ class MessageFeature(object):
                 'Could not extract characteristic(s) from %r due to error: %r',
                 event,
                 error,
-                exc_info=True)
+                exc_info=True
+            )
             return
 
         try:
             yield self.function(message)
         except Exception as error:
             logger.exception(
-                'Could not extract characteristic(s) from message of %r due to error: %r',
-                event,
-                error)
+                'Could not extract characteristic(s) from message of %r due to error: %r', event,
+                error
+            )
 
 
 class FeatureSet(object):
@@ -203,10 +201,7 @@ class FeatureSet(object):
         for label, feature in self.features.items():
             for characteristics in feature.extract(event):
                 if characteristics:
-                    items.append((
-                        self.aliases[label],
-                        characteristics,
-                    ))
+                    items.append((self.aliases[label], characteristics,))
         return self.index.record(
             self.__get_scope(event.group),
             self.__get_key(event.group),
@@ -255,7 +250,8 @@ class FeatureSet(object):
         unsafe_scopes = set(scopes.keys()) - set([self.__get_scope(destination)])
         if unsafe_scopes and not allow_unsafe:
             raise ValueError(
-                'all groups must belong to same project if unsafe merges are not allowed')
+                'all groups must belong to same project if unsafe merges are not allowed'
+            )
 
         destination_scope = self.__get_scope(destination)
         destination_key = self.__get_key(destination)
@@ -272,8 +268,7 @@ class FeatureSet(object):
             if source_scope != destination_scope:
                 imports = [
                     (alias, destination_key, data)
-                    for (alias, _), data in
-                    zip(
+                    for (alias, _), data in zip(
                         items,
                         self.index.export(source_scope, items),
                     )

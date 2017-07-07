@@ -89,10 +89,7 @@ class OrganizationOptionManager(BaseManager):
 
     def reload_cache(self, organization_id):
         cache_key = self._make_key(organization_id)
-        result = dict(
-            (i.key, i.value)
-            for i in self.filter(organization=organization_id)
-        )
+        result = dict((i.key, i.value) for i in self.filter(organization=organization_id))
         cache.set(cache_key, result)
         self.__cache[organization_id] = result
         return result
@@ -110,6 +107,7 @@ class OrganizationOptionManager(BaseManager):
 
 
 class OrganizationOption(Model):
+
     """
     Organization options apply only to an instance of a organization.
 

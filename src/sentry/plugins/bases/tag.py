@@ -26,7 +26,5 @@ class TagPlugin(Plugin2):
 
     def get_tags(self, event, **kwargs):
         return [
-            (self.tag, v)
-            for v in self.get_tag_values(event)
-            if len(v) <= MAX_TAG_VALUE_LENGTH
+            (self.tag, v) for v in self.get_tag_values(event) if len(v) <= MAX_TAG_VALUE_LENGTH
         ]

@@ -32,10 +32,7 @@ class UserAuthenticatorDetailsEndpoint(UserEndpoint):
             # process.
             if not authenticator.interface.is_backup_interface:
                 interfaces = Authenticator.objects.all_interfaces_for_user(user)
-                backup_interfaces = [
-                    x for x in interfaces
-                    if x.is_backup_interface
-                ]
+                backup_interfaces = [x for x in interfaces if x.is_backup_interface]
                 if len(backup_interfaces) == len(interfaces):
                     for iface in backup_interfaces:
                         iface.authenticator.delete()

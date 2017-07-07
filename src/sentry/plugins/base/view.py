@@ -8,6 +8,7 @@ from .response import Response
 
 
 class PluggableViewMixin(object):
+
     """
     A mix-in which provides a render method which returns a special object to
     enable embedding of content within base-views.

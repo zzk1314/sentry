@@ -15,6 +15,7 @@ from sentry.db.models.fields import EncryptedPickledObjectField
 
 
 class Option(Model):
+
     """
     Global options which apply in most situations as defaults,
     and generally can be overwritten by per-project options.

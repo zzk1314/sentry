@@ -90,9 +90,7 @@ def createuser(email, password, superuser, no_password, no_input):
 
     # TODO(dcramer): kill this when we improve flows
     if settings.SENTRY_SINGLE_ORGANIZATION:
-        from sentry.models import (
-            Organization, OrganizationMember, OrganizationMemberTeam, Team
-        )
+        from sentry.models import (Organization, OrganizationMember, OrganizationMemberTeam, Team)
 
         org = Organization.get_default()
         if superuser:

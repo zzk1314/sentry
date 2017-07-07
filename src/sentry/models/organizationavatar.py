@@ -8,15 +8,13 @@ from . import AvatarBase
 
 
 class OrganizationAvatar(AvatarBase):
+
     """
     An OrganizationAvatar associates an Organization with their avatar photo File
     and contains their preferences for avatar type.
     """
 
-    AVATAR_TYPES = (
-        (0, 'letter_avatar'),
-        (1, 'upload'),
-    )
+    AVATAR_TYPES = ((0, 'letter_avatar'), (1, 'upload'),)
 
     FILE_TYPE = 'avatar.file'
 

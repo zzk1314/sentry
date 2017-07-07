@@ -46,10 +46,9 @@ class LostPasswordHash(Model):
         return self.date_added > timezone.now() - timedelta(hours=48)
 
     def get_absolute_url(self):
-        return absolute_uri(reverse(
-            'sentry-account-recover-confirm',
-            args=[self.user.id, self.hash]
-        ))
+        return absolute_uri(
+            reverse('sentry-account-recover-confirm', args=[self.user.id, self.hash])
+        )
 
     def send_recover_mail(self, request):
         from sentry import options

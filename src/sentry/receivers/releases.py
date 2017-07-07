@@ -92,14 +92,9 @@ post_save.connect(
     weak=False
 )
 
-
 post_save.connect(
-    ensure_release_exists,
-    sender=TagValue,
-    dispatch_uid="ensure_release_exists",
-    weak=False
+    ensure_release_exists, sender=TagValue, dispatch_uid="ensure_release_exists", weak=False
 )
-
 
 post_save.connect(
     resolved_in_commit,

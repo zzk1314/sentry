@@ -20,6 +20,7 @@ from sentry.utils.safe import trim
 
 
 class Message(Interface):
+
     """
     A standard message consisting of a ``message`` arg, an an optional
     ``params`` arg for formatting, and an optional ``formatted`` message which

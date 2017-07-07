@@ -7,6 +7,7 @@ from sentry.web.frontend.base import BaseView
 
 
 class AuthView(BaseView):
+
     """
     A segment of Provider's auth pipeline.
 
@@ -24,6 +25,7 @@ class AuthView(BaseView):
 
 
 class ConfigureView(BaseView, PluggableViewMixin):
+
     """
     """
 

@@ -26,6 +26,7 @@ class UserOptionValue(object):
     committed_deploys_only = '3'
     no_deploys = '4'
 
+
 option_scope_error = 'this is not a supported use case, scope to project OR organization'
 
 
@@ -123,8 +124,8 @@ class UserOptionManager(BaseManager):
             metakey = user_metakey(user)
         if metakey not in self.__metadata:
             result = dict(
-                (i.key, i.value) for i in
-                self.filter(
+                (i.key, i.value)
+                for i in self.filter(
                     user=user,
                     project=project,
                     organization=organization,
@@ -145,6 +146,7 @@ class UserOptionManager(BaseManager):
 # TODO(dcramer): the NULL UNIQUE constraint here isnt valid, and instead has to
 # be manually replaced in the database. We should restructure this model.
 class UserOption(Model):
+
     """
     User options apply only to a user, and optionally a project OR an organization.
 

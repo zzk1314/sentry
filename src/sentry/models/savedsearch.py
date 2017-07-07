@@ -7,6 +7,7 @@ from sentry.db.models import FlexibleForeignKey, Model, sane_repr
 
 
 class SavedSearch(Model):
+
     """
     A saved search query.
     """
@@ -28,6 +29,7 @@ class SavedSearch(Model):
 
 
 class SavedSearchUserDefault(Model):
+
     """
     Indicates the default saved search for a given user
     """

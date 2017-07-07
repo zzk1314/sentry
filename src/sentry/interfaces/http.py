@@ -69,10 +69,7 @@ def format_cookies(value):
     if isinstance(value, dict):
         value = value.items()
 
-    return [
-        list(map(fix_broken_encoding, (k.strip(), v)))
-        for k, v in value
-    ]
+    return [list(map(fix_broken_encoding, (k.strip(), v))) for k, v in value]
 
 
 def fix_broken_encoding(value):
@@ -88,6 +85,7 @@ def fix_broken_encoding(value):
 
 
 class Http(Interface):
+
     """
     The Request information is stored in the Http interface. Two arguments
     are required: ``url`` and ``method``.
@@ -145,8 +143,9 @@ class Http(Interface):
         if query_string:
             # if querystring was a dict, convert it to a string
             if isinstance(query_string, dict):
-                query_string = urlencode([(to_bytes(k), to_bytes(v))
-                                          for k, v in query_string.items()])
+                query_string = urlencode(
+                    [(to_bytes(k), to_bytes(v)) for k, v in query_string.items()]
+                )
             else:
                 query_string = query_string
                 if query_string[0] == '?':
@@ -198,14 +197,16 @@ class Http(Interface):
         return url
 
     def to_email_html(self, event, **kwargs):
-        return render_to_string('sentry/partial/interfaces/http_email.html', {
-            'event': event,
-            'url': self.full_url,
-            'short_url': self.url,
-            'method': self.method,
-            'query_string': self.query_string,
-            'fragment': self.fragment,
-        })
+        return render_to_string(
+            'sentry/partial/interfaces/http_email.html', {
+                'event': event,
+                'url': self.full_url,
+                'short_url': self.url,
+                'method': self.method,
+                'query_string': self.query_string,
+                'fragment': self.fragment,
+            }
+        )
 
     def get_alias(self):
         return 'request'

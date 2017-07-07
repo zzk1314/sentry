@@ -14,6 +14,7 @@ from sentry.plugins.bases.tag import TagPlugin
 
 
 class UrlsPlugin(TagPlugin):
+
     """
     Automatically adds the 'url' tag from events containing interface data
     from ``sentry.interfaces.Http``.
@@ -33,5 +34,6 @@ class UrlsPlugin(TagPlugin):
         if not http.url:
             return []
         return [http.url]
+
 
 register(UrlsPlugin)

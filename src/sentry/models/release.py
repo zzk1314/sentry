@@ -17,8 +17,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 
 from sentry.db.models import (
-    ArrayField, BoundedPositiveIntegerField, FlexibleForeignKey, Model,
-    sane_repr
+    ArrayField, BoundedPositiveIntegerField, FlexibleForeignKey, Model, sane_repr
 )
 
 from sentry.models import CommitFileChange
@@ -27,7 +26,6 @@ from sentry.utils.cache import cache
 from sentry.utils.hashlib import md5_text
 
 logger = logging.getLogger(__name__)
-
 
 _sha1_re = re.compile(r'^[a-f0-9]{40}$')
 _dotted_path_prefix_re = re.compile(r'^([a-zA-Z][a-zA-Z0-9-]+)(\.[a-zA-Z][a-zA-Z0-9-]+)+-')
@@ -48,6 +46,7 @@ class ReleaseProject(Model):
 
 
 class Release(Model):
+
     """
     A release is generally created when a new version is pushed into a
     production state.
@@ -55,8 +54,9 @@ class Release(Model):
     __core__ = False
 
     organization = FlexibleForeignKey('sentry.Organization')
-    projects = models.ManyToManyField('sentry.Project', related_name='releases',
-                                      through=ReleaseProject)
+    projects = models.ManyToManyField(
+        'sentry.Project', related_name='releases', through=ReleaseProject
+    )
     # DEPRECATED
     project_id = BoundedPositiveIntegerField(null=True)
     version = models.CharField(max_length=64)
@@ -89,8 +89,9 @@ class Release(Model):
 
     @staticmethod
     def is_valid_version(value):
-        return not (any(c in value for c in BAD_RELEASE_CHARS)
-                    or value in ('.', '..') or not value)
+        return not (
+            any(c in value for c in BAD_RELEASE_CHARS) or value in ('.', '..') or not value
+        )
 
     @classmethod
     def get_cache_key(cls, organization_id, version):
@@ -131,11 +132,13 @@ class Release(Model):
             # TODO(dcramer): if the cache result is -1 we could attempt a
             # default create here instead of default get
             project_version = ('%s-%s' % (project.slug, version))[:64]
-            releases = list(cls.objects.filter(
-                organization_id=project.organization_id,
-                version__in=[version, project_version],
-                projects=project
-            ))
+            releases = list(
+                cls.objects.filter(
+                    organization_id=project.organization_id,
+                    version__in=[version, project_version],
+                    projects=project
+                )
+            )
             if releases:
                 try:
                     release = [r for r in releases if r.version == project_version][0]
@@ -152,8 +155,7 @@ class Release(Model):
                         )
                 except IntegrityError:
                     release = cls.objects.get(
-                        organization_id=project.organization_id,
-                        version=version
+                        organization_id=project.organization_id, version=version
                     )
                 release.add_project(project)
                 if not project.flags.has_releases:
@@ -178,13 +180,13 @@ class Release(Model):
         # ReleaseFile.release
 
         from sentry.models import (
-            ReleaseCommit, ReleaseEnvironment, ReleaseFile, ReleaseProject,
-            Group, GroupRelease, GroupResolution
+            ReleaseCommit, ReleaseEnvironment, ReleaseFile, ReleaseProject, Group, GroupRelease,
+            GroupResolution
         )
 
         model_list = (
-            ReleaseCommit, ReleaseEnvironment, ReleaseFile, ReleaseProject,
-            GroupRelease, GroupResolution
+            ReleaseCommit, ReleaseEnvironment, ReleaseFile, ReleaseProject, GroupRelease,
+            GroupResolution
         )
         for release in from_releases:
             for model in model_list:
@@ -194,22 +196,16 @@ class Release(Model):
                     update_kwargs = {'release_id': to_release.id}
                 try:
                     with transaction.atomic():
-                        model.objects.filter(
-                            release_id=release.id
-                        ).update(**update_kwargs)
+                        model.objects.filter(release_id=release.id).update(**update_kwargs)
                 except IntegrityError:
                     for item in model.objects.filter(release_id=release.id):
                         try:
                             with transaction.atomic():
-                                model.objects.filter(
-                                    id=item.id
-                                ).update(**update_kwargs)
+                                model.objects.filter(id=item.id).update(**update_kwargs)
                         except IntegrityError:
                             item.delete()
 
-            Group.objects.filter(
-                first_release=release
-            ).update(first_release=to_release)
+            Group.objects.filter(first_release=release).update(first_release=to_release)
 
             release.delete()
 
@@ -239,10 +235,7 @@ class Release(Model):
     def get_dist(self, name):
         from sentry.models import Distribution
         try:
-            return Distribution.objects.get(
-                name=name,
-                release=self
-            )
+            return Distribution.objects.get(name=name, release=self)
         except Distribution.DoesNotExist:
             pass
 
@@ -279,10 +272,12 @@ class Release(Model):
         ).exclude(version=self.version).order_by('-date_added').first()
 
         names = {r['repository'] for r in refs}
-        repos = list(Repository.objects.filter(
-            organization_id=self.organization_id,
-            name__in=names,
-        ))
+        repos = list(
+            Repository.objects.filter(
+                organization_id=self.organization_id,
+                name__in=names,
+            )
+        )
         repos_by_name = {r.name: r for r in repos}
         invalid_repos = names - set(repos_by_name.keys())
         if invalid_repos:
@@ -325,8 +320,8 @@ class Release(Model):
         commits.
         """
         from sentry.models import (
-            Commit, CommitAuthor, Group, GroupCommitResolution, GroupResolution,
-            GroupStatus, ReleaseCommit, Repository
+            Commit, CommitAuthor, Group, GroupCommitResolution, GroupResolution, GroupStatus,
+            ReleaseCommit, Repository
         )
         from sentry.plugins.providers.repository import RepositoryProvider
 
@@ -347,8 +342,8 @@ class Release(Model):
             commit_author_by_commit = {}
             latest_commit = None
             for idx, data in enumerate(commit_list):
-                repo_name = data.get(
-                    'repository') or 'organization-{}'.format(self.organization_id)
+                repo_name = data.get('repository'
+                                     ) or 'organization-{}'.format(self.organization_id)
                 if repo_name not in repos:
                     repos[repo_name] = repo = Repository.objects.get_or_create(
                         organization_id=self.organization_id,
@@ -360,11 +355,9 @@ class Release(Model):
                 author_email = data.get('author_email')
                 if author_email is None and data.get('author_name'):
                     author_email = (
-                        re.sub(
-                            r'[^a-zA-Z0-9\-_\.]*',
-                            '',
-                            data['author_name']).lower() +
-                        '@localhost')
+                        re.sub(r'[^a-zA-Z0-9\-_\.]*', '', data['author_name']).lower() +
+                        '@localhost'
+                    )
 
                 if not author_email:
                     author = None
@@ -427,18 +420,22 @@ class Release(Model):
 
             self.update(
                 commit_count=len(commit_list),
-                authors=[six.text_type(a_id) for a_id in ReleaseCommit.objects.filter(
-                    release=self,
-                    commit__author_id__isnull=False,
-                ).values_list('commit__author_id', flat=True).distinct()],
+                authors=[
+                    six.text_type(a_id)
+                    for a_id in ReleaseCommit.objects.filter(
+                        release=self,
+                        commit__author_id__isnull=False,
+                    ).values_list('commit__author_id', flat=True).distinct()
+                ],
                 last_commit_id=latest_commit.id if latest_commit else None,
             )
 
-        commit_resolutions = list(GroupCommitResolution.objects.filter(
-            commit_id__in=ReleaseCommit.objects.filter(
-                release=self
-            ).values_list('commit_id', flat=True),
-        ).values_list('group_id', 'commit_id'))
+        commit_resolutions = list(
+            GroupCommitResolution.objects.filter(
+                commit_id__in=ReleaseCommit.objects.filter(release=self)
+                .values_list('commit_id', flat=True),
+            ).values_list('group_id', 'commit_id')
+        )
         user_by_author = {None: None}
         for group_id, commit_id in commit_resolutions:
             author = commit_author_by_commit.get(commit_id)
@@ -461,6 +458,4 @@ class Release(Model):
                 )
                 Group.objects.filter(
                     id=group_id,
-                ).update(
-                    status=GroupStatus.RESOLVED
-                )
+                ).update(status=GroupStatus.RESOLVED)

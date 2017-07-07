@@ -39,6 +39,7 @@ class InterfaceValidationError(Exception):
 
 
 class Interface(object):
+
     """
     An interface is a structured representation of data, which may
     render differently than the default ``extra`` metadata in an event.
@@ -86,9 +87,7 @@ class Interface(object):
         # and save (seriously) ridiculous amounts of bytes
         # XXX(dcramer): its important that we keep zero values here, but empty
         # lists and strings get discarded as we've deemed them not important
-        return dict(
-            (k, v) for k, v in six.iteritems(self._data) if (v == 0 or v)
-        )
+        return dict((k, v) for k, v in six.iteritems(self._data) if (v == 0 or v))
 
     def get_path(self):
         cls = type(self)

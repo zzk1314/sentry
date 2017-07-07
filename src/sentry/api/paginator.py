@@ -143,9 +143,9 @@ class DateTimePaginator(BasePaginator):
         return math.floor(value)
 
     def value_from_cursor(self, cursor):
-        return datetime.fromtimestamp(
-            float(cursor.value) / self.multiplier
-        ).replace(tzinfo=timezone.utc)
+        return datetime.fromtimestamp(float(cursor.value) / self.multiplier).replace(
+            tzinfo=timezone.utc
+        )
 
 
 # TODO(dcramer): previous cursors are too complex at the moment for many things
