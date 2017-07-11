@@ -27,6 +27,27 @@ class Service(object):
         """
 
 
+def build_lazy_method_wrapper(base, service, name):
+    class LazyMethodDocumentationDescriptor(object):
+        __slots__ = []
+
+        def __get__(self, instance, owner):
+            return getattr(service, name).__doc__
+
+    class LazyMethodWrapper(object):
+        __doc__ = LazyMethodDocumentationDescriptor()
+        __slots__ = []
+        __name__ = '<LazyMethodWrapper: {}.{}>'.format(base.__name__, name)
+
+        def __repr__(self):
+            return '<{}: {}.{}>'.format(type(self).__name__, service, name)
+
+        def __call__(self, *args, **kwargs):
+            return getattr(service, name)(*args, **kwargs)
+
+    return LazyMethodWrapper()
+
+
 class LazyServiceWrapper(LazyObject):
     """
     Lazyily instantiates a standard Sentry service class.
@@ -71,6 +92,6 @@ class LazyServiceWrapper(LazyObject):
         base = self._base
         for key in itertools.chain(base.__all__, ('validate', 'setup')):
             if inspect.ismethod(getattr(base, key)):
-                context[key] = (lambda f: lambda *a, **k: getattr(self, f)(*a, **k))(key)
+                context[key] = build_lazy_method_wrapper(base, self, key)
             else:
                 context[key] = getattr(base, key)
