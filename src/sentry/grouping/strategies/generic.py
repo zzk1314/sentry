@@ -64,3 +64,9 @@ class GenericStacktraceStrategy(Strategy):
 
         if stack_invalid:
             return
+
+        for frame in stacktrace.frames:
+            hasher.contribute_value([
+                frame.module,
+                frame.function,
+            ])
