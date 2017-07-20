@@ -138,6 +138,7 @@ class StrategyPick(object):
         return registered_strategies[full_id]
 
     def process_interfaces(self, interfaces, all=False):
+        """Processes the interfaces with the best picked strategy."""
         hasher = GroupHasher(self)
         iterator = izip(self.old_strategies, self.new_strategies)
         rv = []
@@ -204,8 +205,17 @@ class GroupHasher(object):
         finally:
             self.leave_strategy()
 
+    def contribute_value(self, value):
+        """Contributes a single value to the hasher"""
+        if isinstance(value, (tuple, list)):
+            for value in value:
+                self.contribute_value(value)
+        else:
+            self.current_object['values'].append(value)
+
     def contribute_nested(self, identifier, interfaces,
                           preferred_version=None):
+        """Contributes a nested strategy to the hasher."""
         strategy_version = self.pick.find_strategy(
             identifier, self.current_flavor_key, preferred_version)
         with self.nested_strategy(strategy_version):
@@ -216,6 +226,7 @@ class GroupHasher(object):
             )
 
     def hash_interfaces(self, identifier, version, flavor_key, interfaces):
+        """Tells the hasher to hash a specific strategy for a flavor."""
         try:
             strategy_version = self.pick.find_strategy(
                 identifier, version, flavor_key)
