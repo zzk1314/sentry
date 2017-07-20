@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import six
 from contextlib import contextmanager
+from itertools import izip
 
 from sentry.grouping.flavors import get_event_flavor_keys
 
@@ -22,6 +23,8 @@ class StrategyVersion(object):
 
     def __init__(self, strategy_class, identifier, version, priority, flavors):
         self.strategy_class = strategy_class
+        # XXX: hmm?
+        self.strategy = strategy_class()
         self.identifier = identifier
         self.version = version
         self.priority = priority
@@ -34,7 +37,7 @@ class StrategyVersion(object):
     def get_applicable_flavor(self, data, flavor_keys):
         for flavor_key in flavor_keys:
             if flavor_key in self.flavors and \
-               self.strategy_class.used_strategy_versionslicable_for_data(data):
+               self.strategy_class.is_applicable_for_data(data):
                 return flavor_key
         return None
 
@@ -65,7 +68,7 @@ def register_strategy(identifier, version, priority=100, flavors=None):
 class Strategy(object):
 
     @classmethod
-    def used_strategy_versionslicable_for_data(cls, data):
+    def is_applicable_for_data(cls, data):
         return False
 
 
@@ -131,31 +134,52 @@ class StrategyPick(object):
         version = self.find_strategy_version(identifier, preferred_version)
         if version is None:
             raise StrategyNotFound(identifier)
+        full_id = '%s:%s' % (identifier, version)
+        return registered_strategies[full_id]
 
-    def iter_strategies(self):
-        for item in self.old_strategies:
-            yield item
-        for item in self.new_strategies:
-            yield item
+    def process_interfaces(self, interfaces, all=False):
+        hasher = GroupHasher(self)
+        iterator = izip(self.old_strategies, self.new_strategies)
+        rv = []
+
+        for identifier, version, flavor_key in iterator:
+            obj = hasher.hash_interfaces(
+                identifier, version, flavor_key, interfaces)
+            if obj is not None:
+                if not all:
+                    return obj
+                rv.append(obj)
+
+        if all:
+            return rv
 
 
 class GroupHasher(object):
 
-    def __init__(self, pick, platform):
+    def __init__(self, pick):
         self.stack = []
         self.pick = pick
 
     @property
     def current_object(self):
-        return self.stack[-1][2]
+        try:
+            return self.stack[-1][2]
+        except IndexError:
+            return None
 
     @property
     def current_flavor_key(self):
-        return self.stack[-1][1]
+        try:
+            return self.stack[-1][1]
+        except IndexError:
+            return None
 
     @property
     def current_strategy_version(self):
-        return self.stack[-1][0]
+        try:
+            return self.stack[-1][0]
+        except IndexError:
+            return None
 
     def enter_strategy(self, strategy_version, flavor_key):
         obj = {
@@ -163,17 +187,20 @@ class GroupHasher(object):
             'values': [],
             'nested': [],
         }
-        self.current_object['nested'].append(obj)
+        cur_obj = self.current_object
+        if cur_obj is not None:
+            cur_obj['nested'].append(obj)
         self.stack.append((strategy_version, flavor_key, obj))
+        return obj
 
     def leave_strategy(self):
         self.stack.pop()
 
     @contextmanager
     def nested_strategy(self, strategy_version):
-        self.enter_strategy(strategy_version)
+        obj = self.enter_strategy(strategy_version)
         try:
-            yield
+            yield obj
         finally:
             self.leave_strategy()
 
@@ -183,16 +210,46 @@ class GroupHasher(object):
             identifier, self.current_flavor_key, preferred_version)
         with self.nested_strategy(strategy_version):
             strategy_version.strategy.hash_interfaces(
-                identifier=identifier,
+                interfaces=interfaces,
                 platform=self.pick.platform,
                 hasher=self
             )
+
+    def hash_interfaces(self, identifier, version, flavor_key, interfaces):
+        try:
+            strategy_version = self.pick.find_strategy(
+                identifier, version, flavor_key)
+        except StrategyNotFound:
+            return
+        obj = self.enter_strategy(strategy_version, flavor_key)
+        strategy_version.strategy.hash_interfaces(
+            identifier=identifier,
+            platform=self.platform,
+            hasher=self
+        )
+        self.leave_strategy()
+        if obj['values'] or obj['nested']:
+            return obj
 
 
 def pick_strategies(project, data):
     """Given a project and the data this returns a list of strategy
     configurations that should be tested.  This might use frozen
     information based on if a flavor keys were used previously.
+
+    Usage::
+
+        from sentry.grouping.strategies.api import pick_strategies
+        pick = pick_strategies(project, data)
+        # later
+        hash_info = pick.process_interfaces(interfaces)
+
+    Or if you want all hashes::
+
+        hash_infos = pick.process_interfaces(interfaces, all=True)
+
+    The creation of the strategies is based on the raw event data
+    wheras the processing takes places on the interfaces.
     """
     flavor_keys = get_event_flavor_keys(data)
     used_strategy_versions = get_used_project_strategy_versions(

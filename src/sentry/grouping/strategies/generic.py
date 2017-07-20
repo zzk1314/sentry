@@ -21,12 +21,14 @@ class GenericExceptionStrategy(Strategy):
             data['sentry.interfaces.Exception'].get('values'))
 
     def hash_interfaces(self, interfaces, platform, hasher):
-        exc = interfaces[0]
+        exc = interfaces['sentry.interfaces.Exception']
         for stacktrace in exc.values:
             hasher.contribute_nested(
                 identifier='generic-stacktrace',
                 preferred_version='latest',
-                interfaces=[stacktrace]
+                interfaces={
+                    'sentry.interfaces.Stacktrace': stacktrace,
+                }
             )
 
 
@@ -46,7 +48,7 @@ class GenericStacktraceStrategy(Strategy):
         return 'sentry.interfaces.Stacktrace' in data
 
     def hash_interfaces(self, interfaces, platform, hasher):
-        stacktrace = interfaces[0]
+        stacktrace = interfaces['sentry.interfaces.Stacktrace']
 
         # Do not hash empty stacktraces
         if not stacktrace.frames:
