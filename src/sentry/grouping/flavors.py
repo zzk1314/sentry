@@ -8,14 +8,13 @@ def get_event_flavor_keys(data):
     used to "freeze" the most likely used strategy for a project so that
     the user can explicitly upgrade later.
 
-    The order in which the keys are returned go from least specific to most
+    The order in which the keys are returned go from lst specific to most
     specific.
     """
-    rv = []
+    rv = ['generic']
 
     platform = data.get('platform')
     if platform:
-        rv.append('platform:generic')
         if platform in VALID_PLATFORMS:
             rv.append('platform:%s' % platform)
 
@@ -25,8 +24,8 @@ def get_event_flavor_keys(data):
         sdk_name = sdk_info.get('name')
         integrations = sdk_info.get('integrations')
         if sdk_name:
-            for match in get_integration_id_for_event(platform, sdk_name, integrations,
-                                                      return_matches=True):
+            for match in reversed(get_integration_id_for_event(
+                    platform, sdk_name, integrations, return_matches=True)):
                 rv.append('integration:%s' % match)
 
     return rv

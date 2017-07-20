@@ -306,32 +306,39 @@ def get_integration_id_for_event(platform, sdk_name, integrations,
                                  return_matches=False):
     rv = []
 
-    if integrations:
-        for integration in integrations:
-            # check special cases
-            if platform in PLATFORM_INTEGRATION_TO_INTEGRATION_ID and \
-                    integration in PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform]:
-                rv.append(
-                    PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform][integration])
+    def _return(value):
+        if not return_matches:
+            raise StopIteration(value)
+        if value not in rv:
+            rv.append(value)
 
-            # try <platform>-<integration>, for example "java-log4j"
-            integration_id = "%s-%s" % (platform, integration)
-            if integration_id in INTEGRATION_ID_TO_PLATFORM_DATA:
-                rv.append(integration_id)
+    try:
+        if integrations:
+            for integration in integrations:
+                # check special cases
+                if platform in PLATFORM_INTEGRATION_TO_INTEGRATION_ID and \
+                        integration in PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform]:
+                    _return(
+                        PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform][integration])
 
-    # try sdk name, for example "sentry-java" -> "java" or "raven-java:log4j" -> "java-log4j"
-    sdk_name = sdk_name.lower().replace(
-        "sentry-", "").replace("raven-", "").replace(":", "-")
-    if sdk_name in INTEGRATION_ID_TO_PLATFORM_DATA:
-        rv.append(sdk_name)
+                # try <platform>-<integration>, for example "java-log4j"
+                integration_id = "%s-%s" % (platform, integration)
+                if integration_id in INTEGRATION_ID_TO_PLATFORM_DATA:
+                    _return(integration_id)
+
+        # try sdk name, for example "sentry-java" -> "java" or "raven-java:log4j" -> "java-log4j"
+        sdk_name = sdk_name.lower().replace(
+            "sentry-", "").replace("raven-", "").replace(":", "-")
+        if sdk_name in INTEGRATION_ID_TO_PLATFORM_DATA:
+            _return(sdk_name)
+    except StopIteration as exc:
+        return exc.args[0]
 
     # If the matches are requested we return them, otherwise we check if we have
     # a single match and then return that before falling back to the platform.
     # The platform fallback is not used when matches are requested
     if return_matches:
         return rv
-    elif rv:
-        return rv[0]
 
     # try platform name, for example "java"
     if platform in INTEGRATION_ID_TO_PLATFORM_DATA:
