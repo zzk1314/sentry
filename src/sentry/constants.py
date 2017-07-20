@@ -111,7 +111,8 @@ DEFAULT_SORT_OPTION = 'date'
 
 # Setup languages for only available locales
 LANGUAGE_MAP = dict(settings.LANGUAGES)
-LANGUAGES = [(k, LANGUAGE_MAP[k]) for k in get_all_languages() if k in LANGUAGE_MAP]
+LANGUAGES = [(k, LANGUAGE_MAP[k])
+             for k in get_all_languages() if k in LANGUAGE_MAP]
 
 # TODO(dcramer): We eventually want to make this user-editable
 TAG_LABELS = {
@@ -141,7 +142,8 @@ SENTRY_RULES = (
 )
 
 # methods as defined by http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html + PATCH
-HTTP_METHODS = ('GET', 'POST', 'PUT', 'OPTIONS', 'HEAD', 'DELETE', 'TRACE', 'CONNECT', 'PATCH')
+HTTP_METHODS = ('GET', 'POST', 'PUT', 'OPTIONS', 'HEAD',
+                'DELETE', 'TRACE', 'CONNECT', 'PATCH')
 
 CLIENT_RESERVED_ATTRS = (
     'project',
@@ -300,23 +302,36 @@ PLATFORM_INTEGRATION_TO_INTEGRATION_ID = {
 # {"platform": "java",
 #  "sdk": {"name": "sentry-java",
 #          "integrations": ["java.util.logging"]}} -> java-logging
-def get_integration_id_for_event(platform, sdk_name, integrations):
+def get_integration_id_for_event(platform, sdk_name, integrations,
+                                 return_matches=False):
+    rv = []
+
     if integrations:
         for integration in integrations:
             # check special cases
             if platform in PLATFORM_INTEGRATION_TO_INTEGRATION_ID and \
                     integration in PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform]:
-                return PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform][integration]
+                rv.append(
+                    PLATFORM_INTEGRATION_TO_INTEGRATION_ID[platform][integration])
 
             # try <platform>-<integration>, for example "java-log4j"
             integration_id = "%s-%s" % (platform, integration)
             if integration_id in INTEGRATION_ID_TO_PLATFORM_DATA:
-                return integration_id
+                rv.append(integration_id)
 
     # try sdk name, for example "sentry-java" -> "java" or "raven-java:log4j" -> "java-log4j"
-    sdk_name = sdk_name.lower().replace("sentry-", "").replace("raven-", "").replace(":", "-")
+    sdk_name = sdk_name.lower().replace(
+        "sentry-", "").replace("raven-", "").replace(":", "-")
     if sdk_name in INTEGRATION_ID_TO_PLATFORM_DATA:
-        return sdk_name
+        rv.append(sdk_name)
+
+    # If the matches are requested we return them, otherwise we check if we have
+    # a single match and then return that before falling back to the platform.
+    # The platform fallback is not used when matches are requested
+    if return_matches:
+        return rv
+    elif rv:
+        return rv[0]
 
     # try platform name, for example "java"
     if platform in INTEGRATION_ID_TO_PLATFORM_DATA:
