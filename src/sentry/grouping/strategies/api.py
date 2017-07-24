@@ -1,13 +1,17 @@
 from __future__ import absolute_import
 
 import six
+
 from contextlib import contextmanager
 from itertools import izip
+from weakref import ref as weakref
 
+from sentry.interfaces.base import get_interface
 from sentry.grouping.flavors import get_event_flavor_keys
 
 
 registered_strategies = {}
+strategies_by_priority = []
 LATEST_STRATEGIES = {}
 
 
@@ -23,8 +27,7 @@ class StrategyVersion(object):
 
     def __init__(self, strategy_class, identifier, version, priority, flavors):
         self.strategy_class = strategy_class
-        # XXX: hmm?
-        self.strategy = strategy_class()
+        self.strategy = strategy_class(self)
         self.identifier = identifier
         self.version = version
         self.priority = priority
@@ -61,11 +64,23 @@ def register_strategy(identifier, version, priority=100, flavors=None):
             LATEST_STRATEGIES[identifier] = version
 
         registered_strategies[v.full_id] = v
+        strategies_by_priority.append(v)
+        strategies_by_priority.sort(key=lambda x: -x.priority)
         return cls
     return decorator
 
 
 class Strategy(object):
+
+    def __init__(self, version):
+        self._version = weakref(version)
+
+    @property
+    def version(self):
+        rv = self._version()
+        if rv is None:
+            raise AttributeError('version')
+        return rv
 
     @classmethod
     def is_applicable_for_data(cls, data):
@@ -86,7 +101,8 @@ def get_applicable_strategies(data, flavor_keys=None):
     if flavor_keys is None:
         flavor_keys = get_event_flavor_keys(data)
     rv = []
-    for strategy_version in six.itervalues(registered_strategies):
+    # XXX: ony pick applicable version
+    for strategy_version in strategies_by_priority:
         flavor_key = strategy_version.get_applicable_flavor(data, flavor_keys)
         if flavor_key is not None:
             rv.append((strategy_version.identifier,
@@ -154,6 +170,19 @@ class StrategyPick(object):
         if all:
             return rv
 
+    def process_event(self, event, all=False):
+        """Processes an event with the best picked strategy."""
+        return self.process_interfaces(event.get_interfaces(), all=all)
+
+    def process_data(self, data, all=False):
+        """Processes event data with the best picked strategy."""
+        interfaces = {}
+        for key, value in six.iteritems(data):
+            interface = get_interface(key)
+            obj = interface.to_python()
+            interfaces[obj.get_path()] = obj
+        return self.process_interfaces(interfaces, all=all)
+
 
 class GroupHasher(object):
 
@@ -181,6 +210,11 @@ class GroupHasher(object):
             return self.stack[-1][0]
         except IndexError:
             return None
+
+    @property
+    def did_contribute(self):
+        obj = self.current_object
+        return bool(obj and (obj['values'] or obj['nested']))
 
     def enter_strategy(self, strategy_version, flavor_key):
         obj = {
@@ -238,8 +272,9 @@ class GroupHasher(object):
             platform=self.platform,
             hasher=self
         )
+        did_contribute = self.did_contribute
         self.leave_strategy()
-        if obj['values'] or obj['nested']:
+        if did_contribute:
             return obj
 
 
