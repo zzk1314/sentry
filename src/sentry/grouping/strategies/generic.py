@@ -6,12 +6,14 @@ from sentry.grouping.strategies.api import Strategy, register_strategy
 
 
 @register_strategy(
+    description='exception',
     identifier='generic-in-app-exception',
     flavors=['generic'],
     priority=100,
     version='1.0',
 )
 @register_strategy(
+    description='exception',
     identifier='generic-exception',
     flavors=['generic'],
     priority=110,
@@ -49,12 +51,14 @@ class GenericExceptionStrategy(Strategy):
 
 
 @register_strategy(
+    description='in-app stacktrace',
     identifier='generic-in-app-stacktrace',
     flavors=['generic'],
     priority=200,
     version='1.0',
 )
 @register_strategy(
+    description='complete stacktrace',
     identifier='generic-system-stacktrace',
     flavors=['generic'],
     priority=210,
@@ -73,7 +77,7 @@ class GenericStacktraceStrategy(Strategy):
         if not frames:
             return []
 
-        if self.identifier == 'generic-system-stacktrace':
+        if self.version.identifier == 'generic-system-stacktrace':
             total_frames = len(frames)
             frames = [f for f in frames if f.in_app] or frames
 

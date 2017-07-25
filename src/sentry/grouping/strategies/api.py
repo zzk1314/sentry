@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import six
 
 from contextlib import contextmanager
-from itertools import izip
+from itertools import chain
 from weakref import ref as weakref
 
 from sentry.interfaces.base import get_interface
@@ -25,13 +25,15 @@ class StrategyNotFound(LookupError):
 
 class StrategyVersion(object):
 
-    def __init__(self, strategy_class, identifier, version, priority, flavors):
+    def __init__(self, strategy_class, identifier, version, priority, flavors,
+                 description):
         self.strategy_class = strategy_class
         self.strategy = strategy_class(self)
         self.identifier = identifier
         self.version = version
         self.priority = priority
         self.flavors = flavors
+        self.description = description
 
     @property
     def full_id(self):
@@ -45,7 +47,8 @@ class StrategyVersion(object):
         return None
 
 
-def register_strategy(identifier, version, priority=100, flavors=None):
+def register_strategy(identifier, version, priority=100, flavors=None,
+                      description=None):
     if not flavors:
         flavors = ['platform:generic']
 
@@ -55,7 +58,8 @@ def register_strategy(identifier, version, priority=100, flavors=None):
             identifier=identifier,
             version=version,
             priority=priority,
-            flavors=flavors
+            flavors=flavors,
+            description=description,
         )
 
         old_version = LATEST_STRATEGIES.get(identifier)
@@ -65,7 +69,7 @@ def register_strategy(identifier, version, priority=100, flavors=None):
 
         registered_strategies[v.full_id] = v
         strategies_by_priority.append(v)
-        strategies_by_priority.sort(key=lambda x: -x.priority)
+        strategies_by_priority.sort(key=lambda x: x.priority)
         return cls
     return decorator
 
@@ -156,7 +160,7 @@ class StrategyPick(object):
     def process_interfaces(self, interfaces, all=False):
         """Processes the interfaces with the best picked strategy."""
         hasher = GroupHasher(self)
-        iterator = izip(self.old_strategies, self.new_strategies)
+        iterator = chain(self.old_strategies, self.new_strategies)
         rv = []
 
         for identifier, version, flavor_key in iterator:
@@ -178,9 +182,12 @@ class StrategyPick(object):
         """Processes event data with the best picked strategy."""
         interfaces = {}
         for key, value in six.iteritems(data):
-            interface = get_interface(key)
-            obj = interface.to_python()
-            interfaces[obj.get_path()] = obj
+            try:
+                interface_cls = get_interface(key)
+            except ValueError:
+                continue
+            interface = interface_cls()
+            interfaces[interface.get_path()] = interface.to_python(value)
         return self.process_interfaces(interfaces, all=all)
 
 
@@ -232,8 +239,8 @@ class GroupHasher(object):
         self.stack.pop()
 
     @contextmanager
-    def nested_strategy(self, strategy_version):
-        obj = self.enter_strategy(strategy_version)
+    def nested_strategy(self, strategy_version, flavor_key):
+        obj = self.enter_strategy(strategy_version, flavor_key)
         try:
             yield obj
         finally:
@@ -250,9 +257,10 @@ class GroupHasher(object):
     def contribute_nested(self, identifier, interfaces,
                           preferred_version=None):
         """Contributes a nested strategy to the hasher."""
+        flavor_key = self.current_flavor_key
         strategy_version = self.pick.find_strategy(
-            identifier, self.current_flavor_key, preferred_version)
-        with self.nested_strategy(strategy_version):
+            identifier, flavor_key, preferred_version)
+        with self.nested_strategy(strategy_version, flavor_key):
             strategy_version.strategy.hash_interfaces(
                 interfaces=interfaces,
                 platform=self.pick.platform,
@@ -268,8 +276,8 @@ class GroupHasher(object):
             return
         obj = self.enter_strategy(strategy_version, flavor_key)
         strategy_version.strategy.hash_interfaces(
-            identifier=identifier,
-            platform=self.platform,
+            interfaces=interfaces,
+            platform=self.pick.platform,
             hasher=self
         )
         did_contribute = self.did_contribute
@@ -321,3 +329,47 @@ def pick_strategies(project, data):
         old_strategies=old_strategies,
         new_strategies=new_strategies
     )
+
+
+def describe_strategy_grouping(values, as_text=False):
+    """Given the values from running a strategy over an event this
+    returns a human readable version of it.
+    """
+
+    def _describe(d):
+        strategy_version = registered_strategies.get(d['strategy'])
+        if strategy_version is None:
+            rv = {
+                'strategy': None,
+                'description': 'unknown legacy grouping',
+            }
+        else:
+            rv = {
+                'strategy': strategy_version.identifier,
+                'description': strategy_version.description,
+            }
+
+        for nested in d['nested']:
+            rv.setdefault('nested', []).append(_describe(nested))
+
+        return rv
+
+    rv = _describe(values)
+
+    if not as_text:
+        return rv
+
+    lines = []
+
+    def _dump(value, depth=0):
+        lines.append('%s%s %s' % (
+            '  ' * depth,
+            depth == 0 and 'group by' or 'considering',
+            value['description'],
+        ))
+        for nested in value.get('nested') or ():
+            _dump(nested, depth + 1)
+
+    _dump(rv)
+
+    return '\n'.join(lines)
