@@ -7,13 +7,13 @@ from sentry.grouping.strategies.api import Strategy, register_strategy
 
 @register_strategy(
     identifier='generic-in-app-exception',
-    flavors=['platform:generic'],
+    flavors=['generic'],
     priority=100,
     version='1.0',
 )
 @register_strategy(
     identifier='generic-exception',
-    flavors=['platform:generic'],
+    flavors=['generic'],
     priority=110,
     version='1.0',
 )
@@ -50,13 +50,13 @@ class GenericExceptionStrategy(Strategy):
 
 @register_strategy(
     identifier='generic-in-app-stacktrace',
-    flavors=['platform:generic'],
+    flavors=['generic'],
     priority=200,
     version='1.0',
 )
 @register_strategy(
     identifier='generic-system-stacktrace',
-    flavors=['platform:generic'],
+    flavors=['generic'],
     priority=210,
     version='1.0',
 )
