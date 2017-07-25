@@ -18,7 +18,7 @@ def get_event_flavor_keys(data):
         if platform in VALID_PLATFORMS:
             rv.append('platform:%s' % platform)
 
-    sdk_info = data.get('sdk_info')
+    sdk_info = data.get('sdk')
 
     if platform and sdk_info and isinstance(sdk_info, dict):
         sdk_name = sdk_info.get('name')
