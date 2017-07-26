@@ -38,6 +38,11 @@ class GenericExceptionStrategy(Strategy):
 
     def hash_interfaces(self, interfaces, platform, hasher):
         exc = interfaces['sentry.interfaces.Exception']
+        if len(exc.values) == 1:
+            hasher.explain_grouping('exception')
+        else:
+            hasher.explain_grouping('%d exceptions' % len(exc.values))
+
         for value in exc.values:
             if not value.stacktrace:
                 continue
@@ -73,11 +78,14 @@ class GenericStacktraceStrategy(Strategy):
     def is_applicable_for_data(cls, data):
         return 'sentry.interfaces.Stacktrace' in data
 
+    def in_app_only(self, platform):
+        return self.version.identifier != 'generic-system-stacktrace'
+
     def get_relevant_frames(self, frames, platform):
         if not frames:
             return []
 
-        if self.version.identifier == 'generic-system-stacktrace':
+        if self.in_app_only(platform):
             total_frames = len(frames)
             frames = [f for f in frames if f.in_app] or frames
 
@@ -104,20 +112,20 @@ class GenericStacktraceStrategy(Strategy):
         platform = frame.platform or platform
 
         if frame.module:
-            hasher.contribute_value(frame.module)
+            hasher.contribute_value('module', frame.module)
         elif frame.filename:
-            hasher.contribute_value(self.remove_filename_outliers(
+            hasher.contribute_value('filename', self.remove_filename_outliers(
                 frame.filename, platform))
 
         if self.can_use_context_line(frame, platform):
-            hasher.contribute_value(frame.context_line.strip())
+            hasher.contribute_value('sourcecode', frame.context_line.strip())
 
         if not hasher.did_contribute:
             return
         elif frame.symbol:
-            hasher.contribute_value(frame.symbol)
+            hasher.contribute_value('function', frame.symbol)
         elif frame.function:
-            hasher.contribute_value(frame.function)
+            hasher.contribute_value('function', frame.function)
 
     def hash_interfaces(self, interfaces, platform, hasher):
         stacktrace = interfaces['sentry.interfaces.Stacktrace']
@@ -137,6 +145,11 @@ class GenericStacktraceStrategy(Strategy):
 
         if stack_invalid:
             return
+
+        if self.in_app_only(platform):
+            hasher.explain_grouping('in-app stacktrace frames')
+        else:
+            hasher.explain_grouping('complete stacktrace frames')
 
         for frame in self.get_relevant_frames(frames, platform):
             self.hash_frame(frame, platform, hasher)

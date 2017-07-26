@@ -97,14 +97,14 @@ class ExceptionBasicsTest(TestCase):
 
         readable = describe_strategy_grouping(values[0], as_text=True)
         assert readable.splitlines() == [
-            'group by exception',
-            '  considering in-app stacktrace',
-            '  considering in-app stacktrace',
+            'group by 2 exceptions',
+            '  considering in-app stacktrace frames (based on filename, function)',
+            '  considering in-app stacktrace frames (based on filename, function)',
         ]
 
         readable = describe_strategy_grouping(values[1], as_text=True)
         assert readable.splitlines() == [
-            'group by exception',
-            '  considering complete stacktrace',
-            '  considering complete stacktrace',
+            'group by 2 exceptions',
+            '  considering complete stacktrace frames (based on filename, function)',
+            '  considering complete stacktrace frames (based on filename, function)',
         ]

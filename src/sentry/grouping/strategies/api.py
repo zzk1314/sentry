@@ -223,10 +223,19 @@ class GroupHasher(object):
         obj = self.current_object
         return bool(obj and (obj['values'] or obj['nested']))
 
+    def explain_grouping(self, text):
+        obj = self.current_object
+        if obj['explanation'] is None:
+            obj['explanation'] = text
+        else:
+            obj['explanation'] = '%s; %s' % (obj['explanation'], text)
+
     def enter_strategy(self, strategy_version, flavor_key):
         obj = {
             'strategy': strategy_version.full_id,
+            'explanation': None,
             'values': [],
+            'contributions': [],
             'nested': [],
         }
         cur_obj = self.current_object
@@ -246,13 +255,16 @@ class GroupHasher(object):
         finally:
             self.leave_strategy()
 
-    def contribute_value(self, value):
+    def contribute_value(self, name, value):
         """Contributes a single value to the hasher"""
         if isinstance(value, (tuple, list)):
             for value in value:
-                self.contribute_value(value)
+                self.contribute_value(name, value)
         else:
-            self.current_object['values'].append(value)
+            obj = self.current_object
+            if name not in obj['contributions']:
+                obj['contributions'].append(name)
+            obj['values'].append(value)
 
     def contribute_nested(self, identifier, interfaces,
                           preferred_version=None):
@@ -348,6 +360,15 @@ def describe_strategy_grouping(values, as_text=False):
                 'strategy': strategy_version.identifier,
                 'description': strategy_version.description,
             }
+
+        if d['explanation'] is not None:
+            rv['description'] = d['explanation']
+
+        if d['contributions']:
+            rv['description'] = '%s (based on %s)' % (
+                rv['description'],
+                ', '.join(sorted(d['contributions'])),
+            )
 
         for nested in d['nested']:
             rv.setdefault('nested', []).append(_describe(nested))
