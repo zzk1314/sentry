@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import posixpath
 
+from sentry.interfaces.exception import SingleException
 from sentry.grouping.strategies.api import Strategy, register_strategy
 
 
@@ -20,9 +21,6 @@ from sentry.grouping.strategies.api import Strategy, register_strategy
     version='1.0',
 )
 class GenericExceptionStrategy(Strategy):
-    interfaces = [
-        'sentry.interfaces.Exception',
-    ]
 
     @property
     def stracktrace_strategy_id(self):
@@ -37,20 +35,33 @@ class GenericExceptionStrategy(Strategy):
             data['sentry.interfaces.Exception'].get('values'))
 
     def hash_interfaces(self, interfaces, platform, hasher):
+        # This can be Exception or SingleException.  Figure out which one it is.
+        exceptions = None
         exc = interfaces['sentry.interfaces.Exception']
-        if len(exc.values) == 1:
-            hasher.explain_grouping('exception')
-        else:
-            hasher.explain_grouping('%d exceptions' % len(exc.values))
+        if not isinstance(exc, SingleException):
+            if len(exc.values) >= 1:
+                exceptions = exc.values
+                exc = None
+            else:
+                exc = exc.values[0]
 
-        for value in exc.values:
-            if not value.stacktrace:
-                continue
+        if exceptions is not None:
+            hasher.explain_grouping('%d exceptions' % len(exceptions))
+            for exc in exceptions:
+                hasher.contribute_nested(
+                    identifier=self.version.identifier,
+                    preferred_version=self.version.version,
+                    interfaces={
+                        'sentry.interfaces.Exception': exc,
+                    }
+                )
+        else:
+            hasher.explain_grouping('exception stacktrace for %s' % exc.type)
             hasher.contribute_nested(
                 identifier=self.stracktrace_strategy_id,
                 preferred_version='latest',
                 interfaces={
-                    'sentry.interfaces.Stacktrace': value.stacktrace,
+                    'sentry.interfaces.Stacktrace': exc.stacktrace,
                 }
             )
 
@@ -70,9 +81,6 @@ class GenericExceptionStrategy(Strategy):
     version='1.0',
 )
 class GenericStacktraceStrategy(Strategy):
-    interfaces = [
-        'sentry.interfaces.Stacktrace',
-    ]
 
     @classmethod
     def is_applicable_for_data(cls, data):

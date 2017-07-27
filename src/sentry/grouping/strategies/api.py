@@ -385,7 +385,7 @@ def describe_strategy_grouping(values, as_text=False):
     def _dump(value, depth=0):
         lines.append('%s%s %s' % (
             '  ' * depth,
-            depth == 0 and 'group by' or 'considering',
+            depth == 0 and 'group by' or '->',
             value['description'],
         ))
         for nested in value.get('nested') or ():
