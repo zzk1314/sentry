@@ -38,6 +38,7 @@ import OrganizationDashboard from './views/organizationDashboard';
 import OrganizationDetails from './views/organizationDetails';
 import OrganizationContext from './views/organizationContext';
 import OrganizationIntegrations from './views/organizationIntegrations';
+import IntegrationDetails from './views/integrationDetails';
 import OrganizationRateLimits from './views/organizationRateLimits';
 import OrganizationRepositories from './views/organizationRepositories';
 import OrganizationSettings from './views/organizationSettings';
@@ -116,7 +117,6 @@ function routes() {
 
   return (
     <Route path="/" component={errorHandler(App)}>
-
       <Route path="/account/" component={errorHandler(AccountLayout)}>
         <Route path="authorizations/" component={errorHandler(AccountAuthorizations)} />
       </Route>
@@ -171,6 +171,10 @@ function routes() {
         <Route
           path="/organizations/:orgId/integrations/"
           component={errorHandler(OrganizationIntegrations)}
+        />
+        <Route
+          path="/organizations/:orgId/integrations/:integrationId/"
+          component={errorHandler(IntegrationDetails)}
         />
         <Route
           path="/organizations/:orgId/settings/"
@@ -307,7 +311,6 @@ function routes() {
             <Route path="feedback/" component={errorHandler(GroupUserReports)} />
             <Route path="similar/" component={errorHandler(GroupSimilarView)} />
             <Route path="merged/" component={errorHandler(GroupMergedView)} />
-
           </Route>
         </Route>
       </Route>

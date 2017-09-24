@@ -1,4 +1,5 @@
 import React from 'react';
+import {Link} from 'react-router';
 
 import AsyncView from './asyncView';
 import DropdownLink from '../components/dropdownLink';
@@ -88,13 +89,13 @@ export default class OrganizationIntegrations extends AsyncView {
     let innerWidth = window.innerWidth
       ? window.innerWidth
       : document.documentElement.clientWidth
-          ? document.documentElement.clientWidth
-          : screen.width;
+        ? document.documentElement.clientWidth
+        : screen.width;
     let innerHeight = window.innerHeight
       ? window.innerHeight
       : document.documentElement.clientHeight
-          ? document.documentElement.clientHeight
-          : screen.height;
+        ? document.documentElement.clientHeight
+        : screen.height;
     let left = innerWidth / 2 - width / 2 + screenLeft;
     let top = innerHeight / 2 - height / 2 + screenTop;
 
@@ -109,24 +110,12 @@ export default class OrganizationIntegrations extends AsyncView {
     };
   };
 
-  getStatusLabel(integration) {
-    switch (integration.status) {
-      case 'pending_deletion':
-        return 'Deletion Queued';
-      case 'deletion_in_progress':
-        return 'Deletion in Progress';
-      case 'hidden':
-        return 'Disabled';
-      default:
-        return null;
-    }
-  }
-
   getTitle() {
     return 'Integrations';
   }
 
   renderBody() {
+    let {orgId} = this.props.params;
     let itemList = this.state.itemList;
     let iconStyles = {
       width: 24,
@@ -135,77 +124,80 @@ export default class OrganizationIntegrations extends AsyncView {
     };
 
     return (
-      <OrganizationHomeContainer className="ref-organization-integrations">
-        <div className="pull-right">
-          <DropdownLink
-            anchorRight
-            className="btn btn-primary btn-sm"
-            title={t('Add Integration')}>
-            {this.state.config.providers.map(provider => {
-              return (
-                <MenuItem noAnchor={true} key={provider.id}>
-                  <a onClick={this.launchAddIntegration.bind(this, provider)}>
-                    {provider.name}
+      <OrganizationHomeContainer>
+        <div className="ref-organization-integrations">
+          <div className="pull-right">
+            <DropdownLink
+              anchorRight
+              className="btn btn-primary btn-sm"
+              title={t('Add Integration')}>
+              {this.state.config.providers.map(provider => {
+                return (
+                  <MenuItem noAnchor={true} key={provider.id}>
+                    <a onClick={this.launchAddIntegration.bind(this, provider)}>
+                      {provider.name}
+                    </a>
+                  </MenuItem>
+                );
+              })}
+            </DropdownLink>
+          </div>
+          <h3 className="m-b-2">
+            {t('Integrations')}
+          </h3>
+          {itemList.length > 0
+            ? <div className="panel panel-default">
+                <table className="table">
+                  <tbody>
+                    {itemList.map(integration => {
+                      let link = `/organizations/${orgId}/integrations/${integration.id}/`;
+                      return (
+                        <tr key={integration.id}>
+                          <td style={{width: 24, paddingRight: 0}}>
+                            <span
+                              className={`icon icon-integration icon-${integration
+                                .provider.id}`}
+                              style={iconStyles}
+                            />
+                          </td>
+                          <td>
+                            <Link to={link}>
+                              <strong>{integration.name}</strong> —{' '}
+                              <small>{integration.provider.name}</small>
+                            </Link>
+                          </td>
+                          <td style={{width: 60}}>
+                            <button
+                              onClick={this.deleteIntegration.bind(this, integration)}
+                              className="btn btn-default btn-xs">
+                              <span className="icon icon-trash" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            : <div className="well blankslate align-center p-x-2 p-y-1">
+                <div className="icon icon-lg icon-git-commit" />
+                <h3>
+                  {t('Sentry is better with friends')}
+                </h3>
+                <p>
+                  {t(
+                    'Integrations allow you to pull in things like repository data or sync with an external issue tracker.'
+                  )}
+                </p>
+                <p className="m-b-1">
+                  <a
+                    className="btn btn-default"
+                    href="https://docs.sentry.io/learn/integrations/">
+                    Learn more
                   </a>
-                </MenuItem>
-              );
-            })}
-          </DropdownLink>
+                </p>
+              </div>}
         </div>
-        <h3 className="m-b-2">
-          {t('Integrations')}
-        </h3>
-        {itemList.length > 0
-          ? <div className="panel panel-default">
-              <table className="table">
-                <tbody>
-                  {itemList.map(integration => {
-                    return (
-                      <tr key={integration.id}>
-                        <td style={{width: 24, paddingRight: 0}}>
-                          <span
-                            className={`icon icon-integration icon-${integration.provider.id}`}
-                            style={iconStyles}
-                          />
-                        </td>
-                        <td>
-                          <strong>
-                            {integration.name}
-                          </strong> — <small>
-                            {integration.provider.name}
-                          </small>
-                        </td>
-                        <td style={{width: 60}}>
-                          <button
-                            onClick={this.deleteIntegration.bind(this, integration)}
-                            className="btn btn-default btn-xs">
-                            <span className="icon icon-trash" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          : <div className="well blankslate align-center p-x-2 p-y-1">
-              <div className="icon icon-lg icon-git-commit" />
-              <h3>
-                {t('Sentry is better with friends')}
-              </h3>
-              <p>
-                {t(
-                  'Integrations allow you to pull in things like repository data or sync with an external issue tracker.'
-                )}
-              </p>
-              <p className="m-b-1">
-                <a
-                  className="btn btn-default"
-                  href="https://docs.sentry.io/learn/integrations/">
-                  Learn more
-                </a>
-              </p>
-            </div>}
       </OrganizationHomeContainer>
     );
   }
