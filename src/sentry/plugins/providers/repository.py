@@ -14,8 +14,9 @@ from .base import ProviderMixin
 class RepositoryProvider(ProviderMixin):
     name = None
 
-    def __init__(self, id):
+    def __init__(self, id, integration_config=None):
         self.id = id
+        self.integration_config = integration_config
 
     def dispatch(self, request, organization, **kwargs):
         if self.needs_auth(request.user):

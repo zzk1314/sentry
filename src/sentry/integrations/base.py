@@ -5,6 +5,16 @@ __all__ = ['Integration']
 import logging
 
 
+class IntegrationConfig(object):
+    def __init__(self, provider, metadata, config):
+        # instance of sentry.integrations.Integration
+        self.provider = provider
+        # metadata stored with <Integration> schema
+        self.metadata = metadata
+        # config stored with <OrganizationIntegration> schema
+        self.config = config
+
+
 class Integration(object):
     """
     An integration describes a third party that can be registered within Sentry.
@@ -91,6 +101,9 @@ class Integration(object):
         >>>     }
         """
         raise NotImplementedError
+
+    def get_registers(self):
+        return []
 
     def setup(self):
         """

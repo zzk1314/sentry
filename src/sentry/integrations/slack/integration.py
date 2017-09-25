@@ -48,3 +48,19 @@ class SlackIntegration(OAuth2Integration):
                 'access_token': data['access_token'],
             },
         }
+
+    # TBD: api
+    # def get_bindings(self):
+    #     return [
+    #         SlackNotificationProvider,
+    #     ]
+
+
+class AlertNotificationEvent(object):
+    type = 'alert'
+
+    def __init__(self, event):
+        self.event = event
+
+bindings.add('notification.provider', SlackNotificationProvider)
+list(bindings.get('notification.provider')).map(lambda x: x.send(event))

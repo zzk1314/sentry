@@ -33,9 +33,14 @@ class RepositoryProviderManager(ProviderManager):
     type = providers.RepositoryProvider
 
 
+class NotificationProviderManager(ProviderManager):
+    type = providers.NotificationProvider
+
+
 class BindingManager(object):
     BINDINGS = {
         'repository.provider': RepositoryProviderManager,
+        'notification.provider': NotificationProviderManager,
     }
 
     def __init__(self):
