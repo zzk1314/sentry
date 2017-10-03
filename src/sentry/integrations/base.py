@@ -43,6 +43,18 @@ class Integration(object):
         """
         raise NotImplementedError
 
+    def get_identity_pipeline(self):
+        """
+        Return a list of ``View`` instances describing this integration's
+        identity-association pipeline. This is optional, and only needed
+        when a service provider needs account-linked identities (not just a
+        single associate for the provider itself).
+
+        >>> def get_pipeline(self):
+        >>>    return []
+        """
+        raise NotImplementedError
+
     # XXX(dcramer): this is not yet exposed anywhere in the UI
     def get_config(self):
         """

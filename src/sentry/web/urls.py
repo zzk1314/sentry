@@ -32,6 +32,7 @@ from sentry.web.frontend.group_event_json import GroupEventJsonView
 from sentry.web.frontend.group_plugin_action import GroupPluginActionView
 from sentry.web.frontend.group_tag_export import GroupTagExportView
 from sentry.web.frontend.home import HomeView
+from sentry.web.frontend.integration_auth import IntegrationAuthView
 from sentry.web.frontend.integration_setup import IntegrationSetupView
 from sentry.web.frontend.mailgun_inbound_webhook import \
     MailgunInboundWebhookView
@@ -449,7 +450,6 @@ urlpatterns += patterns(
     url(r'^robots\.txt$', api.robots_txt, name='sentry-api-robots-txt'),
 
 
-
     # Force a 404 of favicon.ico.
     # This url is commonly requested by browsers, and without
     # blocking this, it was treated as a 200 OK for a react page view.
@@ -465,6 +465,7 @@ urlpatterns += patterns(
     # XXX(dcramer): preferably we'd be able to use 'integrations' as the URL
     # prefix here, but unfortunately sentry.io has that mapped to marketing
     # assets for the time being
+    url(r'^extensions/(?P<provider_id>[\w_-]+)/auth/$', IntegrationAuthView.as_view()),
     url(r'^extensions/(?P<provider_id>[\w_-]+)/setup/$', IntegrationSetupView.as_view()),
     url(r'^extensions/cloudflare/', include('sentry.integrations.cloudflare.urls')),
     url(r'^extensions/slack/', include('sentry.integrations.slack.urls')),

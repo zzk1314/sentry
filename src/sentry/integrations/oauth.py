@@ -50,6 +50,9 @@ class OAuth2Integration(Integration):
         return self.oauth_scopes
 
     def get_pipeline(self):
+        return self.get_identity_pipeline()
+
+    def get_identity_pipeline(self):
         return [
             OAuth2LoginView(
                 authorize_url=self.get_oauth_authorize_url(),
