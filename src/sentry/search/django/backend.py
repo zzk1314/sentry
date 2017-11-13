@@ -29,6 +29,8 @@ class DjangoSearchBackend(SearchBackend):
         status=None,
         tags=None,
         bookmarked_by=None,
+        seen_by=None,
+        unseen_by=None,
         assigned_to=None,
         first_release=None,
         sort_by='date',
@@ -58,7 +60,7 @@ class DjangoSearchBackend(SearchBackend):
         cursor=None,
         limit=None
     ):
-        from sentry.models import Event, Group, GroupSubscription, GroupStatus
+        from sentry.models import Event, Group, GroupSubscription, GroupStatus, GroupSeen
 
         engine = get_db_engine('default')
 
@@ -85,6 +87,20 @@ class DjangoSearchBackend(SearchBackend):
             queryset = queryset.filter(
                 bookmark_set__project=project,
                 bookmark_set__user=bookmarked_by,
+            )
+
+        if seen_by:
+            queryset = queryset.filter(
+                id__in=GroupSeen.objects.filter(
+                    user=seen_by,
+                ).values_list('group_id')
+            )
+
+        if unseen_by:
+            queryset = queryset.exclude(
+                id__in=GroupSeen.objects.filter(
+                    user=unseen_by,
+                ).values_list('group_id')
             )
 
         if assigned_to:

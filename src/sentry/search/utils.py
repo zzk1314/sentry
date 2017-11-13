@@ -363,6 +363,10 @@ def parse_query(project, query, user):
                 results['bookmarked_by'] = parse_user_value(value, user)
             elif key == 'subscribed':
                 results['subscribed_by'] = parse_user_value(value, user)
+            elif key == 'seen':
+                results['seen_by'] = parse_user_value(value, user)
+            elif key == 'unseen':
+                results['unseen_by'] = parse_user_value(value, user)
             elif key in ('first-release', 'firstRelease'):
                 results['first_release'] = parse_release(project, value)
             elif key == 'release':

@@ -27,6 +27,8 @@ class SearchBackend(Service):
         status=None,
         tags=None,
         bookmarked_by=None,
+        unseen_by=None,
+        seen_by=None,
         assigned_to=None,
         first_release=None,
         sort_by='date',
