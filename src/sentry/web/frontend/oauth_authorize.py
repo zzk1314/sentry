@@ -123,7 +123,7 @@ class OAuthAuthorizeView(AuthLoginView):
             )
 
         if scopes:
-            scopes = scopes.split(' ')
+            scopes = scopes.split(',')
             for scope in scopes:
                 if scope not in settings.SENTRY_SCOPES:
                     return self.error(
