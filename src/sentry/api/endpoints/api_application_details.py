@@ -20,7 +20,7 @@ delete_logger = logging.getLogger('sentry.deletions.api')
 class ApiApplicationSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=64)
     redirectUris = ListField(
-        child=serializers.URLField(max_length=255),
+        child=serializers.CharField(max_length=255),
         required=False,
     )
     allowedOrigins = ListField(

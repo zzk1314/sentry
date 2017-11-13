@@ -5,7 +5,7 @@ import six
 
 from django.core.context_processors import csrf
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.middleware.csrf import CsrfViewMiddleware
 from django.views.generic import View
 from django.views.decorators.csrf import csrf_exempt
@@ -265,6 +265,9 @@ class BaseView(View, OrganizationMixin):
         return render_to_response(template, default_context, self.request, status=status)
 
     def redirect(self, url):
+        res = HttpResponse(url, status=302)
+        res['Location'] = url
+        return res
         return HttpResponseRedirect(url)
 
     def get_team_list(self, user, organization):
