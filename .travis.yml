@@ -42,11 +42,15 @@ after_success:
   - bin/upload-zeus-artifact junit.xml "text/xml+xunit"
   - bin/upload-zeus-artifact coverage.xml "text/xml+coverage"
   - bin/upload-zeus-artifact pytest.html "text/html+pytest"
+  - bin/upload-zeus-artifact flake8.pycodestyle.log "text/plain+pycodestyle"
+  - bin/upload-zeus-artifact eslint.checkstyle.xml "text/xml+checkstyle"
 after_failure:
   - dmesg | tail -n 100
   - bin/upload-zeus-artifact junit.xml "text/xml+xunit"
   - bin/upload-zeus-artifact coverage.xml "text/xml+coverage"
   - bin/upload-zeus-artifact pytest.html "text/html+pytest"
+  - bin/upload-zeus-artifact flake8.pycodestyle.log "text/plain+pycodestyle"
+  - bin/upload-zeus-artifact eslint.checkstyle.xml "text/xml+checkstyle"
 # each attribute in the matrix will override the global attribute
 matrix:
   fast_finish: true
