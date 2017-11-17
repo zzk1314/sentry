@@ -65,3 +65,5 @@ __docformat__ = 'restructuredtext en'
 
 # This triggers monkey patches
 __import__('sentry.monkey')
+
+import django
