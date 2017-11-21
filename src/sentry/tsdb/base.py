@@ -46,6 +46,8 @@ class TSDBModel(Enum):
     organization_total_rejected = 201
     # the number of events blocked due to being blacklisted
     organization_total_blacklisted = 202
+    # the number of events filtered because their group was discarded
+    organization_total_received_discarded = 203
 
     # distinct count of users that have been affected by an event in a group
     users_affected_by_group = 300

@@ -293,17 +293,16 @@ def save_event(cache_key=None, data=None, start_time=None, event_id=None, **kwar
             }
         )
 
-        tsdb.incr(
-            tsdb.models.project_total_received_discarded,
-            project_id,
-            timestamp=to_datetime(start_time) if start_time is not None else None,
-        )
-
         try:
             project = Project.objects.get_from_cache(id=project_id)
         except Project.DoesNotExist:
             pass
         else:
+            tsdb.incr_multi((
+                (tsdb.models.project_total_received_discarded, project_id),
+                (tsdb.models.organization_total_received_discarded, project.organization_id),
+            ), timestamp=to_datetime(start_time) if start_time is not None else None)
+
             project_key = None
             if data.get('key_id') is not None:
                 try:
