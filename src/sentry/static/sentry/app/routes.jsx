@@ -102,6 +102,7 @@ import SettingsWrapper from './views/settings/settingsWrapper';
 import SharedGroupDetails from './views/sharedGroupDetails';
 import Stream from './views/stream';
 import TeamCreate from './views/teamCreate';
+import TeamDashboard from './views/teamDashboard';
 import TeamDetails from './views/teamDetails';
 import TeamMembers from './views/teamMembers';
 import TeamSettings from './views/teamSettings';
@@ -310,11 +311,13 @@ function routes() {
     />,
 
     <Route key="members" path="members/" name="Members">
-      <IndexRoute component={
-        HookStore.get('component:org-members-view').length ?
-          HookStore.get('component:org-members-view')[0]() :
-          OrganizationMembersView
-      } />
+      <IndexRoute
+        component={
+          HookStore.get('component:org-members-view').length
+            ? HookStore.get('component:org-members-view')[0]()
+            : OrganizationMembersView
+        }
+      />
       <Route path="new/" name="Invite" component={errorHandler(InviteMember)} />,
       <Route
         path=":memberId/"
@@ -460,6 +463,12 @@ function routes() {
 
       <Route path="/:orgId/" component={errorHandler(OrganizationDetails)}>
         <IndexRoute component={errorHandler(OrganizationDashboard)} />
+
+        <Route
+          path="/organizations/:orgId/teams/:teamId/dashboard/"
+          name="Dashboard"
+          component={errorHandler(TeamDashboard)}
+        />
 
         <Route
           path="/organizations/:orgId/teams/new/"
