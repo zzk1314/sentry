@@ -7,17 +7,14 @@ import LoadingError from '../../components/loadingError';
 import LoadingIndicator from '../../components/loadingIndicator';
 
 const ProjectDocsContext = React.createClass({
-  mixins: [
-    ApiMixin,
-    ProjectState
-  ],
+  mixins: [ApiMixin, ProjectState],
 
   getInitialState() {
     return {
       loading: true,
       platformList: null,
       project: null,
-      team: null
+      team: null,
     };
   },
 
@@ -35,26 +32,24 @@ const ProjectDocsContext = React.createClass({
     let projectId = this.context.project.slug;
 
     this.api.request(`/projects/${orgId}/${projectId}/docs/`, {
-      success: (data) => {
+      success: data => {
         this.setState({
           loading: false,
-          data: data
+          data,
         });
-      }
+      },
     });
   },
 
   render() {
-    if (this.state.loading)
-      return <LoadingIndicator />;
-    else if (this.state.error)
-      return <LoadingError onRetry={this.fetchData} />;
+    if (this.state.loading) return <LoadingIndicator />;
+    else if (this.state.error) return <LoadingError onRetry={this.fetchData} />;
 
     let data = this.state.data;
     return React.cloneElement(this.props.children, {
-      platformData: data // {...this.props}
+      platformData: data,
     });
-  }
+  },
 });
 
 export default ProjectDocsContext;

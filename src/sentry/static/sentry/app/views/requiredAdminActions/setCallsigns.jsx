@@ -1,11 +1,11 @@
 import React from 'react';
+import update from 'react-addons-update';
 import {browserHistory} from 'react-router';
+
 import ActionOverlay from '../../components/actionOverlay';
 import OrganizationState from '../../mixins/organizationState';
 import ApiMixin from '../../mixins/apiMixin';
 import {t} from '../../locale';
-import update from 'react-addons-update';
-
 
 /* given an organization find information about the projects that are
    needed for callsign review.  Splits up projects you are a member of or
@@ -15,7 +15,7 @@ function getProjectInfoForReview(org) {
   let nonMemberProjects = [];
   let requiresReview = 0;
   let canReviewAnything = false;
-  let canWriteProjects = (new Set(org.access)).has('project:write');
+  let canWriteProjects = new Set(org.access).has('project:write');
 
   for (let team of org.teams) {
     for (let project of team.projects) {
@@ -23,34 +23,29 @@ function getProjectInfoForReview(org) {
       let targetList = nonMemberProjects;
       if (team.isMember) {
         canReview = canWriteProjects;
-        if (!project.callSignReviewed) {
-          requiresReview++;
-          canReviewAnything = canReviewAnything || canReview;
-        }
         targetList = memberProjects;
       }
       targetList.push({
         projectId: project.id,
         projectName: project.name,
         isMember: team.isMember,
-        requiresReview: !project.callSignReviewed,
-        canReview: canReview,
+        requiresReview: false,
+        canReview,
         teamName: team.name,
-        callSign: project.callSign || null
+        callSign: project.callSign || null,
       });
     }
   }
 
   return {
-    memberProjects: memberProjects,
-    nonMemberProjects: nonMemberProjects,
+    memberProjects,
+    nonMemberProjects,
     projects: memberProjects.concat(nonMemberProjects),
-    requiresReview: requiresReview,
-    canReviewAnything: canReviewAnything,
-    hasNonMemberProjects: nonMemberProjects.length > 0
+    requiresReview,
+    canReviewAnything,
+    hasNonMemberProjects: nonMemberProjects.length > 0,
   };
 }
-
 
 const SetCallsignsAction = React.createClass({
   mixins: [ApiMixin, OrganizationState],
@@ -59,7 +54,7 @@ const SetCallsignsAction = React.createClass({
     return {
       isLoading: true,
       info: {},
-      slugs: {}
+      slugs: {},
     };
   },
 
@@ -69,17 +64,17 @@ const SetCallsignsAction = React.createClass({
 
   onSubmit(event) {
     this.setState({
-      isLoading: true
+      isLoading: true,
     });
 
     let orgId = this.getOrganization().slug;
     this.api.request(`/organizations/${orgId}/slugs/`, {
       method: 'PUT',
       data: {slugs: this.state.slugs},
-      success: (data) => {
+      success: data => {
         browserHistory.pushState('refresh', `/${orgId}/`);
       },
-      error: (error) => {
+      error: error => {
         /*eslint no-console:0*/
         console.log('Failed to set slugs:', error);
         /*eslint no-alert:0*/
@@ -87,16 +82,16 @@ const SetCallsignsAction = React.createClass({
       },
       complete: () => {
         this.setState({
-          isLoading: false
+          isLoading: false,
         });
-      }
+      },
     });
   },
 
   onSetShortName(projectId, event) {
     this.setState({
       slugs: update(this.state.slugs, {
-        [projectId]: {$set: event.target.value.toUpperCase().trim()}
+        [projectId]: {$set: event.target.value.toUpperCase().trim()},
       }),
     });
   },
@@ -104,13 +99,13 @@ const SetCallsignsAction = React.createClass({
   fetchData() {
     let info = getProjectInfoForReview(this.getOrganization());
     let slugs = {};
-    info.memberProjects.forEach((project) => {
+    info.memberProjects.forEach(project => {
       slugs[project.projectId] = project.callSign;
     });
 
     this.setState({
-      info: info,
-      slugs: slugs,
+      info,
+      slugs,
       isLoading: false,
     });
   },
@@ -128,7 +123,7 @@ const SetCallsignsAction = React.createClass({
       }
     }
 
-    this.state.info.nonMemberProjects.forEach((project) => {
+    this.state.info.nonMemberProjects.forEach(project => {
       if (project.callSign === callsign) {
         found++;
       }
@@ -145,12 +140,18 @@ const SetCallsignsAction = React.createClass({
     return (
       <ActionOverlay actionId="SET_CALLSIGNS" isLoading={this.state.isLoading}>
         <h1>{t('Review Call Signs for Projects')}</h1>
-        <p>{t('Sentry now requires you to specify a call sign (short name) for each project in the organization “%s”. These short names are used to identify the project in the issue IDs.  Ideally they are two or three letter long.', org.name)}</p>
-        {info.hasNonMemberProjects
-          ? <p>{t('Projects of teams you are not a member of are not shown.')}</p> : null}
+        <p>
+          {t(
+            'Sentry now requires you to specify a call sign (short name) for each project in the organization “%s”. These short names are used to identify the project in the issue IDs.  Ideally they are two or three letter long.',
+            org.name
+          )}
+        </p>
+        {info.hasNonMemberProjects ? (
+          <p>{t('Projects of teams you are not a member of are not shown.')}</p>
+        ) : null}
         <p>{t('Projects which have been previously reviewed are shown in green.')}</p>
         <form className="form-horizontal">
-          {info.memberProjects.map((project) => {
+          {info.memberProjects.map(project => {
             let inputId = 'input-' + project.projectId;
             let className = 'form-group short-id-form-group';
             let callsign = this.state.slugs[project.projectId] || '';
@@ -168,38 +169,43 @@ const SetCallsignsAction = React.createClass({
 
             return (
               <div className={className} key={project.projectId}>
-                <label htmlFor={inputId}
-                  className="col-sm-6 col-sm-offset-2 control-label">
+                <label
+                  htmlFor={inputId}
+                  className="col-sm-6 col-sm-offset-2 control-label"
+                >
                   {project.teamName} / {project.projectName}
                 </label>
                 <div className="col-sm-2">
-                  <input type="text"
+                  <input
+                    type="text"
                     id={inputId}
                     className="form-control"
                     onChange={this.onSetShortName.bind(this, project.projectId)}
-                    value={callsign}/>
+                    value={callsign}
+                  />
                 </div>
               </div>
             );
           })}
           <div className="actions">
-            <button type="button"
+            <button
+              type="button"
               onClick={this.onSubmit}
               className="btn btn-primary btn-lg"
-              disabled={!canSubmit}>
+              disabled={!canSubmit}
+            >
               {t('Set Call Signs')}
             </button>
           </div>
         </form>
       </ActionOverlay>
     );
-  }
+  },
 });
 
 SetCallsignsAction.requiresAction = function(org) {
   let info = getProjectInfoForReview(org);
-  return info.requiresReview > 0 && info.canReviewAnything &&
-    (new Set(org.access)).has('callsigns');
+  return info.requiresReview > 0 && info.canReviewAnything;
 };
 
 SetCallsignsAction.getActionLinkTitle = function() {

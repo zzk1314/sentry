@@ -23,26 +23,29 @@ CALLSIGN_BLACKLIST = ['GH']
 
 _callsign_re = re.compile(r'^[A-Z]{2,6}$')
 _word_sep_re = re.compile(r'[\s.;,_-]+(?u)')
-_camelcase_re = re.compile(
-    r'(?:[A-Z]{2,}(?=[A-Z]))|(?:[A-Z][a-z0-9]+)|(?:[a-z0-9]+)')
+_camelcase_re = re.compile(r'(?:[A-Z]{2,}(?=[A-Z]))|(?:[A-Z][a-z0-9]+)|(?:[a-z0-9]+)')
 _letters_re = re.compile(r'[A-Z]+')
 _digit_re = re.compile(r'\d+')
 _sprintf_placeholder_re = re.compile(
-    r'%(?:\d+\$)?[+-]?(?:[ 0]|\'.{1})?-?\d*(?:\.\d+)?[bcdeEufFgGosxX]')
+    r'%(?:\d+\$)?[+-]?(?:[ 0]|\'.{1})?-?\d*(?:\.\d+)?[bcdeEufFgGosxX]'
+)
 
 
-def truncatechars(value, arg):
+def truncatechars(value, arg, ellipsis='...'):
+    # TODO (alex) could use unicode ellipsis: u'\u2026'
     """
     Truncates a string after a certain number of chars.
 
     Argument: Number of chars to truncate after.
     """
+    if value is None:
+        return value
     try:
         length = int(arg)
     except ValueError:  # Invalid literal for int().
         return value  # Fail silently.
     if len(value) > length:
-        return value[:length - 3] + '...'
+        return value[:max(0, length - len(ellipsis))] + ellipsis
     return value
 
 
@@ -121,8 +124,7 @@ def validate_callsign(value):
 
 
 def iter_callsign_choices(project_name):
-    words = list(x.upper() for x in tokens_from_name(
-        project_name, remove_digits=True))
+    words = list(x.upper() for x in tokens_from_name(project_name, remove_digits=True))
     bits = []
 
     if len(words) == 2:
@@ -184,16 +186,16 @@ def tokens_from_name(value, remove_digits=False):
 valid_dot_atom_characters = frozenset(
     string.ascii_letters +
     string.digits +
-    ".!#$%&'*+-/=?^_`{|}~"
-)
+    ".!#$%&'*+-/=?^_`{|}~")
 
 
 def is_valid_dot_atom(value):
     """Validate an input string as an RFC 2822 dot-atom-text value."""
-    return (isinstance(value, six.string_types)  # must be a string type
-        and not value[0] == '.'
-        and not value[-1] == '.'  # cannot start or end with a dot
-        and set(value).issubset(valid_dot_atom_characters))  # can only contain valid characters
+    return (
+        isinstance(value, six.string_types)  # must be a string type
+        and not value[0] == '.' and not value[-1] == '.'  # cannot start or end with a dot
+        and set(value).issubset(valid_dot_atom_characters)
+    )  # can only contain valid characters
 
 
 def count_sprintf_parameters(string):
@@ -207,13 +209,17 @@ def codec_lookup(encoding, default='utf-8'):
     Note: the default value is not sanity checked and would
     bypass these checks."""
 
+    def _get_default():
+        if default is not None:
+            return codecs.lookup(default)
+
     if not encoding:
-        return codecs.lookup(default)
+        return _get_default()
 
     try:
         info = codecs.lookup(encoding)
     except (LookupError, TypeError):
-        return codecs.lookup(default)
+        return _get_default()
 
     try:
         # Check for `CodecInfo._is_text_encoding`.
@@ -222,13 +228,13 @@ def codec_lookup(encoding, default='utf-8'):
         # introduced into 2.7.12, so versions prior to this will
         # raise, but this is the best we can do.
         if not info._is_text_encoding:
-            return codecs.lookup(default)
+            return _get_default()
     except AttributeError:
         pass
 
     # `undefined` is special a special encoding in python that 100% of
     # the time will raise, so ignore it.
     if info.name == 'undefined':
-        return codecs.lookup(default)
+        return _get_default()
 
     return info

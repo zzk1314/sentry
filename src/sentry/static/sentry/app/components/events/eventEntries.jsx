@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import {logException} from '../../utils/logging';
@@ -5,14 +6,13 @@ import EventContexts from './contexts';
 import EventContextSummary from './contextSummary';
 import EventDataSection from './eventDataSection';
 import EventErrors from './errors';
-import ReprocessingHint from './reprocessingHint';
 import EventExtraData from './extraData';
 import EventPackageData from './packageData';
 import EventTags from './eventTags';
 import EventSdk from './sdk';
 import EventDevice from './device';
 import EventUserReport from './userReport';
-import PropTypes from '../../proptypes';
+import SentryTypes from '../../proptypes';
 import utils from '../../utils';
 import {t} from '../../locale';
 
@@ -40,18 +40,18 @@ export const INTERFACES = {
 
 const EventEntries = React.createClass({
   propTypes: {
-    group: PropTypes.Group.isRequired,
-    event: PropTypes.Event.isRequired,
-    orgId: React.PropTypes.string.isRequired,
-    project: React.PropTypes.object.isRequired,
+    group: SentryTypes.Group.isRequired,
+    event: SentryTypes.Event.isRequired,
+    orgId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     // TODO(dcramer): ideally isShare would be replaced with simple permission
     // checks
-    isShare: React.PropTypes.bool
+    isShare: PropTypes.bool,
   },
 
   getDefaultProps() {
     return {
-      isShare: false
+      isShare: false,
     };
   },
 
@@ -62,122 +62,105 @@ const EventEntries = React.createClass({
   interfaces: INTERFACES,
 
   render() {
-    let group = this.props.group;
-    let evt = this.props.event;
-    let isShare = this.props.isShare;
-    let project = this.props.project;
+    let {group, isShare, project, event, orgId} = this.props;
 
-    let entries = evt.entries.map((entry, entryIdx) => {
+    let entries = event.entries.map((entry, entryIdx) => {
       try {
         let Component = this.interfaces[entry.type];
         if (!Component) {
           /*eslint no-console:0*/
-          window.console && console.error && console.error('Unregistered interface: ' + entry.type);
+          window.console &&
+            console.error &&
+            console.error('Unregistered interface: ' + entry.type);
           return null;
         }
         return (
           <Component
             key={'entry-' + entryIdx}
             group={group}
-            event={evt}
+            event={event}
             type={entry.type}
             data={entry.data}
-            isShare={isShare} />
+            isShare={isShare}
+          />
         );
       } catch (ex) {
         logException(ex);
         return (
           <EventDataSection
-              group={group}
-              event={evt}
-              type={entry.type}
-              title={entry.type}>
+            group={group}
+            event={event}
+            type={entry.type}
+            title={entry.type}
+          >
             <p>{t('There was an error rendering this data.')}</p>
           </EventDataSection>
         );
       }
     });
 
-    let hasContext = (
-      !utils.objectIsEmpty(evt.user) || !utils.objectIsEmpty(evt.contexts)
-    );
+    let hasContext =
+      !utils.objectIsEmpty(event.user) || !utils.objectIsEmpty(event.contexts);
 
-    let hasContextSummary = (
-      hasContext && (evt.platform === 'cocoa' || evt.platform === 'javascript' || evt.platform === 'java')
-    );
+    let hasContextSummary =
+      hasContext &&
+      (event.platform === 'cocoa' ||
+        event.platform === 'native' ||
+        event.platform === 'javascript' ||
+        event.platform === 'java');
 
     return (
       <div className="entries">
-        {evt.userReport &&
+        {event.userReport && (
           <EventUserReport
-            group={group}
-            event={evt} />
-        }
-        {!utils.objectIsEmpty(evt.errors) &&
-          <ReprocessingHint
-            group={group}
-            event={evt}
-            orgId={this.props.orgId}
-            projectId={project.slug} />
-        }
-        {!utils.objectIsEmpty(evt.errors) &&
-          <EventErrors
-            group={group}
-            event={evt} />
-        }
-        {!utils.objectIsEmpty(evt.sdk) && evt.sdk.upstream.isNewer &&
-          <div className="alert-block alert-info box">
-            <span className="icon-exclamation"/>
-            {t('This event was reported with an old version of the %s SDK.', evt.platform)}
-            {evt.sdk.upstream.url &&
-              <a href={evt.sdk.upstream.url}
-                 className="btn btn-sm btn-default">{t('Learn More')}</a>
-            }
-          </div>
-        }
-        {hasContextSummary &&
-          <EventContextSummary
-            group={group}
-            event={evt} />
-        }
-        <EventTags
-          group={group}
-          event={evt}
-          orgId={this.props.orgId}
-          projectId={project.slug} />
+            report={event.userReport}
+            orgId={orgId}
+            projectId={project.slug}
+            issueId={group.id}
+          />
+        )}
+        {!utils.objectIsEmpty(event.errors) && (
+          <EventErrors group={group} event={event} />
+        )}
+        {!utils.objectIsEmpty(event.sdk) &&
+          event.sdk.upstream.isNewer && (
+            <div className="alert-block alert-info box">
+              <span className="icon-exclamation" />
+              {t(
+                'This event was reported with an old version of the %s SDK.',
+                event.platform
+              )}
+              {event.sdk.upstream.url && (
+                <a href={event.sdk.upstream.url} className="btn btn-sm btn-default">
+                  {t('Learn More')}
+                </a>
+              )}
+            </div>
+          )}
+        {hasContextSummary && <EventContextSummary group={group} event={event} />}
+        <EventTags group={group} event={event} orgId={orgId} projectId={project.slug} />
         {entries}
-
-        {hasContext &&
+        {hasContext && (
           <EventContexts
             group={group}
-            event={evt}
+            event={event}
             orgId={this.props.orgId}
             projectId={project.slug}
           />
-        }
-        {!utils.objectIsEmpty(evt.context) &&
-          <EventExtraData
-            group={group}
-            event={evt} />
-        }
-        {!utils.objectIsEmpty(evt.packages) &&
-          <EventPackageData
-            group={group}
-            event={evt} />
-        }
-        {!utils.objectIsEmpty(evt.device) &&
-          <EventDevice
-            group={group}
-            event={evt} />
-        }
-        {!utils.objectIsEmpty(evt.sdk) &&
-          <EventSdk
-            group={group}
-            event={evt} />
-        }
+        )}
+        {!utils.objectIsEmpty(event.context) && (
+          <EventExtraData group={group} event={event} />
+        )}
+        {!utils.objectIsEmpty(event.packages) && (
+          <EventPackageData group={group} event={event} />
+        )}
+        {!utils.objectIsEmpty(event.device) && (
+          <EventDevice group={group} event={event} />
+        )}
+        {!utils.objectIsEmpty(event.sdk) && <EventSdk group={group} event={event} />}
       </div>
     );
-  }
+  },
 });
 
 export default EventEntries;

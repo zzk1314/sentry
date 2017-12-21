@@ -1,4 +1,5 @@
 import jQuery from 'jquery';
+import PropTypes from 'prop-types';
 import React from 'react';
 import {browserHistory} from 'react-router';
 
@@ -6,22 +7,22 @@ import ApiMixin from '../../mixins/apiMixin';
 import LoadingError from '../../components/loadingError';
 import LoadingIndicator from '../../components/loadingIndicator';
 import Pagination from '../../components/pagination';
-import SearchBar from '../../components/searchBar.jsx';
+import SearchBar from '../../components/searchBar';
 import {t} from '../../locale';
 
 import ReleaseList from './releaseList';
 
 const ProjectReleases = React.createClass({
   propTypes: {
-    defaultQuery: React.PropTypes.string,
-    setProjectNavSection: React.PropTypes.func
+    defaultQuery: PropTypes.string,
+    setProjectNavSection: PropTypes.func,
   },
 
   mixins: [ApiMixin],
 
   getDefaultProps() {
     return {
-      defaultQuery: ''
+      defaultQuery: '',
     };
   },
 
@@ -33,7 +34,7 @@ const ProjectReleases = React.createClass({
       loading: true,
       error: false,
       query: queryParams.query || this.props.defaultQuery,
-      pageLinks: ''
+      pageLinks: '',
     };
   },
 
@@ -45,16 +46,18 @@ const ProjectReleases = React.createClass({
   componentWillReceiveProps(nextProps) {
     if (nextProps.location.search !== this.props.location.search) {
       let queryParams = nextProps.location.query;
-      this.setState({
-        query: queryParams.query
-      }, this.fetchData);
+      this.setState(
+        {
+          query: queryParams.query,
+        },
+        this.fetchData
+      );
     }
   },
 
   onSearch(query) {
     let targetQueryParams = {};
-    if (query !== '')
-      targetQueryParams.query = query;
+    if (query !== '') targetQueryParams.query = query;
 
     let {orgId, projectId} = this.props.params;
     browserHistory.pushState(null, `/${orgId}/${projectId}/releases/`, targetQueryParams);
@@ -63,7 +66,7 @@ const ProjectReleases = React.createClass({
   fetchData() {
     this.setState({
       loading: true,
-      error: false
+      error: false,
     });
 
     this.api.request(this.getProjectReleasesEndpoint(), {
@@ -72,15 +75,15 @@ const ProjectReleases = React.createClass({
           error: false,
           loading: false,
           releaseList: data,
-          pageLinks: jqXHR.getResponseHeader('Link')
+          pageLinks: jqXHR.getResponseHeader('Link'),
         });
       },
       error: () => {
         this.setState({
           error: true,
-          loading: false
+          loading: false,
         });
-      }
+      },
     });
   },
 
@@ -89,10 +92,17 @@ const ProjectReleases = React.createClass({
     let queryParams = {
       ...this.props.location.query,
       per_page: 20,
-      query: this.state.query
+      query: this.state.query,
     };
 
-    return '/projects/' + params.orgId + '/' + params.projectId + '/releases/?' + jQuery.param(queryParams);
+    return (
+      '/projects/' +
+      params.orgId +
+      '/' +
+      params.projectId +
+      '/releases/?' +
+      jQuery.param(queryParams)
+    );
   },
 
   getReleaseTrackingUrl() {
@@ -106,26 +116,25 @@ const ProjectReleases = React.createClass({
 
     let params = this.props.params;
 
-    if (this.state.loading)
-      body = this.renderLoading();
-    else if (this.state.error)
-      body = <LoadingError onRetry={this.fetchData} />;
+    if (this.state.loading) body = this.renderLoading();
+    else if (this.state.error) body = <LoadingError onRetry={this.fetchData} />;
     else if (this.state.releaseList.length > 0)
-      body = <ReleaseList orgId={params.orgId} projectId={params.projectId} releaseList={this.state.releaseList} />;
+      body = (
+        <ReleaseList
+          orgId={params.orgId}
+          projectId={params.projectId}
+          releaseList={this.state.releaseList}
+        />
+      );
     else if (this.state.query && this.state.query !== this.props.defaultQuery)
       body = this.renderNoQueryResults();
-    else
-      body = this.renderEmpty();
+    else body = this.renderEmpty();
 
     return body;
   },
 
   renderLoading() {
-    return (
-      <div className="box">
-        <LoadingIndicator />
-      </div>
-    );
+    return <LoadingIndicator />;
   },
 
   renderNoQueryResults() {
@@ -139,12 +148,14 @@ const ProjectReleases = React.createClass({
 
   renderEmpty() {
     return (
-      <div className="box empty-stream">
+      <div className="empty-stream">
         <span className="icon icon-exclamation" />
-        <p>{t('There don\'t seem to be any releases yet.')}</p>
-        <p><a href={this.getReleaseTrackingUrl()}>
-          {t('Learn how to integrate Release Tracking')}
-        </a></p>
+        <p>{t("There don't seem to be any releases yet.")}</p>
+        <p>
+          <a href={this.getReleaseTrackingUrl()}>
+            {t('Learn how to integrate Release Tracking')}
+          </a>
+        </p>
       </div>
     );
   },
@@ -157,7 +168,8 @@ const ProjectReleases = React.createClass({
             <h3>{t('Releases')}</h3>
           </div>
           <div className="col-sm-5 release-search">
-            <SearchBar defaultQuery=""
+            <SearchBar
+              defaultQuery=""
               placeholder={t('Search for a release.')}
               query={this.state.query}
               onSearch={this.onSearch}
@@ -168,12 +180,8 @@ const ProjectReleases = React.createClass({
           <div className="panel-heading panel-heading-bold">
             <div className="row">
               <div className="col-sm-8 col-xs-7">{t('Version')}</div>
-              <div className="col-sm-2 col-xs-3">
-                {t('New Issues')}
-              </div>
-              <div className="col-sm-2 col-xs-2">
-                {t('Last Event')}
-              </div>
+              <div className="col-sm-2 col-xs-3">{t('New Issues')}</div>
+              <div className="col-sm-2 col-xs-2">{t('Last Event')}</div>
             </div>
           </div>
           {this.renderStreamBody()}
@@ -181,7 +189,7 @@ const ProjectReleases = React.createClass({
         <Pagination pageLinks={this.state.pageLinks} />
       </div>
     );
-  }
+  },
 });
 
 export default ProjectReleases;

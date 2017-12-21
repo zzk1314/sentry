@@ -18,12 +18,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from sentry import eventtypes
 from sentry.db.models import (
-    BaseManager, BoundedBigIntegerField, BoundedIntegerField,
-    Model, NodeField, sane_repr
+    BaseManager, BoundedBigIntegerField, BoundedIntegerField, Model, NodeField, sane_repr
 )
-from sentry.interfaces.base import get_interface
+from sentry.interfaces.base import get_interfaces
 from sentry.utils.cache import memoize
-from sentry.utils.safe import safe_execute
 from sentry.utils.strings import truncatechars
 
 
@@ -54,8 +52,8 @@ class Event(Model):
         db_table = 'sentry_message'
         verbose_name = _('message')
         verbose_name_plural = _('messages')
-        unique_together = (('project_id', 'event_id'),)
-        index_together = (('group_id', 'datetime'),)
+        unique_together = (('project_id', 'event_id'), )
+        index_together = (('group_id', 'datetime'), )
 
     __repr__ = sane_repr('project_id', 'group_id')
 
@@ -119,21 +117,15 @@ class Event(Model):
         return et.to_string(self.get_event_metadata())
 
     def error(self):
-        warnings.warn('Event.error is deprecated, use Event.title',
-                      DeprecationWarning)
+        warnings.warn('Event.error is deprecated, use Event.title', DeprecationWarning)
         return self.title
+
     error.short_description = _('error')
 
     @property
     def message_short(self):
-        warnings.warn('Event.message_short is deprecated, use Event.title',
-                      DeprecationWarning)
+        warnings.warn('Event.message_short is deprecated, use Event.title', DeprecationWarning)
         return self.title
-
-    def has_two_part_message(self):
-        warnings.warn('Event.has_two_part_message is no longer used',
-                      DeprecationWarning)
-        return False
 
     @property
     def team(self):
@@ -164,32 +156,15 @@ class Event(Model):
         return None
 
     def get_interfaces(self):
-        result = []
-        for key, data in six.iteritems(self.data):
-            try:
-                cls = get_interface(key)
-            except ValueError:
-                continue
-
-            value = safe_execute(cls.to_python, data,
-                                 _with_transaction=False)
-            if not value:
-                continue
-
-            result.append((key, value))
-
-        return OrderedDict((k, v) for k, v in sorted(result, key=lambda x: x[1].get_score(), reverse=True))
+        return get_interfaces(self.data)
 
     @memoize
     def interfaces(self):
         return self.get_interfaces()
 
-    def get_tags(self, with_internal=True):
+    def get_tags(self):
         try:
-            return sorted(
-                (t, v) for t, v in self.data.get('tags') or ()
-                if with_internal or not t.startswith('sentry:')
-            )
+            return sorted((t, v) for t, v in self.data.get('tags') or ())
         except ValueError:
             # at one point Sentry allowed invalid tag sets such as (foo, bar)
             # vs ((tag, foo), (tag, bar))
@@ -203,12 +178,17 @@ class Event(Model):
                 return v
         return None
 
+    @property
+    def dist(self):
+        return self.get_tag('sentry:dist')
+
     def as_dict(self):
         # We use a OrderedDict to keep elements ordered for a potential JSON serializer
         data = OrderedDict()
         data['id'] = self.event_id
         data['project'] = self.project_id
         data['release'] = self.get_tag('sentry:release')
+        data['dist'] = self.dist
         data['platform'] = self.platform
         data['culprit'] = self.group.culprit
         data['message'] = self.get_legacy_message()
@@ -216,6 +196,8 @@ class Event(Model):
         data['time_spent'] = self.time_spent
         data['tags'] = self.get_tags()
         for k, v in sorted(six.iteritems(self.data)):
+            if k == 'sdk':
+                v = {v_k: v_v for v_k, v_v in six.iteritems(v) if v_k != 'client_ip'}
             data[k] = v
         return data
 
@@ -228,26 +210,24 @@ class Event(Model):
 
     # XXX(dcramer): compatibility with plugins
     def get_level_display(self):
-        warnings.warn('Event.get_level_display is deprecated. Use Event.tags instead.',
-                      DeprecationWarning)
+        warnings.warn(
+            'Event.get_level_display is deprecated. Use Event.tags instead.', DeprecationWarning
+        )
         return self.group.get_level_display()
 
     @property
     def level(self):
-        warnings.warn('Event.level is deprecated. Use Event.tags instead.',
-                      DeprecationWarning)
+        warnings.warn('Event.level is deprecated. Use Event.tags instead.', DeprecationWarning)
         return self.group.level
 
     @property
     def logger(self):
-        warnings.warn('Event.logger is deprecated. Use Event.tags instead.',
-                      DeprecationWarning)
+        warnings.warn('Event.logger is deprecated. Use Event.tags instead.', DeprecationWarning)
         return self.get_tag('logger')
 
     @property
     def site(self):
-        warnings.warn('Event.site is deprecated. Use Event.tags instead.',
-                      DeprecationWarning)
+        warnings.warn('Event.site is deprecated. Use Event.tags instead.', DeprecationWarning)
         return self.get_tag('site')
 
     @property
@@ -290,6 +270,8 @@ class EventSubjectTemplate(string.Template):
 class EventSubjectTemplateData(object):
     tag_aliases = {
         'release': 'sentry:release',
+        'dist': 'sentry:dist',
+        'user': 'sentry:user',
     }
 
     def __init__(self, event):

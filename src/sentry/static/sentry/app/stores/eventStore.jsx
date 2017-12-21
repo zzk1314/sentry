@@ -1,6 +1,6 @@
 import jQuery from 'jquery';
 import Reflux from 'reflux';
-import _ from 'underscore';
+import _ from 'lodash';
 
 const EventStore = Reflux.createStore({
   init() {
@@ -15,7 +15,7 @@ const EventStore = Reflux.createStore({
     this.reset();
 
     let itemIds = new Set();
-    items.forEach((item) => {
+    items.forEach(item => {
       itemIds.add(item.id);
       this.items.push(item);
     });
@@ -30,7 +30,7 @@ const EventStore = Reflux.createStore({
 
     let itemsById = {};
     let itemIds = new Set();
-    items.forEach((item) => {
+    items.forEach(item => {
       itemsById[item.id] = item;
       itemIds.add(item.id);
     });
@@ -65,16 +65,16 @@ const EventStore = Reflux.createStore({
         return this.items[i];
       }
     }
+    return undefined;
   },
 
   getAllItemIds() {
-    return this.items.map((item) => item.id);
+    return this.items.map(item => item.id);
   },
 
   getAllItems() {
     return this.items;
-  }
+  },
 });
 
 export default EventStore;
-

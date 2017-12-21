@@ -1,50 +1,44 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
-const Count = React.createClass({
+export default React.createClass({
   propTypes: {
-    value: React.PropTypes.any.isRequired
+    value: PropTypes.any.isRequired,
   },
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.value !== nextProps.value;
   },
 
-  numberFormats: [
-      [1000000000, 'b'],
-      [1000000, 'm'],
-      [1000, 'k']
-  ],
+  numberFormats: [[1000000000, 'b'], [1000000, 'm'], [1000, 'k']],
 
   floatFormat(number, places) {
-      let multi = Math.pow(10, places);
-      return parseInt(number * multi, 10) / multi;
+    let multi = Math.pow(10, places);
+    return parseInt(number * multi, 10) / multi;
   },
 
-  formatNumber(number){
-      let b, x, y, o, p;
+  formatNumber(number) {
+    let b, x, y, o, p;
 
-      number = parseInt(number, 10);
+    number = parseInt(number, 10);
 
-      /*eslint no-cond-assign:0*/
-      for (let i = 0; (b = this.numberFormats[i]); i++){
-          x = b[0];
-          y = b[1];
-          o = Math.floor(number / x);
-          p = number % x;
-          if (o > 0) {
-              if (o / 10 > 1 || !p)
-                  return '' + o + y;
-              return '' + this.floatFormat(number / x, 1) + y;
-          }
+    /*eslint no-cond-assign:0*/
+    for (let i = 0; (b = this.numberFormats[i]); i++) {
+      x = b[0];
+      y = b[1];
+      o = Math.floor(number / x);
+      p = number % x;
+      if (o > 0) {
+        if (o / 10 > 1 || !p) return '' + o + y;
+        return '' + this.floatFormat(number / x, 1) + y;
       }
-      return '' + number;
+    }
+    return '' + number.toLocaleString();
   },
 
   render() {
-    return (
-      <span>{this.formatNumber(this.props.value)}</span>
-    );
-  }
-});
+    let {value, className} = this.props;
 
-export default Count;
+    return <span className={className}>{this.formatNumber(value)}</span>;
+  },
+});

@@ -4,24 +4,24 @@ from sentry.api.base import Endpoint
 from sentry.api.exceptions import ResourceDoesNotExist
 from sentry.api.permissions import ScopedPermission
 from sentry.models import User
-from sentry.models.apikey import ROOT_KEY
+from sentry.auth.superuser import is_active_superuser
 
 
 class UserPermission(ScopedPermission):
-    def has_object_permission(self, request, view, user):
-        if request.auth is ROOT_KEY:
-            return True
+    def has_object_permission(self, request, view, user=None):
+        if user is None:
+            user = request.user
         if request.user == user:
             return True
         if request.auth:
             return False
-        if request.is_superuser():
+        if is_active_superuser(request):
             return True
         return False
 
 
 class UserEndpoint(Endpoint):
-    permission_classes = (UserPermission,)
+    permission_classes = (UserPermission, )
 
     def convert_args(self, request, user_id, *args, **kwargs):
         try:

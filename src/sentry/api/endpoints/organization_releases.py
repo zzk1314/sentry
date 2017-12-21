@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from .project_releases import ReleaseSerializer
 from sentry.api.base import DocSection
 from sentry.api.bases.organization import OrganizationReleasesBaseEndpoint
+from sentry.api.exceptions import InvalidRepository
 from sentry.api.paginator import OffsetPaginator
 from sentry.api.serializers import serialize
 from sentry.api.serializers.rest_framework import (
@@ -20,7 +21,7 @@ from sentry.utils.apidocs import scenario, attach_scenarios
 def create_new_org_release_scenario(runner):
     runner.request(
         method='POST',
-        path='/organizations/%s/releases/' % (runner.org.slug,),
+        path='/organizations/%s/releases/' % (runner.org.slug, ),
         data={
             'version': '2.0rc2',
             'ref': '6ba09a7c53235ee8a8fa5ee4c1ca8ca886e7fdbb',
@@ -31,16 +32,21 @@ def create_new_org_release_scenario(runner):
 
 @scenario('ListOrganizationReleases')
 def list_org_releases_scenario(runner):
-    runner.request(
-        method='GET',
-        path='/organizations/%s/releases/' % (runner.org.slug,)
-    )
+    runner.request(method='GET', path='/organizations/%s/releases/' % (runner.org.slug, ))
 
 
 class ReleaseSerializerWithProjects(ReleaseSerializer):
     projects = ListField()
-    headCommits = ListField(child=ReleaseHeadCommitSerializerDeprecated(), required=False)
-    refs = ListField(child=ReleaseHeadCommitSerializer(), required=False)
+    headCommits = ListField(
+        child=ReleaseHeadCommitSerializerDeprecated(),
+        required=False,
+        allow_null=False,
+    )
+    refs = ListField(
+        child=ReleaseHeadCommitSerializer(),
+        required=False,
+        allow_null=False,
+    )
 
 
 class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
@@ -104,8 +110,6 @@ class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
                         for instance.
         :param array projects: a list of project slugs that are involved in
                                this release
-        :param datetime dateStarted: an optional date that indicates when the
-                                     release process started.
         :param datetime dateReleased: an optional date that indicates when
                                       the release went live.  If not provided
                                       the current time is assumed.
@@ -128,8 +132,8 @@ class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
             result = serializer.object
 
             allowed_projects = {
-                p.slug: p for p in self.get_allowed_projects(request, organization)
-            }
+                p.slug: p for p in self.get_allowed_projects(
+                    request, organization)}
 
             projects = []
             for slug in result['projects']:
@@ -147,7 +151,6 @@ class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
                         ref=result.get('ref'),
                         url=result.get('url'),
                         owner=result.get('owner'),
-                        date_started=result.get('dateStarted'),
                         date_released=result.get('dateReleased'),
                     ), True
             except IntegrityError:
@@ -178,18 +181,26 @@ class OrganizationReleasesEndpoint(OrganizationReleasesBaseEndpoint):
 
             refs = result.get('refs')
             if not refs:
-                refs = [{
-                    'repository': r['repository'],
-                    'previousCommit': r.get('previousId'),
-                    'commit': r['currentId'],
-                } for r in result.get('headCommits', [])]
+                refs = [
+                    {
+                        'repository': r['repository'],
+                        'previousCommit': r.get('previousId'),
+                        'commit': r['currentId'],
+                    } for r in result.get('headCommits', [])
+                ]
             if refs:
                 if not request.user.is_authenticated():
-                    return Response({
-                        'refs': ['You must use an authenticated API token to fetch refs']
-                    }, status=400)
+                    return Response(
+                        {
+                            'refs': ['You must use an authenticated API token to fetch refs']
+                        },
+                        status=400
+                    )
                 fetch_commits = not commit_list
-                release.set_refs(refs, request.user, fetch_commits=fetch_commits)
+                try:
+                    release.set_refs(refs, request.user, fetch=fetch_commits)
+                except InvalidRepository as exc:
+                    return Response({'refs': [exc.message]}, status=400)
 
             if not created and not new_projects:
                 # This is the closest status code that makes sense, and we want

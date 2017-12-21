@@ -18,11 +18,11 @@ from django.utils.encoding import force_bytes
 from hashlib import md5
 from structlog import get_logger
 from uuid import uuid4
+from six.moves.urllib.parse import urlencode
 
 from sentry import roles
 from sentry.db.models import (
-    BaseModel, BoundedAutoField, BoundedPositiveIntegerField,
-    FlexibleForeignKey, Model, sane_repr
+    BaseModel, BoundedAutoField, BoundedPositiveIntegerField, FlexibleForeignKey, Model, sane_repr
 )
 from sentry.utils.http import absolute_uri
 
@@ -40,7 +40,7 @@ class OrganizationMemberTeam(BaseModel):
     class Meta:
         app_label = 'sentry'
         db_table = 'sentry_organizationmember_teams'
-        unique_together = (('team', 'organizationmember'),)
+        unique_together = (('team', 'organizationmember'), )
 
     __repr__ = sane_repr('team_id', 'organizationmember_id')
 
@@ -65,23 +65,24 @@ class OrganizationMember(Model):
 
     organization = FlexibleForeignKey('sentry.Organization', related_name="member_set")
 
-    user = FlexibleForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                             related_name="sentry_orgmember_set")
+    user = FlexibleForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, related_name="sentry_orgmember_set"
+    )
     email = models.EmailField(null=True, blank=True)
     role = models.CharField(
         choices=roles.get_choices(),
         max_length=32,
         default=roles.get_default().id,
     )
-    flags = BitField(flags=(
-        ('sso:linked', 'sso:linked'),
-        ('sso:invalid', 'sso:invalid'),
-    ), default=0)
+    flags = BitField(
+        flags=(('sso:linked', 'sso:linked'), ('sso:invalid', 'sso:invalid'), ), default=0
+    )
     token = models.CharField(max_length=64, null=True, blank=True, unique=True)
     date_added = models.DateTimeField(default=timezone.now)
     has_global_access = models.BooleanField(default=True)
-    teams = models.ManyToManyField('sentry.Team', blank=True,
-                                   through='sentry.OrganizationMemberTeam')
+    teams = models.ManyToManyField(
+        'sentry.Team', blank=True, through='sentry.OrganizationMemberTeam'
+    )
 
     # Deprecated -- no longer used
     type = BoundedPositiveIntegerField(default=50, blank=True)
@@ -89,12 +90,13 @@ class OrganizationMember(Model):
     class Meta:
         app_label = 'sentry'
         db_table = 'sentry_organizationmember'
-        unique_together = (
-            ('organization', 'user'),
-            ('organization', 'email'),
-        )
+        unique_together = (('organization', 'user'), ('organization', 'email'), )
 
-    __repr__ = sane_repr('organization_id', 'user_id', 'role',)
+    __repr__ = sane_repr(
+        'organization_id',
+        'user_id',
+        'role',
+    )
 
     @transaction.atomic
     def save(self, *args, **kwargs):
@@ -120,10 +122,15 @@ class OrganizationMember(Model):
     def get_invite_link(self):
         if not self.is_pending:
             return None
-        return absolute_uri(reverse('sentry-accept-invite', kwargs={
-            'member_id': self.id,
-            'token': self.token or self.legacy_token,
-        }))
+        return absolute_uri(
+            reverse(
+                'sentry-accept-invite',
+                kwargs={
+                    'member_id': self.id,
+                    'token': self.token or self.legacy_token,
+                }
+            )
+        )
 
     def send_invite_email(self):
         from sentry.utils.email import MessageBuilder
@@ -148,25 +155,59 @@ class OrganizationMember(Model):
             logger = get_logger(name='sentry.mail')
             logger.exception(e)
 
-    def send_sso_link_email(self):
+    def send_sso_link_email(self, actor, provider):
         from sentry.utils.email import MessageBuilder
 
+        link_args = {'organization_slug': self.organization.slug}
+
         context = {
-            'email': self.email,
-            'organization_name': self.organization.name,
-            'url': absolute_uri(reverse('sentry-auth-organization', kwargs={
-                'organization_slug': self.organization.slug,
-            })),
+            'organization': self.organization,
+            'actor': actor,
+            'provider': provider,
+            'url': absolute_uri(reverse('sentry-auth-organization', kwargs=link_args)),
         }
 
         msg = MessageBuilder(
-            subject='Action Required for %s' % (self.organization.name,),
+            subject='Action Required for %s' % (self.organization.name, ),
             template='sentry/emails/auth-link-identity.txt',
             html_template='sentry/emails/auth-link-identity.html',
             type='organization.auth_link',
             context=context,
         )
         msg.send_async([self.get_email()])
+
+    def send_sso_unlink_email(self, actor, provider):
+        from sentry.utils.email import MessageBuilder
+        from sentry.models import LostPasswordHash
+
+        email = self.get_email()
+
+        recover_uri = '{path}?{query}'.format(
+            path=reverse('sentry-account-recover'),
+            query=urlencode({'email': email}),
+        )
+
+        context = {
+            'email': email,
+            'recover_url': absolute_uri(recover_uri),
+            'has_password': self.user.password,
+            'organization': self.organization,
+            'actor': actor,
+            'provider': provider,
+        }
+
+        if not self.user.password:
+            password_hash = LostPasswordHash.for_user(self.user)
+            context['set_password_url'] = password_hash.get_absolute_url(mode='set_password')
+
+        msg = MessageBuilder(
+            subject='Action Required for %s' % (self.organization.name, ),
+            template='sentry/emails/auth-sso-disabled.txt',
+            html_template='sentry/emails/auth-sso-disabled.html',
+            type='organization.auth_sso_disabled',
+            context=context,
+        )
+        msg.send_async([email])
 
     def get_display_name(self):
         if self.user_id:
@@ -191,16 +232,23 @@ class OrganizationMember(Model):
     def get_audit_log_data(self):
         from sentry.models import Team
         return {
-            'email': self.email,
-            'user': self.user_id,
-            'teams': list(Team.objects.filter(
-                id__in=OrganizationMemberTeam.objects.filter(
-                    organizationmember=self,
-                    is_active=True,
-                ).values_list('team', flat=True)
-            )),
-            'has_global_access': self.has_global_access,
-            'role': self.role,
+            'email':
+            self.email,
+            'user':
+            self.user_id,
+            'teams':
+            list(
+                Team.objects.filter(
+                    id__in=OrganizationMemberTeam.objects.filter(
+                        organizationmember=self,
+                        is_active=True,
+                    ).values_list('team', flat=True)
+                ).values_list('id', flat=True)
+            ),
+            'has_global_access':
+            self.has_global_access,
+            'role':
+            self.role,
         }
 
     def get_teams(self):

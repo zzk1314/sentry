@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import ApiMixin from '../../mixins/apiMixin';
@@ -12,21 +13,19 @@ const POLLER_DELAY = 60000;
 
 const Broadcasts = React.createClass({
   propTypes: {
-    showPanel: React.PropTypes.bool,
-    currentPanel: React.PropTypes.string,
-    hidePanel: React.PropTypes.func,
-    onShowPanel: React.PropTypes.func.isRequired
+    showPanel: PropTypes.bool,
+    currentPanel: PropTypes.string,
+    hidePanel: PropTypes.func,
+    onShowPanel: PropTypes.func.isRequired,
   },
 
-  mixins: [
-    ApiMixin
-  ],
+  mixins: [ApiMixin],
 
   getInitialState() {
     return {
       broadcasts: [],
       loading: true,
-      error: false
+      error: false,
     };
   },
 
@@ -55,20 +54,20 @@ const Broadcasts = React.createClass({
     }
     this.api.request('/broadcasts/', {
       method: 'GET',
-      success: (data) => {
+      success: data => {
         this.setState({
-          broadcasts: data,
-          loading: false
+          broadcasts: data || [],
+          loading: false,
         });
         this.poller = window.setTimeout(this.fetchData, POLLER_DELAY);
       },
       error: () => {
         this.setState({
           loading: false,
-          error: true
+          error: true,
         });
         this.poller = window.setTimeout(this.fetchData, POLLER_DELAY);
-      }
+      },
     });
   },
 
@@ -78,30 +77,31 @@ const Broadcasts = React.createClass({
   },
 
   getUnseenIds() {
-    return this.state.broadcasts.filter((item) => {
-      return !item.hasSeen;
-    }).map((item) => {
-      return item.id;
-    });
+    return this.state.broadcasts
+      .filter(item => {
+        return !item.hasSeen;
+      })
+      .map(item => {
+        return item.id;
+      });
   },
 
   markSeen() {
     let unseenBroadcastIds = this.getUnseenIds();
-    if (unseenBroadcastIds.length === 0)
-      return;
+    if (unseenBroadcastIds.length === 0) return;
 
     this.api.request('/broadcasts/', {
       method: 'PUT',
       query: {id: unseenBroadcastIds},
       data: {
-        hasSeen: '1'
+        hasSeen: '1',
       },
       success: () => {
         this.setState({
-          broadcasts: this.state.broadcasts.map((item) => {
+          broadcasts: this.state.broadcasts.map(item => {
             item.hasSeen = true;
             return item;
-          })
+          }),
         });
       },
     });
@@ -110,37 +110,45 @@ const Broadcasts = React.createClass({
   render() {
     let {broadcasts, loading} = this.state;
     return (
-      <li className={this.props.currentPanel == 'broadcasts' ? 'active' : null }>
-        <a className="broadcasts-toggle" onClick={this.onShowPanel} title="Updates from Sentry">
-          <span className="icon icon-globe"/>
-          {this.getUnseenIds() > 0 &&
-            <span className="activity-indicator"/>
-          }
+      <li className={this.props.currentPanel == 'broadcasts' ? 'active' : null}>
+        <a
+          className="broadcasts-toggle"
+          onClick={this.onShowPanel}
+          title="Updates from Sentry"
+        >
+          <span className="icon icon-globe" />
+          {this.getUnseenIds() > 0 && <span className="activity-indicator" />}
         </a>
-        {this.props.showPanel && this.props.currentPanel == 'broadcasts' &&
-          <SidebarPanel title={t('Recent updates from Sentry')}
-                        hidePanel={this.props.hidePanel}>
-              {loading ?
+        {this.props.showPanel &&
+          this.props.currentPanel == 'broadcasts' && (
+            <SidebarPanel
+              title={t('Recent updates from Sentry')}
+              hidePanel={this.props.hidePanel}
+            >
+              {loading ? (
                 <LoadingIndicator />
-              : (broadcasts.length === 0 ?
-                <div className="sidebar-panel-empty">{t('No recent updates from the Sentry team.')}</div>
-              :
-                broadcasts.map((item) => {
+              ) : broadcasts.length === 0 ? (
+                <div className="sidebar-panel-empty">
+                  {t('No recent updates from the Sentry team.')}
+                </div>
+              ) : (
+                broadcasts.map(item => {
                   return (
                     <SidebarPanelItem
                       key={item.id}
                       className={!item.hasSeen && 'unseen'}
                       title={item.title}
                       message={item.message}
-                      link={item.link}/>
+                      link={item.link}
+                    />
                   );
                 })
               )}
-          </SidebarPanel>
-        }
+            </SidebarPanel>
+          )}
       </li>
     );
-  }
+  },
 });
 
 export default Broadcasts;

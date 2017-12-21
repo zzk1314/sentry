@@ -1,26 +1,39 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
 
 function LoadingIndicator(props) {
-  let {mini, triangle} = props;
-  let classes = {
+  let {mini, triangle, overlay, dark, children, finished, className, style} = props;
+  let cx = classNames(className, {
+    overlay,
+    dark,
     loading: true,
     mini,
-    triangle
-  };
+    triangle,
+  });
+
+  let loadingCx = classNames({
+    'loading-indicator': true,
+    'load-complete': finished,
+  });
 
   return (
-    <div className={classNames(props.className, classes)}>
-      <div className="loading-indicator"></div>
-      <div className="loading-message">{props.children}</div>
+    <div className={cx} style={style}>
+      <div className={loadingCx}>
+        {finished ? <div className="checkmark draw" /> : null}
+      </div>
+
+      <div className="loading-message">{children}</div>
     </div>
   );
 }
 
 LoadingIndicator.propTypes = {
-  mini: React.PropTypes.bool,
-  triangle: React.PropTypes.bool
+  overlay: PropTypes.bool,
+  dark: PropTypes.bool,
+  mini: PropTypes.bool,
+  triangle: PropTypes.bool,
+  finished: PropTypes.bool,
 };
 
 export default LoadingIndicator;
-

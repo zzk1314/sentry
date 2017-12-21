@@ -1,29 +1,28 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import GroupEventDataSection from '../eventDataSection';
-import PropTypes from '../../../proptypes';
+import SentryTypes from '../../../proptypes';
 import {isStacktraceNewestFirst} from './stacktrace';
 import CrashHeader from './crashHeader';
 import CrashContent from './crashContent';
 
-const ExceptionInterface = React.createClass({
-  propTypes: {
-    group: PropTypes.Group.isRequired,
-    event: PropTypes.Event.isRequired,
-    type: React.PropTypes.string.isRequired,
-    data: React.PropTypes.object.isRequired,
-  },
+class ExceptionInterface extends React.Component {
+  static propTypes = {
+    group: SentryTypes.Group.isRequired,
+    event: SentryTypes.Event.isRequired,
+    type: PropTypes.string.isRequired,
+    data: PropTypes.object.isRequired,
+  };
 
-  getInitialState() {
-    return {
-      stackView: this.props.data.hasSystemFrames ? 'app' : 'full',
-      newestFirst: isStacktraceNewestFirst(),
-      stackType: 'original',
-    };
-  },
+  state = {
+    stackView: this.props.data.hasSystemFrames ? 'app' : 'full',
+    newestFirst: isStacktraceNewestFirst(),
+    stackType: 'original',
+  };
 
-  eventHasThreads() {
+  eventHasThreads = () => {
     return !!this.props.event.entries.find(x => x.type === 'threads');
-  },
+  };
 
   render() {
     let group = this.props.group;
@@ -48,7 +47,7 @@ const ExceptionInterface = React.createClass({
         stackView={stackView}
         newestFirst={newestFirst}
         stackType={stackType}
-        onChange={(newState) => {
+        onChange={newState => {
           this.setState(newState);
         }}
       />
@@ -56,21 +55,23 @@ const ExceptionInterface = React.createClass({
 
     return (
       <GroupEventDataSection
-          group={group}
-          event={event}
-          type={this.props.type}
-          title={title}
-          wrapTitle={false}>
+        group={group}
+        event={event}
+        type={this.props.type}
+        title={title}
+        wrapTitle={false}
+      >
         <CrashContent
           group={group}
           event={event}
           stackType={stackType}
           stackView={stackView}
           newestFirst={newestFirst}
-          exception={data} />
+          exception={data}
+        />
       </GroupEventDataSection>
     );
   }
-});
+}
 
 export default ExceptionInterface;

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import OrganizationState from '../mixins/organizationState';
 import {t} from '../locale';
@@ -6,12 +7,12 @@ import LoadingIndicator from '../components/loadingIndicator';
 
 const ActionOverlay = React.createClass({
   propTypes: {
-    actionId: React.PropTypes.string.isRequired,
-    isLoading: React.PropTypes.bool
+    actionId: PropTypes.string.isRequired,
+    isLoading: PropTypes.bool,
   },
 
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: PropTypes.object.isRequired,
   },
 
   mixins: [OrganizationState],
@@ -47,27 +48,27 @@ const ActionOverlay = React.createClass({
 
     return (
       <div className={className} {...other}>
-        <div className="pattern"/>
+        <div className="pattern" />
         <div className="container">
           <div className="dialog">
             <div className="dialog-contents">
               <div className="discard-bar">
-                <a href={orgUrl} onClick={this.onDoThisLater}>{
-                  t('Do this later …')}</a>
+                <a href={orgUrl} onClick={this.onDoThisLater}>
+                  {t('Do this later …')}
+                </a>
               </div>
-              <div className="content">
-                {children}
-              </div>
-              {isLoading ?
+              <div className="content">{children}</div>
+              {isLoading ? (
                 <div className="loading-overlay">
-                  <LoadingIndicator/>
-                </div> : null}
+                  <LoadingIndicator />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
       </div>
     );
-  }
+  },
 });
 
 export default ActionOverlay;

@@ -5,9 +5,7 @@ from django.utils import timezone
 from jsonfield import JSONField
 
 from sentry.constants import ObjectStatus
-from sentry.db.models import (
-    BoundedPositiveIntegerField, Model, sane_repr
-)
+from sentry.db.models import (BoundedPositiveIntegerField, Model, sane_repr)
 from sentry.signals import pending_delete
 
 
@@ -26,13 +24,13 @@ class Repository(Model):
         db_index=True,
     )
     date_added = models.DateTimeField(default=timezone.now)
+    integration_id = BoundedPositiveIntegerField(db_index=True, null=True)
 
     class Meta:
         app_label = 'sentry'
         db_table = 'sentry_repository'
         unique_together = (
-            ('organization_id', 'name'),
-            ('organization_id', 'provider', 'external_id')
+            ('organization_id', 'name'), ('organization_id', 'provider', 'external_id')
         )
 
     __repr__ = sane_repr('organization_id', 'name', 'provider')
@@ -42,12 +40,39 @@ class Repository(Model):
         provider_cls = bindings.get('repository.provider').get(self.provider)
         return provider_cls(self.provider)
 
+    def generate_delete_fail_email(self, error_message):
+        from sentry.utils.email import MessageBuilder
 
-def on_delete(instance, actor, **kwargs):
-    instance.get_provider().delete_repository(
-        repo=instance,
-        actor=actor,
-    )
+        new_context = {
+            'repo': self,
+            'error_message': error_message,
+            'provider_name': self.get_provider().name,
+        }
+
+        return MessageBuilder(
+            subject='Unable to Delete Repository Webhooks',
+            context=new_context,
+            template='sentry/emails/unable-to-delete-repo.txt',
+            html_template='sentry/emails/unable-to-delete-repo.html',
+        )
+
+
+def on_delete(instance, actor=None, **kwargs):
+    from sentry.exceptions import InvalidIdentity, PluginError
+    try:
+        instance.get_provider().delete_repository(
+            repo=instance,
+            actor=actor,
+        )
+    except Exception as exc:
+        if isinstance(exc, (PluginError, InvalidIdentity)):
+            error = exc.message
+        else:
+            error = 'An unknown error occurred'
+
+        if actor is not None:
+            msg = instance.generate_delete_fail_email(error)
+            msg.send_async(to=[actor.email])
 
 
 pending_delete.connect(on_delete, sender=Repository, weak=False)

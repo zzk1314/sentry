@@ -29,9 +29,7 @@ from sentry.utils.email import send_mail
 from sentry.utils.http import absolute_uri
 from sentry.utils.warnings import DeprecatedSettingWarning, UnsupportedBackend, seen_warnings
 from sentry.web.decorators import requires_admin
-from sentry.web.forms import (
-    ChangeUserForm, NewUserForm, RemoveUserForm, TestEmailForm
-)
+from sentry.web.forms import (ChangeUserForm, NewUserForm, RemoveUserForm, TestEmailForm)
 from sentry.utils import auth
 from sentry.web.helpers import render_to_response, render_to_string
 
@@ -45,25 +43,26 @@ def configure_plugin(request, slug):
     if isinstance(view, HttpResponse):
         return view
 
-    return render_to_response('sentry/admin/plugins/configure.html', {
-        'plugin': plugin,
-        'title': plugin.get_conf_title(),
-        'slug': plugin.slug,
-        'view': view,
-    }, request)
+    return render_to_response(
+        'sentry/admin/plugins/configure.html', {
+            'plugin': plugin,
+            'title': plugin.get_conf_title(),
+            'slug': plugin.slug,
+            'view': view,
+        }, request
+    )
 
 
 @requires_admin
 @transaction.atomic
 @csrf_protect
 def create_new_user(request):
-    if not request.is_superuser():
-        return HttpResponseRedirect(auth.get_login_url())
-
-    form = NewUserForm(request.POST or None, initial={
-        'send_welcome_mail': True,
-        'create_project': True,
-    })
+    form = NewUserForm(
+        request.POST or None, initial={
+            'send_welcome_mail': True,
+            'create_project': True,
+        }
+    )
     if form.is_valid():
         user = form.save(commit=False)
 
@@ -83,8 +82,9 @@ def create_new_user(request):
 
             try:
                 send_mail(
-                    '%s Welcome to Sentry' % (options.get('mail.subject-prefix'),),
-                    body, options.get('mail.from'), [user.email],
+                    '%s Welcome to Sentry' % (options.get('mail.subject-prefix'), ),
+                    body,
+                    options.get('mail.from'), [user.email],
                     fail_silently=False
                 )
             except Exception as e:
@@ -104,9 +104,6 @@ def create_new_user(request):
 @requires_admin
 @csrf_protect
 def edit_user(request, user_id):
-    if not request.is_superuser():
-        return HttpResponseRedirect(auth.get_login_url())
-
     try:
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
@@ -177,11 +174,13 @@ def status_env(request):
             continue
         config.append((k, v_repr))
 
-    return render_to_response('sentry/admin/status/env.html', {
-        'python_version': sys.version,
-        'config': config,
-        'environment': env.data,
-    }, request)
+    return render_to_response(
+        'sentry/admin/status/env.html', {
+            'python_version': sys.version,
+            'config': config,
+            'environment': env.data,
+        }, request
+    )
 
 
 @requires_admin
@@ -196,13 +195,17 @@ def status_packages(request):
             continue
         config.append((k, getattr(settings, k)))
 
-    return render_to_response('sentry/admin/status/packages.html', {
-        'modules': sorted([(p.project_name, p.version) for p in pkg_resources.working_set]),
-        'extensions': [
-            (p.get_title(), '%s.%s' % (p.__module__, p.__class__.__name__))
-            for p in plugins.all(version=None)
-        ],
-    }, request)
+    return render_to_response(
+        'sentry/admin/status/packages.html', {
+            'modules':
+            sorted([(p.project_name, p.version) for p in pkg_resources.working_set]),
+            'extensions': [
+                (p.get_title(), '%s.%s' % (p.__module__, p.__class__.__name__))
+                for p in plugins.all(version=None)
+            ],
+        },
+        request
+    )
 
 
 @requires_admin
@@ -226,8 +229,10 @@ def status_warnings(request):
     return render_to_response(
         'sentry/admin/status/warnings.html',
         {
-            'groups': sorted([(groupings[key], sort_by_message(values)) for key, values in groups.items()]),
-            'warnings': sort_by_message(warnings),
+            'groups':
+            sorted([(groupings[key], sort_by_message(values)) for key, values in groups.items()]),
+            'warnings':
+            sort_by_message(warnings),
         },
         request,
     )
@@ -242,20 +247,23 @@ def status_mail(request):
         body = """This email was sent as a request to test the Sentry outbound email configuration."""
         try:
             send_mail(
-                '%s Test Email' % (options.get('mail.subject-prefix'),),
-                body, options.get('mail.from'), [request.user.email],
+                '%s Test Email' % (options.get('mail.subject-prefix'), ),
+                body,
+                options.get('mail.from'), [request.user.email],
                 fail_silently=False
             )
         except Exception as e:
             form.errors['__all__'] = [six.text_type(e)]
 
-    return render_to_response('sentry/admin/status/mail.html', {
-        'form': form,
-        'mail_host': options.get('mail.host'),
-        'mail_password': bool(options.get('mail.password')),
-        'mail_username': options.get('mail.username'),
-        'mail_port': options.get('mail.port'),
-        'mail_use_tls': options.get('mail.use-tls'),
-        'mail_from': options.get('mail.from'),
-        'mail_list_namespace': options.get('mail.list-namespace'),
-    }, request)
+    return render_to_response(
+        'sentry/admin/status/mail.html', {
+            'form': form,
+            'mail_host': options.get('mail.host'),
+            'mail_password': bool(options.get('mail.password')),
+            'mail_username': options.get('mail.username'),
+            'mail_port': options.get('mail.port'),
+            'mail_use_tls': options.get('mail.use-tls'),
+            'mail_from': options.get('mail.from'),
+            'mail_list_namespace': options.get('mail.list-namespace'),
+        }, request
+    )

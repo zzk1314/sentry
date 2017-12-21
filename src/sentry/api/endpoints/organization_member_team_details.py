@@ -4,15 +4,13 @@ from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.response import Response
 
-from sentry.api.bases.organization import (
-    OrganizationEndpoint, OrganizationPermission
-)
+from sentry.api.bases.organization import (OrganizationEndpoint, OrganizationPermission)
 from sentry.api.exceptions import ResourceDoesNotExist
 from sentry.api.serializers import serialize
 from sentry.api.serializers.models.team import TeamWithProjectsSerializer
+from sentry.auth.superuser import is_active_superuser
 from sentry.models import (
-    AuditLogEntryEvent, OrganizationAccessRequest,
-    OrganizationMember, OrganizationMemberTeam, Team
+    AuditLogEntryEvent, OrganizationAccessRequest, OrganizationMember, OrganizationMemberTeam, Team
 )
 
 ERR_INSUFFICIENT_ROLE = 'You cannot modify a member other than yourself.'
@@ -24,8 +22,12 @@ class OrganizationMemberTeamSerializer(serializers.Serializer):
 
 class RelaxedOrganizationPermission(OrganizationPermission):
     _allowed_scopes = [
-        'org:read', 'org:write', 'org:admin',
-        'member:read', 'member:write', 'member:admin',
+        'org:read',
+        'org:write',
+        'org:admin',
+        'member:read',
+        'member:write',
+        'member:admin',
     ]
 
     scope_map = {
@@ -44,7 +46,7 @@ class OrganizationMemberTeamDetailsEndpoint(OrganizationEndpoint):
 
     def _can_access(self, request, member):
         # TODO(dcramer): ideally org owners/admins could perform these actions
-        if request.is_superuser():
+        if is_active_superuser(request):
             return True
 
         if not request.user.is_authenticated():
@@ -129,8 +131,7 @@ class OrganizationMemberTeamDetailsEndpoint(OrganizationEndpoint):
             data=omt.get_audit_log_data(),
         )
 
-        return Response(serialize(
-            team, request.user, TeamWithProjectsSerializer()), status=201)
+        return Response(serialize(team, request.user, TeamWithProjectsSerializer()), status=201)
 
     def delete(self, request, organization, member_id, team_slug):
         """
@@ -172,5 +173,4 @@ class OrganizationMemberTeamDetailsEndpoint(OrganizationEndpoint):
             )
             omt.delete()
 
-        return Response(serialize(
-            team, request.user, TeamWithProjectsSerializer()), status=200)
+        return Response(serialize(team, request.user, TeamWithProjectsSerializer()), status=200)

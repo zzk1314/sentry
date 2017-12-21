@@ -7,30 +7,29 @@ import ResultGrid from '../components/resultGrid';
 import {t} from '../locale';
 
 export const prettyDate = function(x) {
-    return moment(x).format('ll');
+  return moment(x).format('ll');
 };
 
-const AdminUsers = React.createClass({
-  getRow(row) {
+class AdminUsers extends React.Component {
+  getRow = row => {
     return [
       <td>
-        <strong><a href={`/manage/users/${row.id}/`}>
-          {row.username}
-        </a></strong><br />
-        {row.email !== row.username &&
-          <small>{row.email}</small>
-        }
+        <strong>
+          <a href={`/manage/users/${row.id}/`}>{row.username}</a>
+        </strong>
+        <br />
+        {row.email !== row.username && <small>{row.email}</small>}
       </td>,
       <td style={{textAlign: 'center'}}>{prettyDate(row.dateJoined)}</td>,
-      <td style={{textAlign: 'center'}}>{prettyDate(row.lastLogin)}</td>
+      <td style={{textAlign: 'center'}}>{prettyDate(row.lastLogin)}</td>,
     ];
-  },
+  };
 
   render() {
     let columns = [
       <th>User</th>,
       <th style={{textAlign: 'center', width: 150}}>Joined</th>,
-      <th style={{textAlign: 'center', width: 150}}>Last Login</th>
+      <th style={{textAlign: 'center', width: 150}}>Last Login</th>,
     ];
 
     return (
@@ -38,7 +37,7 @@ const AdminUsers = React.createClass({
         <h3>{t('Users')}</h3>
         <ResultGrid
           path="/manage/users/"
-          endpoint={`/users/`}
+          endpoint={'/users/'}
           method="GET"
           columns={columns}
           columnsForRow={this.getRow}
@@ -46,20 +45,16 @@ const AdminUsers = React.createClass({
           filters={{
             status: {
               name: 'Status',
-              options: [
-                ['active', 'Active'],
-                ['disabled', 'Disabled'],
-              ],
+              options: [['active', 'Active'], ['disabled', 'Disabled']],
             },
           }}
-          sortOptions={[
-            ['date', 'Date Joined'],
-          ]}
+          sortOptions={[['date', 'Date Joined']]}
           defaultSort="date"
-          {...this.props} />
+          {...this.props}
+        />
       </div>
     );
-  },
-});
+  }
+}
 
 export default AdminUsers;

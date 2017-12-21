@@ -1,7 +1,9 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import {Link} from 'react-router';
-import Count from '../../components/count';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
+
+import Count from '../../components/count';
 import {t} from '../../locale';
 
 let getPercent = (item, total) => {
@@ -16,10 +18,10 @@ let getPercent = (item, total) => {
 
 const ProjectTable = React.createClass({
   propTypes: {
-    projectMap: React.PropTypes.object.isRequired,
-    projectTotals: React.PropTypes.array.isRequired,
-    orgTotal: React.PropTypes.object.isRequired,
-    organization: React.PropTypes.object.isRequired
+    projectMap: PropTypes.object.isRequired,
+    projectTotals: PropTypes.array.isRequired,
+    orgTotal: PropTypes.object.isRequired,
+    organization: PropTypes.object.isRequired,
   },
 
   mixins: [PureRenderMixin],
@@ -31,7 +33,7 @@ const ProjectTable = React.createClass({
     let org = this.props.organization;
 
     if (!projectTotals) {
-      return <div/>;
+      return <div />;
     }
 
     // Sort based on # events received in desc order
@@ -45,34 +47,52 @@ const ProjectTable = React.createClass({
           <tr>
             <th>{t('Project')}</th>
             <th className="align-right">{t('Accepted')}</th>
-            <th className="align-right">{t('Dropped')}<br/>{t('(Rate Limit)')}</th>
-            <th className="align-right">{t('Dropped')}<br/>{t('(Filters)')}</th>
+            <th className="align-right">
+              {t('Dropped')}
+              <br />
+              {t('(Rate Limit)')}
+            </th>
+            <th className="align-right">
+              {t('Dropped')}
+              <br />
+              {t('(Filters)')}
+            </th>
             <th className="align-right">{t('Total')}</th>
           </tr>
         </thead>
         <tbody>
-          {projectTotals.map((item) => {
+          {projectTotals.map(item => {
             let project = projectMap[item.id];
+
+            if (!project) {
+              return null;
+            }
 
             return (
               <tr key={item.id}>
                 <td>
-                  <Link to={`/${org.slug}/${project.slug}/`}>{project.team.name} / {project.name}</Link>
+                  <Link to={`/${org.slug}/${project.slug}/`}>
+                    {project.team.name} / {project.name}
+                  </Link>
                 </td>
                 <td className="align-right">
-                  <Count value={item.accepted} /><br/>
+                  <Count value={item.accepted} />
+                  <br />
                   <small>{getPercent(item.accepted, orgTotal.accepted)}</small>
                 </td>
                 <td className="align-right">
-                  <Count value={item.rejected} /><br/>
+                  <Count value={item.rejected} />
+                  <br />
                   <small>{getPercent(item.rejected, orgTotal.rejected)}</small>
                 </td>
                 <td className="align-right">
-                  <Count value={item.blacklisted} /><br/>
+                  <Count value={item.blacklisted} />
+                  <br />
                   <small>{getPercent(item.blacklisted, orgTotal.blacklisted)}</small>
                 </td>
                 <td className="align-right">
-                  <Count value={item.received} /><br/>
+                  <Count value={item.received} />
+                  <br />
                   <small>{getPercent(item.received, orgTotal.received)}</small>
                 </td>
               </tr>
@@ -81,7 +101,7 @@ const ProjectTable = React.createClass({
         </tbody>
       </table>
     );
-  }
+  },
 });
 
 export default ProjectTable;

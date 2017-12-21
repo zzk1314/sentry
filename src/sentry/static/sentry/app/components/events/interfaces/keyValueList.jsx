@@ -1,21 +1,24 @@
+import PropTypes from 'prop-types';
 import React from 'react';
-import _ from 'underscore';
+import _ from 'lodash';
 
 import ContextData from '../../contextData';
 import {deviceNameMapper} from '../../../utils';
 
 const KeyValueList = React.createClass({
   propTypes: {
-    data: React.PropTypes.any.isRequired,
-    isContextData: React.PropTypes.bool,
-    isSorted: React.PropTypes.bool,
-    onClick: React.PropTypes.func
+    data: PropTypes.any.isRequired,
+    isContextData: PropTypes.bool,
+    isSorted: PropTypes.bool,
+    onClick: PropTypes.func,
+    raw: PropTypes.bool,
   },
 
   getDefaultProps() {
     return {
       isContextData: false,
-      isSorted: true
+      isSorted: true,
+      raw: false,
     };
   },
 
@@ -27,36 +30,40 @@ const KeyValueList = React.createClass({
     if (data === undefined || data === null) {
       data = [];
     } else if (!(data instanceof Array)) {
-      data = Object.keys(data).map((key) => [key, data[key]]);
+      data = Object.keys(data).map(key => [key, data[key]]);
     }
 
-    data = this.props.isSorted ? _.sortBy(data, (key, value) => key) : data;
-
-    const props = (this.props.onClick) ? {onClick: this.props.onClick} : {};
+    data = this.props.isSorted ? _.sortBy(data, [(key, value) => key]) : data;
+    let raw = this.props.raw;
+    const props = this.props.onClick ? {onClick: this.props.onClick} : {};
     return (
       <table className="table key-value" {...props}>
         <tbody>
-        {data.map(([key, value]) => {
-          if (this.props.isContextData) {
-            return [
-              <tr key={key}>
-                <td className="key">{key}</td>
-                <td className="value"><ContextData data={value}/></td>
-              </tr>
-            ];
-          } else {
-            return [
-              <tr key={key}>
-                <td className="key">{key}</td>
-                <td className="value"><pre>{deviceNameMapper('' + value || ' ')}</pre></td>
-              </tr>
-            ];
-          }
-        })}
+          {data.map(([key, value]) => {
+            if (this.props.isContextData) {
+              return [
+                <tr key={key}>
+                  <td className="key">{key}</td>
+                  <td className="value">
+                    <ContextData data={!raw ? value : JSON.stringify(value)} />
+                  </td>
+                </tr>,
+              ];
+            } else {
+              return [
+                <tr key={key}>
+                  <td className="key">{key}</td>
+                  <td className="value">
+                    <pre>{deviceNameMapper('' + value || ' ')}</pre>
+                  </td>
+                </tr>,
+              ];
+            }
+          })}
         </tbody>
       </table>
     );
-  }
+  },
 });
 
 export default KeyValueList;

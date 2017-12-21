@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import ApiMixin from '../../mixins/apiMixin';
 import LoadingError from '../../components/loadingError';
@@ -8,20 +9,18 @@ import EventNode from './eventNode';
 
 const EventList = React.createClass({
   propTypes: {
-    title: React.PropTypes.string.isRequired,
-    endpoint: React.PropTypes.string.isRequired
+    title: PropTypes.string.isRequired,
+    endpoint: PropTypes.string.isRequired,
   },
 
-  mixins: [
-    ApiMixin
-  ],
+  mixins: [ApiMixin],
 
   getInitialState() {
     return {
       groupList: [],
       loading: true,
       error: false,
-      statsPeriod: '24h'
+      statsPeriod: '24h',
     };
   },
 
@@ -30,15 +29,18 @@ const EventList = React.createClass({
   },
 
   componentWillReceiveProps() {
-    this.setState({
-      loading: true,
-      error: false
-    }, this.fetchData);
+    this.setState(
+      {
+        loading: true,
+        error: false,
+      },
+      this.fetchData
+    );
   },
 
   fetchData() {
     let minutes;
-    switch(this.state.statsPeriod) {
+    switch (this.state.statsPeriod) {
       case '15m':
         minutes = '15';
         break;
@@ -54,32 +56,32 @@ const EventList = React.createClass({
     this.api.request(this.props.endpoint, {
       query: {
         limit: 5,
-        minutes: minutes
+        minutes,
       },
-      success: (data) => {
+      success: data => {
         this.setState({
           groupList: data,
           loading: false,
-          error: false
+          error: false,
         });
       },
       error: () => {
         this.setState({
           loading: false,
-          error: true
+          error: true,
         });
-      }
+      },
     });
   },
 
   onSelectStatsPeriod(period) {
     this.setState({
-      statsPeriod: period
+      statsPeriod: period,
     });
   },
 
   render() {
-    let eventNodes = this.state.groupList.map((item) => {
+    let eventNodes = this.state.groupList.map(item => {
       return <EventNode group={item} key={item.id} />;
     });
 
@@ -96,22 +98,20 @@ const EventList = React.createClass({
         </div>
         <div className="box-content">
           <div className="tab-pane active">
-            {this.state.loading ?
+            {this.state.loading ? (
               <LoadingIndicator />
-            : (this.state.error ?
+            ) : this.state.error ? (
               <LoadingError onRetry={this.fetchData} />
-            : (eventNodes.length ?
-              <ul className="group-list group-list-small">
-                {eventNodes}
-              </ul>
-            :
+            ) : eventNodes.length ? (
+              <ul className="group-list group-list-small">{eventNodes}</ul>
+            ) : (
               <div className="group-list-empty">{t('No data available.')}</div>
-            ))}
+            )}
           </div>
         </div>
       </div>
     );
-  }
+  },
 });
 
 export default EventList;

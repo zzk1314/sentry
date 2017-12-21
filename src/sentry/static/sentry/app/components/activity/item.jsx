@@ -1,196 +1,266 @@
-import marked from 'marked';
+import PropTypes from 'prop-types';
 import React from 'react';
+import {Link} from 'react-router';
+import marked from 'marked';
 
+import {CommitLink} from '../../views/releases/releaseCommits';
 import Duration from '../../components/duration';
 import Avatar from '../../components/avatar';
-import {Link} from 'react-router';
+import IssueLink from '../../components/issueLink';
 import MemberListStore from '../../stores/memberListStore';
 import TimeSince from '../../components/timeSince';
 import Version from '../../components/version';
 
-import {tct} from '../../locale';
+import {t, tn, tct} from '../../locale';
 
+class ActivityItem extends React.Component {
+  static propTypes = {
+    clipHeight: PropTypes.number,
+    defaultClipped: PropTypes.bool,
+    item: PropTypes.object.isRequired,
+    orgId: PropTypes.string.isRequired,
+  };
 
-const ActivityItem = React.createClass({
-  propTypes: {
-    clipHeight: React.PropTypes.number,
-    defaultClipped: React.PropTypes.bool,
-    item: React.PropTypes.object.isRequired,
-    orgId: React.PropTypes.string.isRequired
-  },
+  static defaultProps = {
+    defaultClipped: false,
+    clipHeight: 68,
+  };
 
-  getDefaultProps() {
-    return {
-      defaultClipped: false,
-      clipHeight: 68
-    };
-  },
-
-  getInitialState() {
-    return {
-      clipped: this.props.defaultClipped
-    };
-  },
+  state = {
+    clipped: this.props.defaultClipped,
+  };
 
   componentDidMount() {
     if (this.refs.activityBubble) {
       let bubbleHeight = this.refs.activityBubble.offsetHeight;
 
-      if (bubbleHeight > this.props.clipHeight ) {
+      if (bubbleHeight > this.props.clipHeight) {
         /*eslint react/no-did-mount-set-state:0*/
         // okay if this causes re-render; cannot determine until
         // rendered first anyways
         this.setState({
-          clipped: true
+          clipped: true,
         });
       }
     }
-  },
+  }
 
-  formatProjectActivity(author, item) {
+  formatProjectActivity = (author, item) => {
     let data = item.data;
     let orgId = this.props.orgId;
     let project = item.project;
     let issue = item.issue;
 
-    switch(item.type) {
+    let issueLink = issue ? (
+      <IssueLink orgId={orgId} projectId={project.slug} issue={issue}>
+        {issue.shortId}
+      </IssueLink>
+    ) : null;
+
+    switch (item.type) {
       case 'note':
-        return tct('[author] commented on [link:an issue]', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/activity/#event_${item.id}`} />
+        return tct('[author] commented on [issue]', {
+          author,
+          issue: (
+            <Link
+              to={`/${orgId}/${project.slug}/issues/${issue.id}/activity/#event_${item.id}`}
+            >
+              {issue.shortId}
+            </Link>
+          ),
         });
       case 'set_resolved':
-        return tct('[author] marked [link:an issue] as resolved', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] marked [issue] as resolved', {
+          author,
+          issue: issueLink,
         });
       case 'set_resolved_by_age':
-        return tct('[author] marked [link:an issue] as resolved due to age', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] marked [issue] as resolved due to age', {
+          author,
+          issue: issueLink,
         });
       case 'set_resolved_in_release':
         if (data.version) {
-          return tct('[author] marked [link:an issue] as resolved in [version]', {
-            author: author,
-            version: <Version version={data.version} orgId={orgId} projectId={project.slug} />,
-            link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+          return tct('[author] marked [issue] as resolved in [version]', {
+            author,
+            version: (
+              <Version version={data.version} orgId={orgId} projectId={project.slug} />
+            ),
+            issue: issueLink,
           });
         }
-        return tct('[author] marked [link:an issue] as resolved in the upcoming release', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] marked [issue] as resolved in the upcoming release', {
+          author,
+          issue: issueLink,
         });
       case 'set_resolved_in_commit':
-        return tct('[author] marked [link:an issue] as fixed in [version]', {
-          author: author,
-          version: data.commit.id.substr(0, 12),
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] marked [issue] as fixed in [version]', {
+          author,
+          version: (
+            <CommitLink
+              inline={true}
+              commitId={data.commit.id}
+              repository={data.commit.repository}
+            />
+          ),
+          issue: issueLink,
         });
       case 'set_unresolved':
-        return tct('[author] marked [link:an issue] as unresolved', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] marked [issue] as unresolved', {
+          author,
+          issue: issueLink,
         });
       case 'set_ignored':
         if (data.ignoreDuration) {
-          return tct('[author] ignored [link:an issue] for [duration]', {
-            author: author,
+          return tct('[author] ignored [issue] for [duration]', {
+            author,
             duration: <Duration seconds={data.ignoreDuration * 60} />,
-            link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+            issue: issueLink,
+          });
+        } else if (data.ignoreCount && data.ignoreWindow) {
+          return tct(
+            '[author] ignored [issue] until it happens [count] time(s) in [duration]',
+            {
+              author,
+              count: data.ignoreCount,
+              duration: <Duration seconds={data.ignoreWindow * 60} />,
+              issue: issueLink,
+            }
+          );
+        } else if (data.ignoreCount) {
+          return tct('[author] ignored [issue] until it happens [count] time(s)', {
+            author,
+            count: data.ignoreCount,
+            issue: issueLink,
+          });
+        } else if (data.ignoreUserCount && data.ignoreUserWindow) {
+          return tct(
+            '[author] ignored [issue] until it affects [count] user(s) in [duration]',
+            {
+              author,
+              count: data.ignoreUserCount,
+              duration: <Duration seconds={data.ignoreUserWindow * 60} />,
+              issue: issueLink,
+            }
+          );
+        } else if (data.ignoreUserCount) {
+          return tct('[author] ignored [issue] until it affects [count] user(s)', {
+            author,
+            count: data.ignoreUserCount,
+            issue: issueLink,
           });
         }
-        return tct('[author] ignored [link:an issue]', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] ignored [issue]', {
+          author,
+          issue: issueLink,
         });
       case 'set_public':
-        return tct('[author] made an [link:an issue] public', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] made [issue] public', {
+          author,
+          issue: issueLink,
         });
       case 'set_private':
-        return tct('[author] made an [link:an issue] private', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] made [issue] private', {
+          author,
+          issue: issueLink,
         });
       case 'set_regression':
         if (data.version) {
-          return tct('[author] marked [link:an issue] as a regression in [version]', {
-            author: author,
-            version: <Version version={data.version} orgId={orgId} projectId={project.slug} />,
-            link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+          return tct('[author] marked [issue] as a regression in [version]', {
+            author,
+            version: (
+              <Version version={data.version} orgId={orgId} projectId={project.slug} />
+            ),
+            issue: issueLink,
           });
         }
-        return tct('[author] marked [link:an issue] as a regression', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] marked [issue] as a regression', {
+          author,
+          issue: issueLink,
         });
       case 'create_issue':
-        return tct('[author] linked [link:an issue] on [provider]', {
-          author: author,
+        return tct('[author] linked [issue] on [provider]', {
+          author,
           provider: data.provider,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+          issue: issueLink,
         });
+      case 'unmerge_destination':
+        return tn(
+          '%2$s migrated %1$d fingerprint from %3$s to %4$s',
+          '%2$s migrated %1$d fingerprints from %3$s to %4$s',
+          data.fingerprints.length,
+          author,
+          data.source ? (
+            <a href={`/${orgId}/${project.slug}/issues/${data.source.id}`}>
+              {data.source.shortId}
+            </a>
+          ) : (
+            t('a group')
+          ),
+          issueLink
+        );
       case 'first_seen':
-        return tct('[author] saw [link:a new issue]', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] saw [link:issue]', {
+          author,
+          issue: issueLink,
         });
       case 'assigned':
         let assignee;
         if (item.user && data.assignee === item.user.id) {
-          return tct('[author] assigned [link:an issue] to themselves', {
-            author: author,
-            link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+          return tct('[author] assigned [issue] to themselves', {
+            author,
+            issue: issueLink,
           });
         }
         assignee = MemberListStore.getById(data.assignee);
         if (assignee && assignee.email) {
-          return tct('[author] assigned [link:an issue] to [assignee]', {
-            author: author,
+          return tct('[author] assigned [issue] to [assignee]', {
+            author,
             assignee: <span title={assignee.email}>{assignee.name}</span>,
-            link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+            issue: issueLink,
           });
-        }
-        else if (data.assigneeEmail) {
-          return tct('[author] assigned [link:an issue] to [assignee]', {
-            author: author,
+        } else if (data.assigneeEmail) {
+          return tct('[author] assigned [issue] to [assignee]', {
+            author,
             assignee: data.assigneeEmail,
-            link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+            issue: issueLink,
           });
         }
-        return tct('[author] assigned [link:an issue] to an [help:unknown user]', {
-          author: author,
+        return tct('[author] assigned [issue] to an [help:unknown user]', {
+          author,
           help: <span title={data.assignee} />,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+          issue: issueLink,
         });
       case 'unassigned':
-        return tct('[author] unassigned [link:an issue]', {
-          author: author,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+        return tct('[author] unassigned [issue]', {
+          author,
+          issue: issueLink,
         });
       case 'merge':
         return tct('[author] merged [count] [link:issues]', {
-          author: author,
+          author,
           count: data.issues.length + 1,
-          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />
+          link: <Link to={`/${orgId}/${project.slug}/issues/${issue.id}/`} />,
         });
       case 'release':
         return tct('[author] released version [version]', {
-          author: author,
-          version: <Version version={data.version} orgId={orgId} projectId={project.slug} />
+          author,
+          version: (
+            <Version version={data.version} orgId={orgId} projectId={project.slug} />
+          ),
         });
       case 'deploy':
         return tct('[author] deployed version [version] to [environment].', {
-          author: author,
-          version: <Version version={data.version} orgId={orgId} projectId={project.slug} />,
-          environment: data.environment || 'Default Environment'
+          author,
+          version: (
+            <Version version={data.version} orgId={orgId} projectId={project.slug} />
+          ),
+          environment: data.environment || 'Default Environment',
         });
       default:
         return ''; // should never hit (?)
     }
-  },
+  };
 
   render() {
     let item = this.props.item;
@@ -201,13 +271,17 @@ const ActivityItem = React.createClass({
       bubbleClassName += ' clipped';
     }
 
-    let avatar = (item.user ?
-      <Avatar user={item.user} size={64} className="avatar" /> :
-      <div className="avatar sentry"><span className="icon-sentry-logo" /></div>);
+    let avatar = item.user ? (
+      <Avatar user={item.user} size={64} className="avatar" />
+    ) : (
+      <div className="avatar sentry">
+        <span className="icon-sentry-logo" />
+      </div>
+    );
 
     let author = {
       name: item.user ? item.user.name : 'Sentry',
-      avatar: avatar,
+      avatar,
     };
 
     if (item.type === 'note') {
@@ -222,11 +296,15 @@ const ActivityItem = React.createClass({
               </span>,
               item
             )}
-            <div className={bubbleClassName} ref="activityBubble" dangerouslySetInnerHTML={{__html: noteBody}} />
+            <div
+              className={bubbleClassName}
+              ref="activityBubble"
+              dangerouslySetInnerHTML={{__html: noteBody}}
+            />
             <div className="activity-meta">
-              <Link
-                className="project"
-                to={`/${orgId}/${item.project.slug}/`}>{item.project.name}</Link>
+              <Link className="project" to={`/${orgId}/${item.project.slug}/`}>
+                {item.project.name}
+              </Link>
               <span className="bullet" />
               <TimeSince date={item.dateCreated} />
             </div>
@@ -248,9 +326,9 @@ const ActivityItem = React.createClass({
               <a href={item.data.location}>{item.data.title}</a>
             </div>
             <div className="activity-meta">
-              <Link
-                className="project"
-                to={`/${orgId}/${item.project.slug}/`}>{item.project.name}</Link>
+              <Link className="project" to={`/${orgId}/${item.project.slug}/`}>
+                {item.project.name}
+              </Link>
               <span className="bullet" />
               <TimeSince date={item.dateCreated} />
             </div>
@@ -269,9 +347,9 @@ const ActivityItem = React.createClass({
               item
             )}
             <div className="activity-meta">
-              <Link
-                className="project"
-                to={`/${orgId}/${item.project.slug}/`}>{item.project.name}</Link>
+              <Link className="project" to={`/${orgId}/${item.project.slug}/`}>
+                {item.project.name}
+              </Link>
               <span className="bullet" />
               <TimeSince date={item.dateCreated} />
             </div>
@@ -279,7 +357,7 @@ const ActivityItem = React.createClass({
         </li>
       );
     }
-  },
-});
+  }
+}
 
 export default ActivityItem;

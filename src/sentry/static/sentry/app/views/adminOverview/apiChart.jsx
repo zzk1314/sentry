@@ -1,18 +1,18 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import ApiMixin from '../../mixins/apiMixin';
-import FlotChart from '../../components/flotChart';
+import StackedBarChart from '../../components/stackedBarChart';
 import LoadingError from '../../components/loadingError';
 import LoadingIndicator from '../../components/loadingIndicator';
 
-const ApiChart = React.createClass({
+export default React.createClass({
   propTypes: {
-    since: React.PropTypes.number.isRequired
+    since: PropTypes.number.isRequired,
+    resolution: PropTypes.string.isRequired,
   },
 
-  mixins: [
-    ApiMixin
-  ],
+  mixins: [ApiMixin],
 
   getInitialState() {
     return {
@@ -21,7 +21,7 @@ const ApiChart = React.createClass({
       rawData: {
         'client-api.all-versions.responses.2xx': null,
         'client-api.all-versions.responses.4xx': null,
-        'client-api.all-versions.responses.5xx': null
+        'client-api.all-versions.responses.5xx': null,
       },
     };
   },
@@ -29,33 +29,36 @@ const ApiChart = React.createClass({
   componentWillMount() {
     this.fetchData();
   },
-  
+
   fetchData() {
     let statNameList = [
       'client-api.all-versions.responses.2xx',
       'client-api.all-versions.responses.4xx',
-      'client-api.all-versions.responses.5xx'
+      'client-api.all-versions.responses.5xx',
     ];
 
-    statNameList.forEach((statName) => {
+    statNameList.forEach(statName => {
       this.api.request('/internal/stats/', {
         method: 'GET',
         data: {
           since: this.props.since,
           resolution: '1h',
-          key: statName
+          key: statName,
         },
-        success: (data) => {
+        success: data => {
           this.state.rawData[statName] = data;
-          this.setState({
-            rawData: this.state.rawData,
-          }, this.requestFinished);
+          this.setState(
+            {
+              rawData: this.state.rawData,
+            },
+            this.requestFinished
+          );
         },
-        error: (data) => {
+        error: data => {
           this.setState({
-            error: true
+            error: true,
           });
-        }
+        },
       });
     });
   },
@@ -65,20 +68,24 @@ const ApiChart = React.createClass({
     if (rawData['events.total'] && rawData['events.dropped']) {
       this.processOrgData();
     }
-    if (rawData['client-api.all-versions.responses.2xx'] && rawData['client-api.all-versions.responses.4xx'] && rawData['client-api.all-versions.responses.5xx']) {
+    if (
+      rawData['client-api.all-versions.responses.2xx'] &&
+      rawData['client-api.all-versions.responses.4xx'] &&
+      rawData['client-api.all-versions.responses.5xx']
+    ) {
       this.setState({
-        loading: false
+        loading: false,
       });
     }
   },
 
   processRawSeries(series) {
-    return series.map((item) => {
-      return [item[0] * 1000, item[1]];
+    return series.map(item => {
+      return {x: item[0], y: item[1]};
     });
   },
 
-  getChartPoints() {
+  getChartSeries() {
     let {rawData} = this.state;
     return [
       {
@@ -86,47 +93,29 @@ const ApiChart = React.createClass({
         color: 'rgb(86, 175, 232)',
         shadowSize: 0,
         label: '4xx',
-        stack: true,
-        lines: {
-          lineWidth: 2,
-          show: true,
-          fill: true
-        }
       },
       {
         data: this.processRawSeries(rawData['client-api.all-versions.responses.5xx']),
         color: 'rgb(244, 63, 32)',
-        shadowSize: 0,
         label: '5xx',
-        stack: true,
-        lines: {
-          lineWidth: 2,
-          show: true,
-          fill: true
-        }
       },
       {
         data: this.processRawSeries(rawData['client-api.all-versions.responses.2xx']),
-        label: '2xx',
         color: 'rgb(78, 222, 73)',
-        shadowSize: 0,
-        stack: true,
-        lines: {
-          lineWidth: 2,
-          show: true,
-          fill: true
-        }
-      }
+        label: '2xx',
+      },
     ];
   },
 
   render() {
-    if (this.state.loading)
-      return <LoadingIndicator />;
-    else if (this.state.error)
-      return <LoadingError onRetry={this.fetchData} />;
-    return <FlotChart style={{height: 250}} plotData={this.getChartPoints()} />;
-  }
+    if (this.state.loading) return <LoadingIndicator />;
+    else if (this.state.error) return <LoadingError onRetry={this.fetchData} />;
+    return (
+      <StackedBarChart
+        series={this.getChartSeries()}
+        height={150}
+        className="standard-barchart"
+      />
+    );
+  },
 });
-
-export default ApiChart;

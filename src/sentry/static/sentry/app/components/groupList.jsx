@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import Reflux from 'reflux';
 import jQuery from 'jquery';
@@ -14,26 +15,22 @@ import {t} from '../locale';
 
 const GroupList = React.createClass({
   propTypes: {
-    query: React.PropTypes.string.isRequired,
-    canSelectGroups: React.PropTypes.bool,
-    orgId: React.PropTypes.string.isRequired,
-    projectId: React.PropTypes.string.isRequired,
-    bulkActions: React.PropTypes.bool.isRequired
+    query: PropTypes.string.isRequired,
+    canSelectGroups: PropTypes.bool,
+    orgId: PropTypes.string.isRequired,
+    projectId: PropTypes.string.isRequired,
+    bulkActions: PropTypes.bool.isRequired,
   },
 
   contextTypes: {
-    location: React.PropTypes.object
+    location: PropTypes.object,
   },
 
-  mixins: [
-    ProjectState,
-    Reflux.listenTo(GroupStore, 'onGroupChange'),
-    ApiMixin
-  ],
+  mixins: [ProjectState, Reflux.listenTo(GroupStore, 'onGroupChange'), ApiMixin],
 
   getDefaultProps() {
     return {
-      canSelectGroups: true
+      canSelectGroups: true,
     };
   },
 
@@ -41,7 +38,7 @@ const GroupList = React.createClass({
     return {
       loading: true,
       error: false,
-      groupIds: []
+      groupIds: [],
     };
   },
 
@@ -56,8 +53,10 @@ const GroupList = React.createClass({
   },
 
   componentDidUpdate(prevProps) {
-    if (prevProps.orgId !== this.props.orgId ||
-      prevProps.projectId !== this.props.projectId) {
+    if (
+      prevProps.orgId !== this.props.orgId ||
+      prevProps.projectId !== this.props.projectId
+    ) {
       this.fetchData();
     }
   },
@@ -71,7 +70,7 @@ const GroupList = React.createClass({
 
     this.setState({
       loading: true,
-      error: false
+      error: false,
     });
 
     this.api.request(this.getGroupListEndpoint(), {
@@ -81,15 +80,15 @@ const GroupList = React.createClass({
         this.setState({
           error: false,
           loading: false,
-          pageLinks: jqXHR.getResponseHeader('Link')
+          pageLinks: jqXHR.getResponseHeader('Link'),
         });
       },
       error: () => {
         this.setState({
           error: true,
-          loading: false
+          loading: false,
         });
-      }
+      },
     });
   },
 
@@ -105,24 +104,22 @@ const GroupList = React.createClass({
   },
 
   onGroupChange() {
-    let groupIds = this._streamManager.getAllItems().map((item) => item.id);
+    let groupIds = this._streamManager.getAllItems().map(item => item.id);
     if (!utils.valueIsEqual(groupIds, this.state.groupIds)) {
       this.setState({
-        groupIds: groupIds
+        groupIds,
       });
     }
   },
 
   render() {
-    if (this.state.loading)
-      return <LoadingIndicator />;
-    else if (this.state.error)
-      return <LoadingError onRetry={this.fetchData} />;
+    if (this.state.loading) return <LoadingIndicator />;
+    else if (this.state.error) return <LoadingError onRetry={this.fetchData} />;
     else if (this.state.groupIds.length === 0)
       return (
         <div className="box empty-stream">
-          <span className="icon icon-exclamation"></span>
-          <p>{t('There doesn\'t seem to be any events fitting the query.')}</p>
+          <span className="icon icon-exclamation" />
+          <p>{t("There doesn't seem to be any events fitting the query.")}</p>
         </div>
       );
 
@@ -138,7 +135,7 @@ const GroupList = React.createClass({
       <div className={wrapperClass}>
         <GroupListHeader />
         <ul className="group-list">
-          {this.state.groupIds.map((id) => {
+          {this.state.groupIds.map(id => {
             return (
               <StreamGroup
                 key={id}
@@ -152,7 +149,7 @@ const GroupList = React.createClass({
         </ul>
       </div>
     );
-  }
+  },
 });
 
 export default GroupList;

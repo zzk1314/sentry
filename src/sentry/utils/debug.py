@@ -17,13 +17,14 @@ from django.conf import settings
 from django.http import HttpResponse
 from six import StringIO
 
+from sentry.auth.superuser import is_active_superuser
 
 words_re = re.compile(r'\s+')
 
 group_prefix_re = [
     re.compile(r"^.*/django/[^/]+"),
     re.compile(r"^(.*)/[^/]+$"),  # extract module path
-    re.compile(r".*"),   # catch strange entries
+    re.compile(r".*"),  # catch strange entries
 ]
 
 
@@ -33,7 +34,7 @@ class ProfileMiddleware(object):
             return False
         if settings.DEBUG:
             return True
-        if hasattr(request, 'user') and request.is_superuser():
+        if hasattr(request, 'user') and is_active_superuser(request):
             return True
         return False
 
@@ -89,9 +90,7 @@ class ProfileMiddleware(object):
                 newcallers[func_strip_path(func2)] = caller
 
             if newfunc in newstats:
-                newstats[newfunc] = add_func_stats(
-                    newstats[newfunc],
-                    (cc, nc, tt, ct, newcallers))
+                newstats[newfunc] = add_func_stats(newstats[newfunc], (cc, nc, tt, ct, newcallers))
             else:
                 newstats[newfunc] = (cc, nc, tt, ct, newcallers)
         old_top = stats.top_level

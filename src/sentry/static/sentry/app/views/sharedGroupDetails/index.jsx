@@ -1,30 +1,29 @@
+import DocumentTitle from 'react-document-title';
 import React from 'react';
 import jQuery from 'jquery';
-import DocumentTitle from 'react-document-title';
 
+import {t} from '../../locale';
 import ApiMixin from '../../mixins/apiMixin';
 import EventEntries from '../../components/events/eventEntries';
 import Footer from '../../components/footer';
 import LoadingError from '../../components/loadingError';
 import LoadingIndicator from '../../components/loadingIndicator';
-import PropTypes from '../../proptypes';
-
+import NotFound from '../../components/errors/notFound';
+import SentryTypes from '../../proptypes';
 import SharedGroupHeader from './sharedGroupHeader';
 
 const SharedGroupDetails = React.createClass({
   childContextTypes: {
-    group: PropTypes.Group,
+    group: SentryTypes.Group,
   },
 
-  mixins: [
-    ApiMixin
-  ],
+  mixins: [ApiMixin],
 
   getInitialState() {
     return {
       group: null,
       loading: true,
-      error: false
+      error: false,
     };
   },
 
@@ -44,29 +43,29 @@ const SharedGroupDetails = React.createClass({
   },
 
   getTitle() {
-    if (this.state.group)
-      return this.state.group.title;
+    if (this.state.group) return this.state.group.title;
     return 'Sentry';
   },
 
   fetchData() {
     this.setState({
       loading: true,
-      error: false
+      error: false,
     });
 
     this.api.request(this.getGroupDetailsEndpoint(), {
-      success: (data) => {
+      success: data => {
         this.setState({
           loading: false,
-          group: data
+          group: data,
         });
-      }, error: () => {
+      },
+      error: () => {
         this.setState({
           loading: false,
-          error: true
+          error: true,
         });
-      }
+      },
     });
   },
 
@@ -79,10 +78,13 @@ const SharedGroupDetails = React.createClass({
   render() {
     let group = this.state.group;
 
-    if (this.state.loading || !group)
+    if (this.state.loading) {
       return <LoadingIndicator />;
-    else if (this.state.error)
+    } else if (!group) {
+      return <NotFound />;
+    } else if (this.state.error) {
       return <LoadingError onRetry={this.fetchData} />;
+    }
 
     let evt = this.state.group.latestEvent;
 
@@ -93,14 +95,14 @@ const SharedGroupDetails = React.createClass({
           <div className="container">
             <div className="box box-modal">
               <div className="box-header">
-                <a href="/">
+                <a className="logo" href="/">
                   <span className="icon-sentry-logo-full" />
                 </a>
-               {this.state.group.permalink &&
-                <a className="pull-right" href={this.state.group.permalink}>
-                  Details
-                </a>
-               }
+                {this.state.group.permalink && (
+                  <a className="details" href={this.state.group.permalink}>
+                    {t('Details')}
+                  </a>
+                )}
               </div>
               <div className="box-content">
                 <div className="content">
@@ -112,7 +114,8 @@ const SharedGroupDetails = React.createClass({
                         event={evt}
                         orgId={group.project.organization.slug}
                         project={group.project}
-                        isShare={true} />
+                        isShare={true}
+                      />
                     </div>
                   </div>
                   <Footer />
@@ -123,7 +126,7 @@ const SharedGroupDetails = React.createClass({
         </div>
       </DocumentTitle>
     );
-  }
+  },
 });
 
 export default SharedGroupDetails;

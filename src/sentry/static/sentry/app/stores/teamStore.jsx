@@ -1,13 +1,14 @@
 import Reflux from 'reflux';
 import TeamActions from '../actions/teamActions';
-import ProjectStore from './projectStore';
+import ProjectsStore from './projectsStore';
 
 const TeamStore = Reflux.createStore({
   init() {
+    this.initialized = false;
     this.reset();
 
     this.listenTo(TeamActions.updateSuccess, this.onUpdateSuccess);
-    this.listenTo(ProjectStore, this.onProject);
+    this.listenTo(ProjectsStore, this.onProject);
   },
 
   reset() {
@@ -21,13 +22,13 @@ const TeamStore = Reflux.createStore({
         this.projectMap[project.id] = item.id;
       });
     });
+    this.initialized = true;
     this.items = items;
     this.trigger(new Set(items.map(item => item.id)));
   },
 
   onUpdateSuccess(changeId, itemId, response) {
-    if (!response)
-      return;
+    if (!response) return;
 
     let item = this.getBySlug(itemId);
     if (!item) {
@@ -43,11 +44,11 @@ const TeamStore = Reflux.createStore({
     let teamsChanged = new Set();
     projectIds.forEach((set, projectId) => {
       let teamId = this.projectMap[projectId];
+      if (teamId === undefined) return;
       let team = this.getById(teamId);
-
       // TODO: make copy of project? right now just assigning reference
       // to project form project store
-      let project = ProjectStore.getById(projectId);
+      let project = ProjectsStore.getById(projectId);
       team.project = project;
       teamsChanged.add(team.id);
     });
@@ -63,15 +64,14 @@ const TeamStore = Reflux.createStore({
   },
 
   getActive() {
-    return this.items.filter((item) => item.isMember);
+    return this.items.filter(item => item.isMember);
   },
 
   getAll() {
     return this.items;
-  }
+  },
 });
 
 window.TeamStore = TeamStore;
 
 export default TeamStore;
-

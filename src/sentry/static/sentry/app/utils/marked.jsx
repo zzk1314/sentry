@@ -3,11 +3,10 @@ import marked from 'marked';
 function isSafeHref(href, pattern) {
   try {
     return pattern.test(decodeURIComponent(unescape(href)));
-  } catch(e) {
+  } catch (e) {
     return false;
   }
 }
-
 
 // We need to implement our own marked Renderer to not render
 // potentially malicious uris.
@@ -20,7 +19,7 @@ function Renderer() {
 Object.assign(Renderer.prototype, marked.Renderer.prototype);
 
 // Anythign except javascript, vbscript, data protocols
-const safeLinkPattern = /^(?!javascript|vbscript|data:)/i;
+const safeLinkPattern = /^(https?:|mailto:)/i;
 
 Renderer.prototype.link = function(href, title, text) {
   // For a bad link, just return the plain text href
@@ -33,7 +32,6 @@ Renderer.prototype.link = function(href, title, text) {
   out += '>' + text + '</a>';
   return out;
 };
-
 
 // Only allow http(s) for image tags
 const safeImagePattern = /^https?:\/\/./i;
@@ -53,7 +51,7 @@ Renderer.prototype.image = function(href, title, text) {
 marked.setOptions({
   renderer: new Renderer(),
   // Disable all HTML input and only accept Markdown
-  sanitize: true
+  sanitize: true,
 });
 
 export default marked;

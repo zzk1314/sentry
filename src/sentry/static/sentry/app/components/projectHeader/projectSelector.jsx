@@ -1,7 +1,7 @@
+import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import {browserHistory} from 'react-router';
-import jQuery from 'jquery';
+import classNames from 'classnames';
 
 import ApiMixin from '../../mixins/apiMixin';
 
@@ -17,34 +17,29 @@ const ProjectSelector = React.createClass({
   propTypes: {
     // Accepts a project id (slug) and not a project *object* because ProjectSelector
     // is created from Django templates, and only organization is serialized
-    projectId: React.PropTypes.string,
-    organization: React.PropTypes.object.isRequired
+    projectId: PropTypes.string,
+    organization: PropTypes.object.isRequired,
   },
 
   contextTypes: {
-    location: React.PropTypes.object
+    location: PropTypes.object,
   },
 
   mixins: [ApiMixin],
 
   getDefaultProps() {
     return {
-      projectId: null
+      projectId: null,
     };
   },
 
   getInitialState() {
     return {
+      isOpen: false,
       filter: '',
       currentIndex: -1,
-      ...this.getProjectState({filter: ''})
+      ...this.getProjectState({filter: ''}),
     };
-  },
-
-  componentDidUpdate(prevProps, prevState) {
-    // XXX(dcramer): fix odd dedraw issue as of Chrome 45.0.2454.15 dev (64-bit)
-    let node = jQuery(ReactDOM.findDOMNode(this.refs.container));
-    node.hide().show(0);
   },
 
   componentWillUnmount() {
@@ -53,19 +48,57 @@ const ProjectSelector = React.createClass({
     }
   },
 
-  onFilterChange(evt) {
-    this.setState({
-      filter: evt.target.value,
-      currentIndex: -1,
-      ...this.getProjectState({filter: evt.target.value})
-    });
+  urlPrefix() {
+    let org = this.props.organization;
+    return `/organizations/${org.slug}`;
   },
 
-  onKeyUp(evt) {
-    if (evt.key === 'Escape' || evt.keyCode === 27) {
-      // blur handler should additionally hide dropdown
-      this.close();
+  /**
+   * Returns an object with the target project url. If
+   * the router is present, passed as the 'to' property.
+   * If not, passed as an absolute URL via the 'href' property.
+   */
+  getProjectUrlProps(project) {
+    let org = this.props.organization;
+    let path = `/${org.slug}/${project.slug}/`;
+
+    if (this.context.location) {
+      return {to: path};
+    } else {
+      return {href: path};
     }
+  },
+
+  getProjectState(state) {
+    state = state || this.state;
+    let org = this.props.organization;
+    let filter = state.filter.toLowerCase();
+    let projectList = [];
+    let activeTeam;
+    let activeProject;
+    org.teams.forEach(team => {
+      if (!team.isMember) {
+        return;
+      }
+      team.projects.forEach(project => {
+        if (project.slug == this.props.projectId) {
+          activeProject = project;
+          activeTeam = team;
+        }
+        let fullName = [team.name, project.name, team.slug, project.slug]
+          .join(' ')
+          .toLowerCase();
+        if (filter && fullName.indexOf(filter) === -1) {
+          return;
+        }
+        projectList.push([team, project]);
+      });
+    });
+    return {
+      projectList,
+      activeTeam,
+      activeProject,
+    };
   },
 
   onFilterBlur() {
@@ -75,26 +108,85 @@ const ProjectSelector = React.createClass({
     // period that seemed to work in all browsers.
     this.filterBlurTimeout = setTimeout(() => {
       this.filterBlurTimeout = null;
-      this.close();
+      this.onClose();
     }, 200);
   },
 
-  close() {
+  onFilterChange(evt) {
     this.setState({
+      filter: evt.target.value,
+      currentIndex: -1,
+      ...this.getProjectState({filter: evt.target.value}),
+    });
+  },
+
+  onFilterClick(e) {
+    e.stopPropagation();
+  },
+
+  onFilterMount(ref) {
+    if (ref) {
+      ref.focus();
+    }
+  },
+
+  onKeyDown(evt) {
+    let projects = this.state.projectList;
+    if (evt.key === 'Down' || evt.keyCode === 40) {
+      if (this.state.currentIndex + 1 < projects.length) {
+        this.setState({
+          currentIndex: this.state.currentIndex + 1,
+        });
+      }
+    } else if (evt.key === 'Up' || evt.keyCode === 38) {
+      if (this.state.currentIndex > 0) {
+        this.setState({
+          currentIndex: this.state.currentIndex - 1,
+        });
+      }
+    } else if (evt.key === 'Enter' || evt.keyCode === 13) {
+      if (this.state.currentIndex > -1) {
+        let url = this.getProjectUrlProps(projects[this.state.currentIndex][1]);
+        if (url.to) {
+          browserHistory.pushState(null, url.to);
+        } else if (url.href) {
+          window.location = url.href;
+        }
+
+        this.onClose();
+      }
+    }
+  },
+
+  onKeyUp(evt) {
+    if (evt.key === 'Escape' || evt.keyCode === 27) {
+      // blur handler should additionally hide dropdown
+      this.onClose();
+    }
+  },
+
+  onOpen() {
+    this.setState({
+      isOpen: true,
+    });
+    // Not sure if this is still necessary
+    // this.setState(state => ({
+    // ...this.getProjectState(state)
+    // }));
+  },
+
+  onClose() {
+    this.setState({
+      isOpen: false,
       filter: '',
       currentIndex: -1,
-      ...this.getProjectState({filter: ''})
+      ...this.getProjectState({filter: ''}),
     });
-    // dropdownLink might not exist because we try to close within
-    // onFilterBlur above after a timeout. My hunch is that sometimes
-    // this DOM element is removed within the 200ms, so we error out.
-    this.refs.dropdownLink && this.refs.dropdownLink.close();
   },
 
   getProjectNode(team, project, highlightText, hasSingleTeam, isSelected) {
     let projectId = project.slug;
-    let label = this.getProjectLabel(team, project, hasSingleTeam,
-                                     highlightText);
+    let label = this.getProjectLabel(team, project, hasSingleTeam, highlightText);
 
     let menuItemProps = {
       key: projectId, // TODO: what if two projects w/ same name under diff orgs?
@@ -105,12 +197,12 @@ const ProjectSelector = React.createClass({
       // property. For example - when project selector is loaded on
       // Django-powered Settings pages.
 
-      ...this.getProjectUrlProps(project)
+      ...this.getProjectUrlProps(project),
     };
 
     return (
       <MenuItem {...menuItemProps}>
-        {project.isBookmarked && <span className="icon-star-solid bookmark "></span>}
+        {project.isBookmarked && <span className="icon-star-solid bookmark " />}
         {label}
       </MenuItem>
     );
@@ -120,8 +212,10 @@ const ProjectSelector = React.createClass({
     let label, text;
     if (!hasSingleTeam && project.name.indexOf(team.name) === -1) {
       label = (
-        <span>{team.name} / <ProjectLabel
-            project={project} organization={this.props.organization}/></span>
+        <span>
+          {team.name} /{' '}
+          <ProjectLabel project={project} organization={this.props.organization} />
+        </span>
       );
       text = team.name + ' / ' + project.name;
     } else {
@@ -144,28 +238,10 @@ const ProjectSelector = React.createClass({
     return (
       <span>
         {text.substr(0, idx)}
-        <strong className="highlight">
-          {text.substr(idx, highlightText.length)}
-        </strong>
+        <strong className="highlight">{text.substr(idx, highlightText.length)}</strong>
         {text.substr(idx + highlightText.length)}
       </span>
     );
-  },
-
-  /**
-   * Returns an object with the target project url. If
-   * the router is present, passed as the 'to' property.
-   * If not, passed as an absolute URL via the 'href' property.
-   */
-  getProjectUrlProps(project) {
-    let org = this.props.organization;
-    let path = `/${org.slug}/${project.slug}/`;
-
-    if (this.context.location) {
-      return {to: path};
-    } else {
-      return {href: path};
-    }
   },
 
   getLinkNode(team, project) {
@@ -181,86 +257,49 @@ const ProjectSelector = React.createClass({
 
     return (
       <span>
-        <Link to={`/${orgId}/${projectId}/`}>
-          {label}
-        </Link>
+        <Link to={`/${orgId}/${projectId}/`}>{label}</Link>
       </span>
     );
   },
 
-  onOpen(evt) {
-    ReactDOM.findDOMNode(this.refs.filter).focus();
-    this.setState({
-      ...this.getProjectState(this.state)
-    });
-  },
+  renderProjectList({organization: org, projects, filter, hasProjectWrite}) {
+    const hasFilter = !!filter;
+    const hasProjects = projects && projects.length;
+    // Will always need to show divider
+    const showDivider = !hasFilter && hasProjectWrite;
 
-  onClose() {
-    this.setState({
-      filter: '',
-      currentIndex: -1,
-      ...this.getProjectState({filter: ''})
-    });
-  },
-
-  onKeyDown(evt) {
-    let projects = this.state.projectList;
-    if (evt.key === 'Down' || evt.keyCode === 40) {
-      if (this.state.currentIndex + 1 < projects.length) {
-        this.setState({
-          currentIndex: this.state.currentIndex + 1
-        });
-      }
-    } else if (evt.key === 'Up' || evt.keyCode === 38) {
-      if (this.state.currentIndex > 0) {
-        this.setState({
-          currentIndex: this.state.currentIndex - 1
-        });
-      }
-    } else if (evt.key === 'Enter' || evt.keyCode === 13) {
-      if (this.state.currentIndex > -1) {
-        let url = this.getProjectUrlProps(projects[this.state.currentIndex][1]);
-        if (url.to) {
-          browserHistory.pushState(null, url.to);
-        } else if (url.href) {
-          window.location = url.href;
-        }
-      }
+    if (hasProjects) {
+      return projects;
+    } else {
+      // There can be a filter and have no found results or
+      // there can simply be no projects to list
+      //
+      // Give an actionable item when there are no projects
+      return [
+        <MenuItem key="empty-message" className="empty-projects-item" noAnchor>
+          <div className="empty-message">
+            {hasFilter && t('No projects found')}
+            {!hasFilter && t('You have no projects.')}
+          </div>
+        </MenuItem>,
+        showDivider ? <MenuItem key="divider" divider /> : null,
+        !hasFilter && hasProjectWrite ? (
+          <MenuItem key="create-project" className="empty-projects-item" noAnchor>
+            <a
+              className="btn btn-primary btn-block"
+              href={`${this.urlPrefix()}/projects/new/`}
+            >
+              {t('Create project')}
+            </a>
+          </MenuItem>
+        ) : null,
+      ];
     }
-  },
-
-  getProjectState(state) {
-    state = state || this.state;
-    let org = this.props.organization;
-    let filter = state.filter.toLowerCase();
-    let projectList = [];
-    let activeTeam;
-    let activeProject;
-    org.teams.forEach((team) => {
-      if (!team.isMember) {
-        return;
-      }
-      team.projects.forEach((project) => {
-        if (project.slug == this.props.projectId) {
-          activeProject = project;
-          activeTeam = team;
-        }
-        let fullName = [team.name, project.name, team.slug, project.slug].join(' ').toLowerCase();
-        if (filter && fullName.indexOf(filter) === -1) {
-          return;
-        }
-        projectList.push([team, project]);
-      });
-    });
-    return {
-      projectList: projectList,
-      activeTeam: activeTeam,
-      activeProject: activeProject
-    };
   },
 
   render() {
     let org = this.props.organization;
+    let access = new Set(org.access);
     let hasSingleTeam = org.teams.length === 1;
 
     let projectList = sortArray(this.state.projectList, ([team, project]) => {
@@ -268,38 +307,64 @@ const ProjectSelector = React.createClass({
     });
 
     let children = projectList.map(([team, project], index) => {
-      return this.getProjectNode(team, project, this.state.filter, hasSingleTeam, this.state.currentIndex === index);
+      return this.getProjectNode(
+        team,
+        project,
+        this.state.filter,
+        hasSingleTeam,
+        this.state.currentIndex === index
+      );
     });
+    const hasFilter = !!this.state.filter;
+    const hasProjects = children && !!children.length;
+    const dropdownClassNames = classNames('project-dropdown', {
+      'is-empty': !hasProjects,
+    });
+
     return (
-      <div className="project-select" ref="container">
+      <div className="project-select">
         <h3>
           <Link to={`/${org.slug}/`} className="home-crumb">
             <span className="icon-home" />
           </Link>
-          {this.state.activeProject ?
-            this.getLinkNode(this.state.activeTeam, this.state.activeProject)
-          :
-            t('Select a project')
-          }
-          <DropdownLink ref="dropdownLink" title="" topLevelClasses="project-dropdown"
-              onOpen={this.onOpen} onClose={this.onClose}>
-            <li className="project-filter" key="_filter">
-              <input
-                value={this.state.filter}
-                type="text"
-                placeholder={t('Filter projects')}
-                onChange={this.onFilterChange}
-                onKeyUp={this.onKeyUp}
-                onKeyDown={this.onKeyDown}
-                onBlur={this.onFilterBlur}
-                ref="filter" />
-            </li>
-            {children}
+          {this.state.activeProject
+            ? this.getLinkNode(this.state.activeTeam, this.state.activeProject)
+            : t('Select a project')}
+          <DropdownLink
+            title=""
+            topLevelClasses={dropdownClassNames}
+            isOpen={this.state.isOpen}
+            onOpen={this.onOpen}
+            onClose={this.onClose}
+            alwaysRenderMenu={false}
+          >
+            {(hasFilter || hasProjects) && (
+              <li className="project-filter" key="_filter">
+                <input
+                  value={this.state.filter}
+                  type="text"
+                  placeholder={t('Filter projects')}
+                  onChange={this.onFilterChange}
+                  onKeyUp={this.onKeyUp}
+                  onKeyDown={this.onKeyDown}
+                  onBlur={this.onFilterBlur}
+                  onClick={this.onFilterClick}
+                  ref={this.onFilterMount}
+                />
+              </li>
+            )}
+
+            {this.renderProjectList({
+              organization: org,
+              hasProjectWrite: access.has('project:write'),
+              projects: children,
+              filter: this.state.filter,
+            })}
           </DropdownLink>
         </h3>
       </div>
     );
-  }
+  },
 });
 
 export default ProjectSelector;

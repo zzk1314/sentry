@@ -1,57 +1,62 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import Note from './note';
 import NoteInput from './noteInput';
 
-const NoteContainer = React.createClass({
-  propTypes: {
-    group: React.PropTypes.object.isRequired,
-    item: React.PropTypes.object.isRequired,
-    author: React.PropTypes.object.isRequired,
-    onDelete: React.PropTypes.func.isRequired
-  },
+class NoteContainer extends React.Component {
+  static propTypes = {
+    group: PropTypes.object.isRequired,
+    item: PropTypes.object.isRequired,
+    author: PropTypes.object.isRequired,
+    onDelete: PropTypes.func.isRequired,
+    sessionUser: PropTypes.object.isRequired,
+    memberList: PropTypes.array.isRequired,
+  };
 
-  getInitialState() {
-    return {
-      editing: false
-    };
-  },
+  state = {
+    editing: false,
+  };
 
-  onEdit() {
+  onEdit = () => {
     this.setState({editing: true});
-  },
+  };
 
-  onFinish() {
+  onFinish = () => {
     this.setState({editing: false});
-  },
+  };
 
-  onDelete() {
+  onDelete = () => {
     this.props.onDelete(this.props.item);
-  },
+  };
 
   render() {
-    let {group, item, author} = this.props;
+    let {group, item, author, sessionUser, memberList} = this.props;
 
     return (
       <li className="activity-note">
         {author.avatar}
         <div className="activity-bubble">
-        {this.state.editing ?
-          <NoteInput
-            group={group}
-            item={item}
-            onFinish={this.onFinish} />
-        :
-          <Note
-            item={item}
-            author={author}
-            onEdit={this.onEdit}
-            onDelete={this.onDelete} />
-        }
+          {this.state.editing ? (
+            <NoteInput
+              group={group}
+              item={item}
+              onFinish={this.onFinish}
+              sessionUser={sessionUser}
+              memberList={memberList}
+            />
+          ) : (
+            <Note
+              item={item}
+              author={author}
+              onEdit={this.onEdit}
+              onDelete={this.onDelete}
+            />
+          )}
         </div>
       </li>
     );
   }
-});
+}
 
 export default NoteContainer;

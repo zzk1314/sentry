@@ -2,16 +2,19 @@
 
 from __future__ import absolute_import
 
+from datetime import timedelta
+from django.utils import timezone
 from mock import Mock, patch
 
-from sentry.models import EventTag, TagKey, TagValue
+from sentry import tagstore
+from sentry.tagstore.models import EventTag
+from sentry.models import Group, GroupSnooze, GroupStatus, ServiceHook
 from sentry.testutils import TestCase
 from sentry.tasks.merge import merge_group
 from sentry.tasks.post_process import index_event_tags, post_process_group
 
 
 class PostProcessGroupTest(TestCase):
-    @patch('sentry.tasks.post_process.record_affected_user', Mock())
     @patch('sentry.rules.processor.RuleProcessor')
     def test_rule_processor(self, mock_processor):
         group = self.create_group(project=self.project)
@@ -36,7 +39,6 @@ class PostProcessGroupTest(TestCase):
 
         mock_callback.assert_called_once_with(event, mock_futures)
 
-    @patch('sentry.tasks.post_process.record_affected_user', Mock())
     @patch('sentry.rules.processor.RuleProcessor')
     def test_group_refresh(self, mock_processor):
         group1 = self.create_group(project=self.project)
@@ -66,6 +68,125 @@ class PostProcessGroupTest(TestCase):
         assert event.group == group2
         assert event.group_id == group2.id
 
+    def test_invalidates_snooze(self):
+        group = self.create_group(
+            project=self.project, status=GroupStatus.IGNORED)
+        event = self.create_event(group=group)
+        snooze = GroupSnooze.objects.create(
+            group=group,
+            until=timezone.now() - timedelta(hours=1),
+        )
+
+        post_process_group(
+            event=event,
+            is_new=True,
+            is_regression=False,
+            is_sample=False,
+        )
+
+        assert not GroupSnooze.objects.filter(
+            id=snooze.id,
+        ).exists()
+
+        group = Group.objects.get(id=group.id)
+        assert group.status == GroupStatus.UNRESOLVED
+
+    def test_maintains_valid_snooze(self):
+        group = self.create_group(project=self.project)
+        event = self.create_event(group=group)
+        snooze = GroupSnooze.objects.create(
+            group=group,
+            until=timezone.now() + timedelta(hours=1),
+        )
+
+        post_process_group(
+            event=event,
+            is_new=True,
+            is_regression=False,
+            is_sample=False,
+        )
+
+        assert GroupSnooze.objects.filter(
+            id=snooze.id,
+        ).exists()
+
+    @patch('sentry.tasks.servicehooks.process_service_hook')
+    def test_service_hook_fires_on_new_event(self, mock_process_service_hook):
+        group = self.create_group(project=self.project)
+        event = self.create_event(group=group)
+
+        hook = ServiceHook.objects.create(
+            project_id=self.project.id,
+            actor_id=self.user.id,
+            events=['event.created'],
+        )
+
+        with self.feature('projects:servicehooks'):
+            post_process_group(
+                event=event,
+                is_new=True,
+                is_regression=False,
+                is_sample=False,
+            )
+
+        mock_process_service_hook.delay.assert_called_once_with(
+            hook_id=hook.id,
+            event=event,
+        )
+
+    @patch('sentry.tasks.servicehooks.process_service_hook')
+    @patch('sentry.rules.processor.RuleProcessor')
+    def test_service_hook_fires_on_alert(self, mock_processor, mock_process_service_hook):
+        group = self.create_group(project=self.project)
+        event = self.create_event(group=group)
+
+        mock_callback = Mock()
+        mock_futures = [Mock()]
+
+        mock_processor.return_value.apply.return_value = [
+            (mock_callback, mock_futures),
+        ]
+
+        hook = ServiceHook.objects.create(
+            project_id=self.project.id,
+            actor_id=self.user.id,
+            events=['event.alert'],
+        )
+
+        with self.feature('projects:servicehooks'):
+            post_process_group(
+                event=event,
+                is_new=False,
+                is_regression=False,
+                is_sample=False,
+            )
+
+        mock_process_service_hook.delay.assert_called_once_with(
+            hook_id=hook.id,
+            event=event,
+        )
+
+    @patch('sentry.tasks.servicehooks.process_service_hook')
+    def test_service_hook_does_not_fire_without_event(self, mock_process_service_hook):
+        group = self.create_group(project=self.project)
+        event = self.create_event(group=group)
+
+        ServiceHook.objects.create(
+            project_id=self.project.id,
+            actor_id=self.user.id,
+            events=[],
+        )
+
+        with self.feature('projects:servicehooks'):
+            post_process_group(
+                event=event,
+                is_new=True,
+                is_regression=False,
+                is_sample=False,
+            )
+
+        assert not mock_process_service_hook.delay.mock_calls
+
 
 class IndexEventTagsTest(TestCase):
     def test_simple(self):
@@ -77,6 +198,7 @@ class IndexEventTagsTest(TestCase):
                 event_id=event.id,
                 group_id=group.id,
                 project_id=self.project.id,
+                environment_id=self.environment.id,
                 organization_id=self.project.organization_id,
                 tags=[('foo', 'bar'), ('biz', 'baz')],
             )
@@ -86,25 +208,29 @@ class IndexEventTagsTest(TestCase):
         ).values_list('key_id', 'value_id'))
         assert len(tags) == 2
 
-        tagkey = TagKey.objects.get(
+        tagkey = tagstore.get_tag_key(
+            project_id=self.project.id,
+            environment_id=self.environment.id,
             key='foo',
-            project=self.project,
         )
-        tagvalue = TagValue.objects.get(
+        tagvalue = tagstore.get_tag_value(
+            project_id=self.project.id,
+            environment_id=self.environment.id,
             key='foo',
             value='bar',
-            project=self.project,
         )
         assert (tagkey.id, tagvalue.id) in tags
 
-        tagkey = TagKey.objects.get(
+        tagkey = tagstore.get_tag_key(
+            project_id=self.project.id,
+            environment_id=self.environment.id,
             key='biz',
-            project=self.project,
         )
-        tagvalue = TagValue.objects.get(
+        tagvalue = tagstore.get_tag_value(
+            project_id=self.project.id,
+            environment_id=self.environment.id,
             key='biz',
             value='baz',
-            project=self.project,
         )
         assert (tagkey.id, tagvalue.id) in tags
 
@@ -114,6 +240,7 @@ class IndexEventTagsTest(TestCase):
                 event_id=event.id,
                 group_id=group.id,
                 project_id=self.project.id,
+                environment_id=self.environment.id,
                 organization_id=self.project.organization_id,
                 tags=[('foo', 'bar'), ('biz', 'baz')],
             )

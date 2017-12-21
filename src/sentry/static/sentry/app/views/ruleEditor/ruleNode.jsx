@@ -1,15 +1,16 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import $ from 'jquery';
 
-const RuleNode = React.createClass({
-  propTypes: {
-    data: React.PropTypes.object.isRequired,
-    node: React.PropTypes.shape({
-      html: React.PropTypes.string.isRequired
+class RuleNode extends React.Component {
+  static propTypes = {
+    data: PropTypes.object.isRequired,
+    node: PropTypes.shape({
+      html: PropTypes.string.isRequired,
     }).isRequired,
-    onDelete: React.PropTypes.func.isRequired
-  },
+    onDelete: PropTypes.func.isRequired,
+  };
 
   componentDidMount() {
     let $html = $(ReactDOM.findDOMNode(this.refs.html));
@@ -32,10 +33,10 @@ const RuleNode = React.createClass({
         data: $el.data('choices'),
         createSearchChoice: function(term) {
           return {id: $.trim(term), text: $.trim(term)};
-        }
+        },
       });
     });
-  },
+  }
 
   render() {
     let {data, node} = this.props;
@@ -53,6 +54,6 @@ const RuleNode = React.createClass({
       </tr>
     );
   }
-});
+}
 
 export default RuleNode;

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import Reflux from 'reflux';
 import DocumentTitle from 'react-document-title';
@@ -9,14 +10,16 @@ import LoadingError from '../../components/loadingError';
 import LoadingIndicator from '../../components/loadingIndicator';
 import MissingProjectMembership from '../../components/missingProjectMembership';
 import OrganizationState from '../../mixins/organizationState';
-import PropTypes from '../../proptypes';
+import SentryTypes from '../../proptypes';
 import TeamStore from '../../stores/teamStore';
-import ProjectStore from '../../stores/projectStore';
+import ProjectsStore from '../../stores/projectsStore';
+import {setActiveProject} from '../../actionCreators/projects';
 import {t} from '../../locale';
 
 const ERROR_TYPES = {
   MISSING_MEMBERSHIP: 'MISSING_MEMBERSHIP',
-  PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND'
+  PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  UNKNOWN: 'UNKNOWN',
 };
 
 /**
@@ -28,21 +31,21 @@ const ERROR_TYPES = {
  */
 const ProjectContext = React.createClass({
   propTypes: {
-    projectId: React.PropTypes.string,
-    orgId: React.PropTypes.string
+    projectId: PropTypes.string,
+    orgId: PropTypes.string,
   },
 
   childContextTypes: {
-    project: PropTypes.Project,
-    team: PropTypes.Team
+    project: SentryTypes.Project,
+    team: SentryTypes.Team,
   },
 
   mixins: [
     ApiMixin,
     Reflux.connect(MemberListStore, 'memberList'),
     Reflux.listenTo(TeamStore, 'onTeamChange'),
-    Reflux.listenTo(ProjectStore, 'onProjectChange'),
-    OrganizationState
+    Reflux.listenTo(ProjectsStore, 'onProjectChange'),
+    OrganizationState,
   ],
 
   getInitialState() {
@@ -53,14 +56,14 @@ const ProjectContext = React.createClass({
       memberList: [],
       project: null,
       team: null,
-      projectNavSection: null
+      projectNavSection: null,
     };
   },
 
   getChildContext() {
     return {
       project: this.state.project,
-      team: this.state.team
+      team: this.state.team,
     };
   },
 
@@ -88,8 +91,10 @@ const ProjectContext = React.createClass({
     // See: https://github.com/gaearon/react-document-title/issues/35
 
     // intentionally shallow comparing references
-    if (prevState.project !== this.state.project ||
-      prevState.organization !== this.state.organization) {
+    if (
+      prevState.project !== this.state.project ||
+      prevState.organization !== this.state.organization
+    ) {
       let docTitle = this.refs.docTitle;
       if (docTitle) docTitle.forceUpdate();
     }
@@ -100,8 +105,7 @@ const ProjectContext = React.createClass({
   },
 
   getTitle() {
-    if (this.state.project)
-      return this.state.team.name + ' / ' + this.state.project.name;
+    if (this.state.project) return this.state.team.name + ' / ' + this.state.project.name;
     return 'Sentry';
   },
 
@@ -110,7 +114,7 @@ const ProjectContext = React.createClass({
     if (!itemIds.has(this.state.team.id)) return;
 
     this.setState({
-      team: {...TeamStore.getById(this.state.team.id)}
+      team: {...TeamStore.getById(this.state.team.id)},
     });
   },
 
@@ -119,7 +123,7 @@ const ProjectContext = React.createClass({
     if (!projectIds.has(this.state.project.id)) return;
 
     this.setState({
-      project: {...ProjectStore.getById(this.state.project.id)}
+      project: {...ProjectsStore.getById(this.state.project.id)},
     });
   },
 
@@ -129,8 +133,8 @@ const ProjectContext = React.createClass({
     let activeProject = null;
     let activeTeam = null;
     let org = this.context.organization;
-    org.teams.forEach((team) => {
-      team.projects.forEach((project) => {
+    org.teams.forEach(team => {
+      team.projects.forEach(project => {
         if (project.slug == projectSlug) {
           activeProject = project;
           activeTeam = team;
@@ -141,49 +145,68 @@ const ProjectContext = React.createClass({
   },
 
   fetchData() {
-    let org = this.context.organization;
-    if (!org) {
-      return;
-    }
+    let {orgId, projectId} = this.props;
+    // we fetch core access/information from the global organization data
     let [activeTeam, activeProject] = this.identifyProject();
     let hasAccess = activeTeam && activeTeam.hasAccess;
 
     this.setState({
       loading: true,
+      // we bind project initially, but it'll rebind
       project: activeProject,
-      team: activeTeam
+      team: activeTeam,
     });
 
     if (activeProject && hasAccess) {
+      setActiveProject(null);
+      this.api.request(`/projects/${orgId}/${projectId}/`, {
+        success: data => {
+          this.setState({
+            loading: false,
+            project: data,
+            team: data.team,
+            error: false,
+            errorType: null,
+          });
+          // assuming here that this means the project is considered the active project
+          setActiveProject(data);
+        },
+        error: error => {
+          // TODO(dcramer): this should handle 404 (project not found)
+          this.setState({
+            loading: false,
+            error: false,
+            errorType: ERROR_TYPES.UNKNOWN,
+          });
+        },
+      });
       // TODO(dcramer): move member list to organization level
       this.api.request(this.getMemberListEndpoint(), {
-        success: (data) => {
-          MemberListStore.loadInitialData(data.filter((m) => m.user).map((m) => m.user));
-        }
+        success: data => {
+          MemberListStore.loadInitialData(data.filter(m => m.user).map(m => m.user));
+        },
       });
 
       this.api.request(this.getEnvironmentListEndpoint(), {
-        success: (data) => {
+        success: data => {
           EnvironmentStore.loadInitialData(data);
-        }
+        },
       });
 
       this.setState({
         loading: false,
-        error: false,
-        errorType: null
       });
     } else if (activeTeam && activeTeam.isMember) {
       this.setState({
         loading: false,
         error: true,
-        errorType: ERROR_TYPES.MISSING_MEMBERSHIP
+        errorType: ERROR_TYPES.MISSING_MEMBERSHIP,
       });
     } else {
       this.setState({
         loading: false,
         error: true,
-        errorType: ERROR_TYPES.PROJECT_NOT_FOUND
+        errorType: ERROR_TYPES.PROJECT_NOT_FOUND,
       });
     }
   },
@@ -200,13 +223,12 @@ const ProjectContext = React.createClass({
 
   setProjectNavSection(section) {
     this.setState({
-      projectNavSection: section
+      projectNavSection: section,
     });
   },
 
   renderBody() {
-    if (this.state.loading)
-      return <LoadingIndicator />;
+    if (this.state.loading) return <LoadingIndicator />;
     else if (this.state.error) {
       switch (this.state.errorType) {
         case ERROR_TYPES.PROJECT_NOT_FOUND:
@@ -222,9 +244,10 @@ const ProjectContext = React.createClass({
           // out into a reusable missing access error component
           return (
             <MissingProjectMembership
-                organization={this.getOrganization()}
-                team={this.state.team}
-                project={this.state.project} />
+              organization={this.getOrganization()}
+              team={this.state.team}
+              project={this.state.project}
+            />
           );
         default:
           return <LoadingError onRetry={this.remountComponent} />;
@@ -235,8 +258,12 @@ const ProjectContext = React.createClass({
   },
 
   render() {
-    return <DocumentTitle ref="docTitle" title={this.getTitle()}>{this.renderBody()}</DocumentTitle>;
-  }
+    return (
+      <DocumentTitle ref="docTitle" title={this.getTitle()}>
+        {this.renderBody()}
+      </DocumentTitle>
+    );
+  },
 });
 
 export default ProjectContext;

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import Avatar from './avatar';
 import TooltipMixin from '../mixins/tooltip';
@@ -5,45 +6,49 @@ import {t} from '../locale';
 
 const ReleaseStats = React.createClass({
   propTypes: {
-    release: React.PropTypes.object,
+    release: PropTypes.object,
   },
 
   mixins: [
     TooltipMixin({
-      selector: '.tip'
+      selector: '.tip',
     }),
   ],
 
   render() {
     let release = this.props.release;
     let commitCount = release.commitCount || 0;
-    let authorCount = release.authors && release.authors.length || 0;
+    let authorCount = (release.authors && release.authors.length) || 0;
     if (commitCount === 0) {
       return null;
     }
 
-    let releaseSummary = (
+    let releaseSummary =
       commitCount +
       t(commitCount !== 1 ? ' commits ' : ' commit ') +
-      t('by ') + authorCount +
-      t(authorCount !== 1 ? ' authors' : ' author'));
+      t('by ') +
+      authorCount +
+      t(authorCount !== 1 ? ' authors' : ' author');
 
     return (
       <div className="release-stats">
         <h6>{releaseSummary}</h6>
         <div className="avatar-grid">
-          {release.authors.map(author => {
+          {release.authors.map((author, i) => {
             return (
-              <span className="avatar-grid-item tip"
-                   title={author.name + ' ' + author.email}>
-                <Avatar user={author}/>
+              <span
+                key={i}
+                className="avatar-grid-item tip"
+                title={author.name + ' ' + author.email}
+              >
+                <Avatar user={author} />
               </span>
             );
           })}
         </div>
       </div>
     );
-  }
+  },
 });
 
 export default ReleaseStats;

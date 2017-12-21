@@ -31,15 +31,44 @@ def make_logrecord(**extra):
     return logging.LogRecord(**kwargs)
 
 
-@pytest.mark.parametrize('record,out', (
-    ({}, {}),
-    ({'msg': '%s', 'args': (1,)}, {'event': '%s', 'positional_args': (1,)}),
-    ({'args': ({'a': 1},)}, {'positional_args': ({'a': 1},)}),
-    ({'exc_info': True}, {'exc_info': True}),
-))
+@pytest.mark.parametrize(
+    'record,out', (
+        ({}, {}), ({
+            'msg': '%s',
+            'args': (1, )
+        }, {
+            'event': '%s',
+            'positional_args': (1, )
+        }), ({
+            'args': ({
+                'a': 1
+            }, )
+        }, {
+            'positional_args': ({
+                'a': 1
+            }, )
+        }), ({
+            'exc_info': True
+        }, {
+            'exc_info': True
+        }),
+    )
+)
 def test_emit(record, out, handler, logger):
     record = make_logrecord(**record)
     handler.emit(record, logger=logger)
     expected = dict(level=logging.INFO, event='msg', name='name')
     expected.update(out)
     logger.log.assert_called_once_with(**expected)
+
+
+@mock.patch('sentry.logging.handlers.metrics')
+def test_log_to_metric(metrics):
+    logger = logging.getLogger('django.request')
+    logger.warn("CSRF problem")
+    metrics.incr.assert_called_once_with('django.request.csrf_problem')
+
+    metrics.reset_mock()
+
+    logger.warn("Some other problem we don't care about")
+    assert metrics.incr.call_count == 0

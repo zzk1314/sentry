@@ -43,6 +43,9 @@
     "src/sentry/auth/password_validation.py",
 ]
 
+# warn if there are migrations
+@S_MIGRATIONS ||= /south_migrations/
+
 # determine if any of the files were modified
 def checkFiles(files_array)
     files_array.select { |f| git.modified_files.include?(f) }
@@ -70,12 +73,6 @@ warn("Changes to build requirements") if checkFiles(@S_BUILD_FILES).any?
 # Warn about changes to dependencies or the build process
 securityMatches = checkFilesPattern(@S_SECURITY_FILE_PATTERN, @S_SECURITY_EXCLUDE_FILES) + checkContents(@S_SECURITY_CONTENT_PATTERN, @S_SECURITY_EXCLUDE_FILES)
 if securityMatches.any?
-    unless github.pr_labels.include?("Security")
-        github.api.update_issue(github.pr_json["head"]["repo"]["full_name"], github.pr_json["number"], {
-            :labels => github.pr_labels + ["Security"],
-        })
-    end
-
     # TODO(dcramer): when GitHub API actually exposes reviewers, we should
     # make this failing
     # securityTeam = github.api.organization_teams('getsentry')[0]
@@ -100,5 +97,15 @@ warn("This change includes modification to a file that was backported from newer
 
 # Reasonable commits must update CHANGES
 if !github.pr_body.include?("#nochanges") && @S_CHANGE_LINES && git.lines_of_code > @S_CHANGE_LINES && !git.modified_files.include?("CHANGES") && checkFilesPattern(@S_CHANGES_REQUIRED_PATTERNS).any?
-    fail("You need to update CHANGES due to the size of this PR")
+    warn("You should update CHANGES due to the size of this PR")
+end
+
+if git.added_files.grep(@S_MIGRATIONS).any?
+    warn("PR includes migrations")
+    markdown("## Migration Checklist\n\n" +
+             "- [ ] new columns need to be nullable (unless table is new)\n" +
+             "- [ ] migration with any new index needs to be done concurrently\n" +
+             "- [ ] data migrations should not be done inside a transaction\n" +
+             "- [ ] before merging, check to make sure there aren't conflicting migration ids\n"
+    )
 end

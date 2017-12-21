@@ -3,6 +3,7 @@ from __future__ import absolute_import
 # TODO(dcramer): this heavily inspired by pytest-selenium, and it's possible
 # we could simply inherit from the plugin at this point
 
+import logging
 import os
 import pytest
 import signal
@@ -14,6 +15,15 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from six.moves.urllib.parse import quote, urlparse
+
+# if we're not running in a PR, we kill the PERCY_TOKEN because its a push
+# to a branch, and we dont want percy comparing things
+# we do need to ensure its run on master so that changes get updated
+if os.environ.get('TRAVIS_PULL_REQUEST', 'false'
+                  ) == 'false' and os.environ.get('TRAVIS_BRANCH', 'master') != 'master':
+    os.environ.setdefault('PERCY_ENABLE', '0')
+
+logger = logging.getLogger('sentry.testutils')
 
 
 class Browser(object):
@@ -31,24 +41,26 @@ class Browser(object):
         """
         Return the absolute URI for a given route in Sentry.
         """
-        return '{}/{}'.format(self.live_server_url, path.lstrip('/').format(
-            *args, **kwargs
-        ))
+        return '{}/{}'.format(self.live_server_url, path.lstrip('/').format(*args, **kwargs))
 
     def get(self, path, *args, **kwargs):
         self.driver.get(self.route(path), *args, **kwargs)
+        self._has_initialized_cookie_store = True
         return self
 
     def post(self, path, *args, **kwargs):
         self.driver.post(self.route(path), *args, **kwargs)
+        self._has_initialized_cookie_store = True
         return self
 
     def put(self, path, *args, **kwargs):
         self.driver.put(self.route(path), *args, **kwargs)
+        self._has_initialized_cookie_store = True
         return self
 
     def delete(self, path, *args, **kwargs):
         self.driver.delete(self.route(path), *args, **kwargs)
+        self._has_initialized_cookie_store = True
         return self
 
     def element(self, selector):
@@ -64,35 +76,58 @@ class Browser(object):
     def click(self, selector):
         self.element(selector).click()
 
-    def wait_until(self, selector, timeout=3):
+    def wait_until(self, selector=None, title=None, timeout=3):
         """
         Waits until ``selector`` is found in the browser, or until ``timeout``
         is hit, whichever happens first.
         """
         from selenium.webdriver.common.by import By
 
-        WebDriverWait(self.driver, timeout).until(
-            expected_conditions.presence_of_element_located(
-                (By.CSS_SELECTOR, selector)
-            )
-        )
+        if selector:
+            condition = expected_conditions.presence_of_element_located((By.CSS_SELECTOR, selector))
+        elif title:
+            condition = expected_conditions.title_is(title)
+        else:
+            raise ValueError
+
+        WebDriverWait(
+            self.driver, timeout
+        ).until(condition)
 
         return self
 
-    def wait_until_not(self, selector, timeout=3):
+    def wait_until_not(self, selector=None, title=None, timeout=3):
         """
         Waits until ``selector`` is NOT found in the browser, or until
         ``timeout`` is hit, whichever happens first.
         """
         from selenium.webdriver.common.by import By
 
-        WebDriverWait(self.driver, timeout).until_not(
-            expected_conditions.presence_of_element_located(
-                (By.CSS_SELECTOR, selector)
-            )
-        )
+        if selector:
+            condition = expected_conditions.presence_of_element_located((By.CSS_SELECTOR, selector))
+        elif title:
+            condition = expected_conditions.title_is(title)
+        else:
+            raise
+
+        WebDriverWait(
+            self.driver, timeout
+        ).until_not(condition)
 
         return self
+
+    @property
+    def switch_to(self):
+        return self.driver.switch_to
+
+    def implicitly_wait(self, duration):
+        """
+        An implicit wait tells WebDriver to poll the DOM for a certain amount of
+        time when trying to find any element (or elements) not immediately
+        available. The default setting is 0. Once set, the implicit wait is set
+        for the life of the WebDriver object.
+        """
+        self.driver.implicitly_wait(duration)
 
     def snapshot(self, name):
         """
@@ -105,37 +140,52 @@ class Browser(object):
         self.percy.snapshot(name=name)
         return self
 
-    def save_cookie(self, name, value, path='/',
-                    expires='Tue, 20 Jun 2025 19:07:44 GMT'):
-        # XXX(dcramer): "hit a url before trying to set cookies"
+    def save_cookie(self, name, value, path='/', expires='Tue, 20 Jun 2025 19:07:44 GMT'):
+        cookie = {
+            'name': name,
+            'value': value,
+            'expires': expires,
+            'path': path,
+            'domain': self.domain,
+        }
+
+        # XXX(dcramer): the cookie store must be initialized via a URL
         if not self._has_initialized_cookie_store:
+            logger.info('selenium.initialize-cookies')
             self.get('/')
-            self._has_initialized_cookie_store = True
 
         # XXX(dcramer): PhantomJS does not let us add cookies with the native
         # selenium API because....
         # http://stackoverflow.com/questions/37103621/adding-cookies-working-with-firefox-webdriver-but-not-in-phantomjs
+
         # TODO(dcramer): this should be escaped, but idgaf
-        self.driver.execute_script("document.cookie = '{name}={value}; path={path}; domain={domain}; expires={expires}';\n".format(
-            name=name,
-            value=value,
-            expires=expires,
-            path=path,
-            domain=self.domain,
-        ))
+        logger.info('selenium.set-cookie.{}'.format(name), extra={
+            'value': value,
+        })
+        if isinstance(self.driver, webdriver.PhantomJS):
+            self.driver.execute_script(
+                "document.cookie = '{name}={value}; path={path}; domain={domain}; expires={expires}';\n".format(
+                    **cookie)
+            )
+        else:
+            self.driver.add_cookie(cookie)
 
 
 def pytest_addoption(parser):
-    parser.addini('selenium_driver',
-                  help='selenium driver (phantomjs or firefox)')
+    parser.addini('selenium_driver', help='selenium driver (chrome, phantomjs, or firefox)')
 
     group = parser.getgroup('selenium', 'selenium')
-    group._addoption('--selenium-driver',
-                     dest='selenium_driver',
-                     help='selenium driver (phantomjs or firefox)')
-    group._addoption('--phantomjs-path',
-                     dest='phantomjs_path',
-                     help='path to phantomjs driver')
+    group._addoption(
+        '--selenium-driver', dest='selenium_driver', help='selenium driver (chrome, phantomjs, or firefox)'
+    )
+    group._addoption(
+        '--window-size',
+        dest='window_size',
+        help='window size (WIDTHxHEIGHT)',
+        default='1280x800')
+    group._addoption('--phantomjs-path', dest='phantomjs_path', help='path to phantomjs driver')
+    group._addoption('--chrome-path', dest='chrome_path', help='path to google-chrome')
+    group._addoption('--chromedriver-path', dest='chromedriver_path', help='path to chromedriver')
 
 
 def pytest_configure(config):
@@ -166,8 +216,29 @@ def percy(request):
 
 @pytest.fixture(scope='function')
 def browser(request, percy, live_server):
+    window_size = request.config.getoption('window_size')
+    window_width, window_height = list(map(int, window_size.split('x', 1)))
+
     driver_type = request.config.getoption('selenium_driver')
-    if driver_type == 'firefox':
+    if driver_type == 'chrome':
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        options.add_argument('disable-gpu')
+        options.add_argument('window-size={}'.format(window_size))
+        chrome_path = request.config.getoption('chrome_path')
+        if chrome_path:
+            options.binary_location = chrome_path
+        chromedriver_path = request.config.getoption('chromedriver_path')
+        if chromedriver_path:
+            driver = webdriver.Chrome(
+                executable_path=chromedriver_path,
+                chrome_options=options,
+            )
+        else:
+            driver = webdriver.Chrome(
+                chrome_options=options,
+            )
+    elif driver_type == 'firefox':
         driver = webdriver.Firefox()
     elif driver_type == 'phantomjs':
         phantomjs_path = request.config.getoption('phantomjs_path')
@@ -179,9 +250,10 @@ def browser(request, percy, live_server):
                 'phantomjs',
             )
         driver = webdriver.PhantomJS(executable_path=phantomjs_path)
-        driver.set_window_size(1280, 800)
     else:
         raise pytest.UsageError('--driver must be specified')
+
+    driver.set_window_size(window_width, window_height)
 
     def fin():
         # Teardown Selenium.
@@ -216,9 +288,10 @@ def _environment(request):
     config._environment.append(('Driver', config.option.selenium_driver))
 
 
-@pytest.mark.tryfirst
-def pytest_runtest_makereport(item, call, __multicall__):
-    report = __multicall__.execute()
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
     summary = []
     extra = getattr(report, 'extra', [])
     driver = getattr(item, '_driver', None)
@@ -230,7 +303,6 @@ def pytest_runtest_makereport(item, call, __multicall__):
     if summary:
         report.sections.append(('selenium', '\n'.join(summary)))
     report.extra = extra
-    return report
 
 
 def _gather_url(item, report, driver, summary, extra):
@@ -281,20 +353,21 @@ def _gather_logs(item, report, driver, summary, extra):
         try:
             log = driver.get_log(name)
         except Exception as e:
-            summary.append('WARNING: Failed to gather {0} log: {1}'.format(
-                name, e))
+            summary.append('WARNING: Failed to gather {0} log: {1}'.format(name, e))
             return
         pytest_html = item.config.pluginmanager.getplugin('html')
         if pytest_html is not None:
-            extra.append(pytest_html.extras.text(
-                format_log(log), '%s Log' % name.title()))
+            extra.append(pytest_html.extras.text(format_log(log), '%s Log' % name.title()))
 
 
 def format_log(log):
     timestamp_format = '%Y-%m-%d %H:%M:%S.%f'
-    entries = [u'{0} {1[level]} - {1[message]}'.format(
-        datetime.utcfromtimestamp(entry['timestamp'] / 1000.0).strftime(
-            timestamp_format), entry).rstrip() for entry in log]
+    entries = [
+        u'{0} {1[level]} - {1[message]}'.format(
+            datetime.utcfromtimestamp(
+                entry['timestamp'] / 1000.0).strftime(timestamp_format), entry
+        ).rstrip() for entry in log
+    ]
     log = '\n'.join(entries)
     log = log.encode('utf-8')
     return log

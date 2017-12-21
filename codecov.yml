@@ -1,14 +1,21 @@
 coverage:
   status:
     project:
-      default:
-        target: 0%
+      default: false
     patch:
-      default:
-        target: 0%
+      default: false
+      python:
+        paths:
+        - "src/sentry"
+        target: 90%
   ignore:
   - src/sentry/lint/.*
+  - src/sentry/runner/.*
+  - src/sentry/debug/.*
   - src/.*?/migrations/.*
   - src/.*?/south_migrations/.*
-
+  - src/bitfield/.*
+  - src/debug_toolbar/.*
+  - src/social_auth/.*
+  - src/south/.*
 comment: false

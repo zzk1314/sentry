@@ -31,7 +31,8 @@ class ProjectKeyTest(TestCase):
             project=self.project,
             status=ProjectKeyStatus.INACTIVE,
         )
-        assert self.model.objects.filter(project=self.project).count() == 2, self.model.objects.all()
+        assert self.model.objects.filter(project=self.project
+                                         ).count() == 2, self.model.objects.all()
         assert self.model.get_default(self.project) == key
 
     def test_is_active(self):
@@ -54,3 +55,4 @@ class ProjectKeyTest(TestCase):
         assert key.dsn_private == 'http://abc:xyz@testserver/1'
         assert key.dsn_public == 'http://abc@testserver/1'
         assert key.csp_endpoint == 'http://testserver/api/1/csp-report/?sentry_key=abc'
+        assert key.minidump_endpoint == 'http://testserver/api/1/minidump?sentry_key=abc'

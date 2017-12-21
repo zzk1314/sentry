@@ -7,9 +7,9 @@ sentry.interfaces.user
 """
 from __future__ import absolute_import
 
-__all__ = ('User',)
+__all__ = ('User', )
 
-import pygeoip
+import geoip
 import six
 
 from django.conf import settings
@@ -20,10 +20,11 @@ from sentry.web.helpers import render_to_string
 from sentry.utils.validators import validate_ip
 from sentry.constants import MAX_EMAIL_FIELD_LENGTH
 
+
 try:
-    gi = pygeoip.GeoIP(settings.GEOIP_PATH)
+    geoip_db = geoip.open_database(settings.GEOIP_PATH)
 except AttributeError:
-    gi = None
+    geoip_db = geoip.geolite2
 
 
 def validate_email(value, required=True):
@@ -56,6 +57,7 @@ class User(Interface):
     >>>     "optional": "value"
     >>> }
     """
+
     @classmethod
     def to_python(cls, data):
         data = data.copy()
@@ -71,9 +73,14 @@ class User(Interface):
             email = trim(validate_email(data.pop('email', None), False), MAX_EMAIL_FIELD_LENGTH)
         except ValueError:
             raise InterfaceValidationError("Invalid value for 'email'")
+
         username = trim(data.pop('username', None), 128)
         if username:
             username = six.text_type(username)
+
+        name = trim(data.pop('name', None), 128)
+        if name:
+            name = six.text_type(name)
 
         try:
             ip_address = validate_ip(data.pop('ip_address', None), False)
@@ -81,9 +88,11 @@ class User(Interface):
             raise InterfaceValidationError("Invalid value for 'ip_address'")
 
         location = None
-        if gi and ip_address:
+        if ip_address:
             # GeoIP returns empty string ('') for localhost, bad input values
-            location = gi.country_code_by_addr(ip_address)
+            result = geoip_db.lookup(ip_address)
+            if result:
+                location = result.country
 
         # TODO(dcramer): patch in fix to deal w/ old data but not allow new
         # if not (ident or email or username or ip_address):
@@ -94,6 +103,7 @@ class User(Interface):
             'email': email,
             'username': username,
             'ip_address': ip_address,
+            'name': name,
         }
 
         if location and location != '':
@@ -108,6 +118,7 @@ class User(Interface):
             'email': self.email,
             'username': self.username,
             'ipAddress': self.ip_address,
+            'name': self.name,
             'data': self.data,
         }
 
@@ -121,7 +132,7 @@ class User(Interface):
         return self.email or self.username
 
     def get_label(self):
-        return self.email or self.username or self.id or self.ip_address
+        return self.name or self.email or self.username or self.id or self.ip_address
 
     def to_email_html(self, event, **kwargs):
         context = {

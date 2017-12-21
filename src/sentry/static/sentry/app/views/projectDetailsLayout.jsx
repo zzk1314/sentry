@@ -1,16 +1,15 @@
 import React from 'react';
 
+import DiffModal from '../components/modals/diffModal';
 import ProjectHeader from '../components/projectHeader';
 import ProjectState from '../mixins/projectState';
 
 const ProjectDetailsLayout = React.createClass({
-  mixins: [
-    ProjectState
-  ],
+  mixins: [ProjectState],
 
   getInitialState() {
     return {
-      projectNavSection: null
+      projectNavSection: null,
     };
   },
 
@@ -21,31 +20,33 @@ const ProjectDetailsLayout = React.createClass({
    */
   setProjectNavSection(section) {
     this.setState({
-      projectNavSection: section
+      projectNavSection: section,
     });
   },
 
   render() {
-    if (!this.context.project)
-      return null;
+    if (!this.context.project) return null;
 
     return (
-     <div>
+      <div>
         <ProjectHeader
           activeSection={this.state.projectNavSection}
           project={this.context.project}
-          organization={this.getOrganization()} />
+          organization={this.getOrganization()}
+        />
         <div className="container">
           <div className="content">
             {React.cloneElement(this.props.children, {
               setProjectNavSection: this.setProjectNavSection,
-              memberList: this.state.memberList
+              memberList: this.state.memberList,
             })}
           </div>
         </div>
+
+        <DiffModal />
       </div>
     );
-  }
+  },
 });
 
 export default ProjectDetailsLayout;

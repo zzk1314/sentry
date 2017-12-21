@@ -16,8 +16,7 @@ from django.utils import dateformat, timezone
 
 from sentry.app import tsdb
 from sentry.models import (
-    Activity, GroupStatus, Organization, OrganizationStatus, Project, Team,
-    User, UserOption
+    Activity, GroupStatus, Organization, OrganizationStatus, Project, Team, User, UserOption
 )
 from sentry.tasks.base import instrumented_task
 from sentry.utils import json, redis
@@ -30,7 +29,6 @@ date_format = functools.partial(
     dateformat.format,
     format_string="F jS, Y",
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +50,7 @@ def _fill_default_parameters(timestamp=None, rollup=None):
 
 
 def _to_interval(timestamp, duration):
-    return (
-        to_datetime(timestamp - duration),
-        to_datetime(timestamp),
-    )
+    return (to_datetime(timestamp - duration), to_datetime(timestamp), )
 
 
 def change(value, reference):
@@ -159,7 +154,8 @@ def merge_series(target, other, function=operator.add):
     return results
 
 
-def prepare_project_series((start, stop), project, rollup=60 * 60 * 24):
+def prepare_project_series(start__stop, project, rollup=60 * 60 * 24):
+    start, stop = start__stop
     resolution, series = tsdb.get_optimal_rollup_series(start, stop, rollup)
     assert resolution == rollup, 'resolution does not match requested value'
     clean = functools.partial(clean_series, start, stop, rollup)
@@ -198,10 +194,11 @@ def prepare_project_series((start, stop), project, rollup=60 * 60 * 24):
     )
 
 
-def prepare_project_aggregates((_, stop), project):
+def prepare_project_aggregates(ignore__stop, project):
     # TODO: This needs to return ``None`` for periods that don't have any data
     # (because the project is not old enough) and possibly extrapolate for
     # periods that only have partial periods.
+    _, stop = ignore__stop
     segments = 4
     period = timedelta(days=7)
     start = stop - (period * segments)
@@ -209,7 +206,7 @@ def prepare_project_aggregates((_, stop), project):
     def get_aggregate_value(start, stop):
         return tsdb.get_sums(
             tsdb.models.project,
-            (project.id,),
+            (project.id, ),
             start,
             stop,
             rollup=60 * 60 * 24,
@@ -250,10 +247,7 @@ def prepare_project_issue_summaries(interval, project):
                 last_seen__lt=stop,
                 resolved_at__isnull=False,  # signals this has *ever* been resolved
             ),
-            type__in=(
-                Activity.SET_REGRESSION,
-                Activity.SET_UNRESOLVED,
-            ),
+            type__in=(Activity.SET_REGRESSION, Activity.SET_UNRESOLVED, ),
             datetime__gte=start,
             datetime__lt=stop,
         ).distinct().values_list('group_id', flat=True)
@@ -289,7 +283,8 @@ def prepare_project_issue_summaries(interval, project):
     ]
 
 
-def prepare_project_usage_summary((start, stop), project):
+def prepare_project_usage_summary(start__stop, project):
+    start, stop = start__stop
     return (
         tsdb.get_sums(
             tsdb.models.project_total_blacklisted,
@@ -297,8 +292,7 @@ def prepare_project_usage_summary((start, stop), project):
             start,
             stop,
             rollup=60 * 60 * 24,
-        )[project.id],
-        tsdb.get_sums(
+        )[project.id], tsdb.get_sums(
             tsdb.models.project_total_rejected,
             [project.id],
             start,
@@ -308,13 +302,10 @@ def prepare_project_usage_summary((start, stop), project):
     )
 
 
-def get_calendar_range((_, stop_time), months):
+def get_calendar_range(ignore__stop_time, months):
+    _, stop_time = ignore__stop_time
     assert (
-        stop_time.hour,
-        stop_time.minute,
-        stop_time.second,
-        stop_time.microsecond,
-        stop_time.tzinfo,
+        stop_time.hour, stop_time.minute, stop_time.second, stop_time.microsecond, stop_time.tzinfo,
     ) == (0, 0, 0, 0, pytz.utc)
 
     last_day = stop_time - timedelta(days=1)
@@ -331,11 +322,7 @@ def get_calendar_range((_, stop_time), months):
 def get_calendar_query_range(interval, months):
     start_month_index, _ = get_calendar_range(interval, months)
 
-    start_time = datetime(
-        day=1,
-        tzinfo=pytz.utc,
-        *index_to_month(start_month_index)
-    )
+    start_time = datetime(day=1, tzinfo=pytz.utc, *index_to_month(start_month_index))
 
     return start_time, interval[1]
 
@@ -389,10 +376,10 @@ def build(name, fields):
     cls = namedtuple(name, names)
 
     def prepare(*args):
-        return cls(*[f(*args) for f in prepare_fields])
+        return cls(* [f(*args) for f in prepare_fields])
 
     def merge(target, other):
-        return cls(*[f(target[i], other[i]) for i, f in enumerate(merge_fields)])
+        return cls(* [f(target[i], other[i]) for i, f in enumerate(merge_fields)])
 
     return cls, prepare, merge
 
@@ -401,35 +388,21 @@ Report, prepare_project_report, merge_reports = build(
     'Report',
     [
         (
-            'series',
-            prepare_project_series,
-            functools.partial(
+            'series', prepare_project_series, functools.partial(
                 merge_series,
                 function=merge_sequences,
             ),
         ),
         (
-            'aggregates',
-            prepare_project_aggregates,
-            functools.partial(
+            'aggregates', prepare_project_aggregates, functools.partial(
                 merge_sequences,
                 function=safe_add,
             ),
         ),
+        ('issue_summaries', prepare_project_issue_summaries, merge_sequences, ),
+        ('usage_summary', prepare_project_usage_summary, merge_sequences, ),
         (
-            'issue_summaries',
-            prepare_project_issue_summaries,
-            merge_sequences,
-        ),
-        (
-            'usage_summary',
-            prepare_project_usage_summary,
-            merge_sequences,
-        ),
-        (
-            'calendar_series',
-            prepare_project_calendar_series,
-            functools.partial(
+            'calendar_series', prepare_project_calendar_series, functools.partial(
                 merge_series,
                 function=safe_add,
             ),
@@ -535,9 +508,7 @@ backend = RedisReportBackend(
 )
 
 
-@instrumented_task(
-    name='sentry.tasks.reports.prepare_reports',
-    queue='reports.prepare')
+@instrumented_task(name='sentry.tasks.reports.prepare_reports', queue='reports.prepare')
 def prepare_reports(dry_run=False, *args, **kwargs):
     timestamp, duration = _fill_default_parameters(*args, **kwargs)
 
@@ -546,18 +517,20 @@ def prepare_reports(dry_run=False, *args, **kwargs):
         prepare_organization_report.delay(timestamp, duration, organization_id, dry_run=dry_run)
 
 
-@instrumented_task(
-    name='sentry.tasks.reports.prepare_organization_report',
-    queue='reports.prepare')
+@instrumented_task(name='sentry.tasks.reports.prepare_organization_report',
+                   queue='reports.prepare')
 def prepare_organization_report(timestamp, duration, organization_id, dry_run=False):
     try:
         organization = _get_organization_queryset().get(id=organization_id)
     except Organization.DoesNotExist:
-        logger.warning('reports.organization.missing', extra={
-            'timestamp': timestamp,
-            'duration': duration,
-            'organization_id': organization_id,
-        })
+        logger.warning(
+            'reports.organization.missing',
+            extra={
+                'timestamp': timestamp,
+                'duration': duration,
+                'organization_id': organization_id,
+            }
+        )
         return
 
     backend.prepare(timestamp, duration, organization)
@@ -579,21 +552,23 @@ def prepare_organization_report(timestamp, duration, organization_id, dry_run=Fa
         )
 
 
-def fetch_personal_statistics((start, stop), organization, user):
+def fetch_personal_statistics(start__stop, organization, user):
+    start, stop = start__stop
     resolved_issue_ids = Activity.objects.filter(
         project__organization_id=organization.id,
         user_id=user.id,
-        type__in=(
-            Activity.SET_RESOLVED,
-            Activity.SET_RESOLVED_IN_RELEASE,
-        ),
+        type__in=(Activity.SET_RESOLVED, Activity.SET_RESOLVED_IN_RELEASE, ),
         datetime__gte=start,
         datetime__lt=stop,
         group__status=GroupStatus.RESOLVED,  # only count if the issue is still resolved
-    ).distinct().values_list('group_id', flat=True)
+    ).distinct().values_list(
+        'group_id', flat=True
+    )
     return {
-        'resolved': len(resolved_issue_ids),
-        'users': tsdb.get_distinct_counts_union(
+        'resolved':
+        len(resolved_issue_ids),
+        'users':
+        tsdb.get_distinct_counts_union(
             tsdb.models.users_affected_by_group,
             resolved_issue_ids,
             start,
@@ -604,11 +579,13 @@ def fetch_personal_statistics((start, stop), organization, user):
 
 
 Duration = namedtuple(
-    'Duration', (
-        'adjective',    # e.g. "daily" or "weekly",
-        'noun',         # relative to today, e.g. "yesterday" or "this week"
+    'Duration',
+    (
+        'adjective',  # e.g. "daily" or "weekly",
+        'noun',  # relative to today, e.g. "yesterday" or "this week"
         'date_format',  # date format used for large series x axis labeling
-    ))
+    )
+)
 
 durations = {
     (60 * 60 * 24 * 7): Duration(
@@ -650,7 +627,7 @@ def build_message(timestamp, duration, organization, user, reports):
         },
     )
 
-    message.add_users((user.id,))
+    message.add_users((user.id, ))
 
     return message
 
@@ -661,7 +638,6 @@ DISABLED_ORGANIZATIONS_USER_OPTION_KEY = 'reports:disabled-organizations'
 def user_subscribed_to_organization_reports(user, organization):
     return organization.id not in UserOption.objects.get_value(
         user=user,
-        project=None,
         key=DISABLED_ORGANIZATIONS_USER_OPTION_KEY,
         default=[],
     )
@@ -673,22 +649,26 @@ class Skipped(object):
     NoReports = object()
 
 
-def has_valid_aggregates(interval, (project, report)):
+def has_valid_aggregates(interval, project__report):
+    project, report = project__report
     return any(bool(value) for value in report.aggregates)
 
 
 @instrumented_task(
-    name='sentry.tasks.reports.deliver_organization_user_report',
-    queue='reports.deliver')
+    name='sentry.tasks.reports.deliver_organization_user_report', queue='reports.deliver'
+)
 def deliver_organization_user_report(timestamp, duration, organization_id, user_id, dry_run=False):
     try:
         organization = _get_organization_queryset().get(id=organization_id)
     except Organization.DoesNotExist:
-        logger.warning('reports.organization.missing', extra={
-            'timestamp': timestamp,
-            'duration': duration,
-            'organization_id': organization_id,
-        })
+        logger.warning(
+            'reports.organization.missing',
+            extra={
+                'timestamp': timestamp,
+                'duration': duration,
+                'organization_id': organization_id,
+            }
+        )
         return
 
     user = User.objects.get(id=user_id)
@@ -717,7 +697,7 @@ def deliver_organization_user_report(timestamp, duration, organization_id, user_
     projects = list(projects)
 
     inclusion_predicates = [
-        lambda interval, (project, report): report is not None,
+        lambda interval, project__report: project__report[1] is not None,
         has_valid_aggregates,
     ]
 
@@ -737,7 +717,8 @@ def deliver_organization_user_report(timestamp, duration, organization_id, user_
     )
 
     if not reports:
-        logger.debug('Skipping report for %r to %r, no qualifying reports to deliver.',
+        logger.debug(
+            'Skipping report for %r to %r, no qualifying reports to deliver.',
             organization,
             user,
         )
@@ -789,7 +770,7 @@ def build_project_breakdown_series(reports):
         operator.itemgetter(0),
         sorted(
             reports.items(),
-            key=lambda (instance, report): sum(sum(values) for timestamp, values in report[0]),
+            key=lambda instance__report: sum(sum(values) for timestamp, values in instance__report[1][0]),
             reverse=True,
         ),
     )[:len(colors)]
@@ -800,14 +781,14 @@ def build_project_breakdown_series(reports):
     # largest color blocks are at the bottom and it feels appropriately
     # weighted.)
     selections = map(
-        lambda (instance, color): (
+        lambda instance__color: (
             Key(
-                instance.slug,
-                instance.get_absolute_url(),
-                color,
-                get_legend_data(reports[instance]),
+                instance__color[0].slug,
+                instance__color[0].get_absolute_url(),
+                instance__color[1],
+                get_legend_data(reports[instance__color[0]]),
             ),
-            reports[instance],
+            reports[instance__color[0]],
         ),
         zip(
             instances,
@@ -823,10 +804,9 @@ def build_project_breakdown_series(reports):
             merge_reports,
             [reports[instance] for instance in overflow],
         )
-        selections.insert(0, (
-            Key('Other', None, '#f2f0fa', get_legend_data(overflow_report)),
-            overflow_report,
-        ))
+        selections.insert(
+            0, (Key('Other', None, '#f2f0fa', get_legend_data(overflow_report)), overflow_report, )
+        )
 
     def summarize(key, points):
         total = sum(points)
@@ -837,12 +817,10 @@ def build_project_breakdown_series(reports):
     # (key, count) pairs.
     series = reduce(
         merge_series,
-        [
-            series_map(
-                functools.partial(summarize, key),
-                report[0],
-            ) for key, report in selections
-        ],
+        [series_map(
+            functools.partial(summarize, key),
+            report[0],
+        ) for key, report in selections],
     )
 
     legend = [key for key, value in reversed(selections)]
@@ -855,10 +833,7 @@ def build_project_breakdown_series(reports):
                 'Total',
                 None,
                 None,
-                reduce(
-                    merge_mappings,
-                    [key.data for key in legend]
-                ),
+                reduce(merge_mappings, [key.data for key in legend]),
             ),
         },
     }
@@ -875,29 +850,36 @@ def to_context(organization, interval, reports):
             'resolved': sum([point.resolved for timestamp, point in series]),
         },
         'distribution': {
-            'types': list(
+            'types':
+            list(
                 zip(
                     (
-                        DistributionType('New', '#8477e0'),
-                        DistributionType('Reopened', '#6C5FC7'),
+                        DistributionType(
+                            'New', '#8477e0'), DistributionType(
+                            'Reopened', '#6C5FC7'),
                         DistributionType('Existing', '#534a92'),
                     ),
                     report.issue_summaries,
                 ),
             ),
-            'total': sum(report.issue_summaries),
+            'total':
+            sum(report.issue_summaries),
         },
         'comparisons': [
             ('last week', change(report.aggregates[-1], report.aggregates[-2])),
-            ('four week average', change(
-                report.aggregates[-1],
-                mean(report.aggregates) if all(v is not None for v in report.aggregates) else None,
-            )),
+            (
+                'four week average', change(
+                    report.aggregates[-1],
+                    mean(report.aggregates) if all(v is not None
+                                                   for v in report.aggregates) else None,
+                )
+            ),
         ],
         'projects': {
             'series': build_project_breakdown_series(reports),
         },
-        'calendar': to_calendar(
+        'calendar':
+        to_calendar(
             interval,
             report.calendar_series,
         ),
@@ -932,10 +914,7 @@ def colorize(spectrum, values):
 
     results = []
     for value in values:
-        results.append((
-            value,
-            spectrum[find_index(value)],
-        ))
+        results.append((value, spectrum[find_index(value)], ))
 
     return legend, results
 
@@ -972,13 +951,10 @@ def to_calendar(interval, series):
         dt = datetime(date.year, date.month, date.day, tzinfo=pytz.utc)
         ts = to_timestamp(dt)
         value = series_value_map.get(ts, None)
-        return (
-            dt,
-            {
-                'value': value,
-                'color': value_color_map[value],
-            }
-        )
+        return (dt, {
+            'value': value,
+            'color': value_color_map[value],
+        })
 
     calendar = Calendar(6)
     sheets = []
@@ -988,10 +964,7 @@ def to_calendar(interval, series):
         for week in calendar.monthdatescalendar(year, month):
             weeks.append(map(get_data_for_date, week))
 
-        sheets.append((
-            datetime(year, month, 1, tzinfo=pytz.utc),
-            weeks,
-        ))
+        sheets.append((datetime(year, month, 1, tzinfo=pytz.utc), weeks, ))
 
     return {
         'legend': list(legend.keys()),

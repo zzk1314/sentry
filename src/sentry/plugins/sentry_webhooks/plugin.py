@@ -14,30 +14,28 @@ from sentry.http import is_valid_url, safe_urlopen
 from sentry.utils.safe import safe_execute
 
 
+def split_urls(value):
+    if not value:
+        return ()
+    return filter(bool, (url.strip() for url in value.splitlines()))
+
+
 def validate_urls(value, **kwargs):
-    output = []
-    for url in value.split('\n'):
-        url = url.strip()
-        if not url:
-            continue
-        if not url.startswith(('http://', 'https://')):
-            raise PluginError('Not a valid URL.')
-        if not is_valid_url(url):
-            raise PluginError('Not a valid URL.')
-        output.append(url)
-    return '\n'.join(output)
+    urls = split_urls(value)
+    if any((not u.startswith(('http://', 'https://')) or not is_valid_url(u)) for u in urls):
+        raise PluginError('Not a valid URL.')
+    return '\n'.join(urls)
 
 
 class WebHooksOptionsForm(notify.NotificationConfigurationForm):
     urls = forms.CharField(
         label=_('Callback URLs'),
-        widget=forms.Textarea(attrs={
-            'class': 'span6', 'placeholder': 'https://sentry.io/callback/url'}),
-        help_text=_('Enter callback URLs to POST new events to (one per line).'))
-
-    def clean_url(self):
-        value = self.cleaned_data.get('url')
-        return validate_urls(value)
+        widget=forms.Textarea(
+            attrs={'class': 'span6',
+                   'placeholder': 'https://sentry.io/callback/url'}
+        ),
+        help_text=_('Enter callback URLs to POST new events to (one per line).')
+    )
 
 
 class WebHooksPlugin(notify.NotificationPlugin):
@@ -64,15 +62,17 @@ class WebHooksPlugin(notify.NotificationPlugin):
         return bool(self.get_option('urls', project))
 
     def get_config(self, project, **kwargs):
-        return [{
-            'name': 'urls',
-            'label': 'Callback URLs',
-            'type': 'textarea',
-            'help': 'Enter callback URLs to POST new events to (one per line).',
-            'placeholder': 'https://sentry.io/callback/url',
-            'validators': [validate_urls],
-            'required': False
-        }]
+        return [
+            {
+                'name': 'urls',
+                'label': 'Callback URLs',
+                'type': 'textarea',
+                'help': 'Enter callback URLs to POST new events to (one per line).',
+                'placeholder': 'https://sentry.io/callback/url',
+                'validators': [validate_urls],
+                'required': False
+            }
+        ]
 
     def get_group_data(self, group, event):
         data = {
@@ -92,10 +92,7 @@ class WebHooksPlugin(notify.NotificationPlugin):
         return data
 
     def get_webhook_urls(self, project):
-        urls = self.get_option('urls', project)
-        if not urls:
-            return ()
-        return filter(bool, urls.strip().splitlines())
+        return split_urls(self.get_option('urls', project))
 
     def send_webhook(self, url, payload):
         return safe_urlopen(

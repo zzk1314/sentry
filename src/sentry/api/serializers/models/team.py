@@ -7,9 +7,9 @@ from six.moves import zip
 
 from sentry.app import env
 from sentry.api.serializers import Serializer, register, serialize
+from sentry.auth.superuser import is_active_superuser
 from sentry.models import (
-    OrganizationAccessRequest, OrganizationMemberTeam, Project, ProjectStatus,
-    Team
+    OrganizationAccessRequest, OrganizationMemberTeam, Project, ProjectStatus, Team
 )
 
 
@@ -37,9 +37,7 @@ class TeamSerializer(Serializer):
         else:
             access_requests = frozenset()
 
-        is_superuser = (
-            request and request.is_superuser() and request.user == user
-        )
+        is_superuser = (request and is_active_superuser(request) and request.user == user)
         result = {}
         for team in item_list:
             is_member = team.id in memberships
@@ -72,10 +70,12 @@ class TeamSerializer(Serializer):
 
 class TeamWithProjectsSerializer(TeamSerializer):
     def get_attrs(self, item_list, user):
-        project_qs = list(Project.objects.filter(
-            team__in=item_list,
-            status=ProjectStatus.VISIBLE,
-        ).order_by('name', 'slug'))
+        project_qs = list(
+            Project.objects.filter(
+                team__in=item_list,
+                status=ProjectStatus.VISIBLE,
+            ).order_by('name', 'slug')
+        )
 
         team_map = {i.id: i for i in item_list}
         # TODO(dcramer): we should query in bulk for ones we're missing here

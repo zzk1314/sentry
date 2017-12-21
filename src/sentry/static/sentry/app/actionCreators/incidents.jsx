@@ -1,6 +1,7 @@
+import $ from 'jquery';
+
 import ConfigStore from '../stores/configStore';
 import IncidentActions from '../actions/incidentActions';
-import $ from 'jquery';
 
 function getIncidentsFromIncidentResponse(incidents) {
   if (incidents === null || incidents.length == 0) {
@@ -9,17 +10,17 @@ function getIncidentsFromIncidentResponse(incidents) {
 
   let isMajor = false;
   let log = [];
-  incidents.forEach((item) => {
+  incidents.forEach(item => {
     if (!isMajor && item.impact === 'major') {
       isMajor = true;
     }
     log.push({
       name: item.name,
-      updates: item.incident_updates.map((update) => {
+      updates: item.incident_updates.map(update => {
         return update.body;
       }),
       url: item.shortlink,
-      status: item.status
+      status: item.status,
     });
   });
 
@@ -36,21 +37,21 @@ export function load() {
       url: 'https://' + cfg.id + '.' + cfg.api_host + '/api/v2/incidents/unresolved.json',
       crossDomain: true,
       cache: false,
-      success: (data) => {
+      success: data => {
         let [incidents, indicator] = getIncidentsFromIncidentResponse(data.incidents);
         IncidentActions.updateSuccess({
           status: {
-            incidents: incidents,
-            indicator: indicator,
-            url: data.page.url
-          }
+            incidents,
+            indicator,
+            url: data.page.url,
+          },
         });
       },
       error: () => {
         IncidentActions.updateError({
-          status: null
+          status: null,
         });
-      }
+      },
     });
   }
 }

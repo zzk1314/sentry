@@ -1,38 +1,38 @@
+import PropTypes from 'prop-types';
 import React from 'react';
-import _ from 'underscore';
+import _ from 'lodash';
 import StreamTagFilter from './tagFilter';
 import LoadingIndicator from '../../components/loadingIndicator';
 import {queryToObj, objToQuery} from '../../utils/stream';
 import {t} from '../../locale';
 
-
 let TEXT_FILTER_DEBOUNCE_IN_MS = 300;
 
 const StreamSidebar = React.createClass({
   propTypes: {
-    orgId: React.PropTypes.string.isRequired,
-    projectId: React.PropTypes.string.isRequired,
+    orgId: PropTypes.string.isRequired,
+    projectId: PropTypes.string.isRequired,
 
-    tags: React.PropTypes.object.isRequired,
-    query: React.PropTypes.string,
-    onQueryChange: React.PropTypes.func.isRequired,
-    defaultQuery: React.PropTypes.string,
-    loading: React.PropTypes.bool
+    tags: PropTypes.object.isRequired,
+    query: PropTypes.string,
+    onQueryChange: PropTypes.func.isRequired,
+    defaultQuery: PropTypes.string,
+    loading: PropTypes.bool,
   },
 
   getDefaultProps() {
     return {
       tags: {},
       query: '',
-      onQueryChange: function () {}
+      onQueryChange: function() {},
     };
   },
 
   getInitialState() {
     let queryObj = queryToObj(this.props.query);
     return {
-      queryObj: queryObj,
-      textFilter: queryObj.__text
+      queryObj,
+      textFilter: queryObj.__text,
     };
   },
 
@@ -44,32 +44,36 @@ const StreamSidebar = React.createClass({
     if (!_.isEqual(nextProps.query, query)) {
       let queryObj = queryToObj(nextProps.query);
       this.setState({
-        queryObj: queryObj,
-        textFilter: queryObj.__text
+        queryObj,
+        textFilter: queryObj.__text,
       });
     }
   },
 
   onSelectTag(tag, value) {
     let newQuery = {...this.state.queryObj};
-    if (value)
-      newQuery[tag.key] = value;
-    else
-      delete newQuery[tag.key];
+    if (value) newQuery[tag.key] = value;
+    else delete newQuery[tag.key];
 
-    this.setState({
-      queryObj: newQuery,
-    }, this.onQueryChange);
+    this.setState(
+      {
+        queryObj: newQuery,
+      },
+      this.onQueryChange
+    );
   },
 
-  onTextChange: function (evt) {
+  onTextChange: function(evt) {
     this.setState({textFilter: evt.target.value});
   },
 
   debouncedTextChange: _.debounce(function(text) {
-    this.setState({
-      queryObj: {...this.state.queryObj, __text:text}
-    }, this.onQueryChange);
+    this.setState(
+      {
+        queryObj: {...this.state.queryObj, __text: text},
+      },
+      this.onQueryChange
+    );
   }, TEXT_FILTER_DEBOUNCE_IN_MS),
 
   onTextFilterSubmit(evt) {
@@ -77,12 +81,15 @@ const StreamSidebar = React.createClass({
 
     let newQueryObj = {
       ...this.state.queryObj,
-      __text: this.state.textFilter
+      __text: this.state.textFilter,
     };
 
-    this.setState({
-      queryObj: newQueryObj
-    }, this.onQueryChange);
+    this.setState(
+      {
+        queryObj: newQueryObj,
+      },
+      this.onQueryChange
+    );
   },
 
   onQueryChange() {
@@ -91,17 +98,20 @@ const StreamSidebar = React.createClass({
   },
 
   onClearSearch() {
-    this.setState({
-      textFilter: ''
-    }, this.onTextFilterSubmit);
+    this.setState(
+      {
+        textFilter: '',
+      },
+      this.onTextFilterSubmit
+    );
   },
 
   render() {
     return (
       <div className="stream-sidebar">
-        {this.props.loading ?
-          <LoadingIndicator/>
-        :
+        {this.props.loading ? (
+          <LoadingIndicator />
+        ) : (
           <div>
             <div className="stream-tag-filter">
               <h6 className="nav-header">{t('Text')}</h6>
@@ -112,16 +122,16 @@ const StreamSidebar = React.createClass({
                   onChange={this.onTextChange}
                   value={this.state.textFilter}
                 />
-                {this.state.textFilter &&
+                {this.state.textFilter && (
                   <a className="search-clear-form" onClick={this.onClearSearch}>
                     <span className="icon-circle-cross" />
                   </a>
-                }
+                )}
               </form>
-              <hr/>
+              <hr />
             </div>
 
-            {_.map(this.props.tags, (tag) => {
+            {_.map(this.props.tags, tag => {
               return (
                 <StreamTagFilter
                   value={this.state.queryObj[tag.key]}
@@ -134,10 +144,10 @@ const StreamSidebar = React.createClass({
               );
             })}
           </div>
-        }
+        )}
       </div>
     );
-  }
+  },
 });
 
 export default StreamSidebar;

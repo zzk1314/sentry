@@ -1,19 +1,18 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import U2fInterface from './u2finterface';
 import {t} from '../locale';
 
-const U2fSign = React.createClass({
-  propTypes: {
-    challengeData: React.PropTypes.object,
-    displayMode: React.PropTypes.string,
-  },
+class U2fSign extends React.Component {
+  static propTypes = {
+    challengeData: PropTypes.object,
+    displayMode: PropTypes.string,
+  };
 
-  getDefaultProps() {
-    return {
-      displayMode: 'signin'
-    };
-  },
+  static defaultProps = {
+    displayMode: 'signin',
+  };
 
   render() {
     const {displayMode} = this.props;
@@ -21,18 +20,27 @@ const U2fSign = React.createClass({
       <U2fInterface
         challengeData={this.props.challengeData}
         silentIfUnsupported={displayMode === 'sudo'}
-        flowMode={'sign'}>
+        flowMode={'sign'}
+      >
         <p>
-          {displayMode === 'signin' ? t(`
+          {displayMode === 'signin'
+            ? t(
+                `
             Insert your U2F device or tap the button on it to confirm the
             sign-in request.
-          `) : displayMode === 'sudo' ? t(`
+          `
+              )
+            : displayMode === 'sudo'
+              ? t(
+                  `
             Alternatively you can use your U2F device to confirm the action.
-          `) : null}
+          `
+                )
+              : null}
         </p>
       </U2fInterface>
     );
   }
-});
+}
 
 export default U2fSign;

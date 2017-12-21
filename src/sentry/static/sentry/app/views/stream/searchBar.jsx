@@ -1,7 +1,9 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import PureRenderMixin from 'react-addons-pure-render-mixin';
 import Reflux from 'reflux';
-import _ from 'underscore';
+import _ from 'lodash';
 import classNames from 'classnames';
 
 import StreamTagStore from '../../stores/streamTagStore';
@@ -10,23 +12,21 @@ import MemberListStore from '../../stores/memberListStore';
 import ApiMixin from '../../mixins/apiMixin';
 import {t} from '../../locale';
 
-import PureRenderMixin from 'react-addons-pure-render-mixin';
-
 import SearchDropdown from './searchDropdown';
 
 const SearchBar = React.createClass({
   propTypes: {
-    orgId: React.PropTypes.string.isRequired,
-    projectId: React.PropTypes.string.isRequired,
+    orgId: PropTypes.string.isRequired,
+    projectId: PropTypes.string.isRequired,
 
-    defaultQuery: React.PropTypes.string,
-    query: React.PropTypes.string,
-    defaultSearchItems: React.PropTypes.array.isRequired,
-    disabled: React.PropTypes.bool,
-    placeholder: React.PropTypes.string,
+    defaultQuery: PropTypes.string,
+    query: PropTypes.string,
+    defaultSearchItems: PropTypes.array.isRequired,
+    disabled: PropTypes.bool,
+    placeholder: PropTypes.string,
 
-    onQueryChange: React.PropTypes.func,
-    onSearch: React.PropTypes.func
+    onQueryChange: PropTypes.func,
+    onSearch: PropTypes.func,
   },
 
   mixins: [
@@ -53,7 +53,7 @@ const SearchBar = React.createClass({
      */
     getQueryTerms(query, cursor) {
       return query.slice(0, cursor).match(/\S+:"[^"]*"?|\S+/g);
-    }
+    },
   },
 
   getDefaultProps() {
@@ -69,35 +69,35 @@ const SearchBar = React.createClass({
           desc: t('key/value pair associated to an issue'),
           example: 'browser:"Chrome 34", has:browser',
           className: 'icon-tag',
-          value: 'browser:'
+          value: 'browser:',
         },
         {
           title: t('Status'),
           desc: t('State of an issue'),
           example: 'is:resolved, unresolved, ignored, assigned, unassigned',
           className: 'icon-toggle',
-          value: 'is:'
+          value: 'is:',
         },
         {
           title: t('Assigned'),
           desc: t('team member assigned to an issue'),
           example: 'assigned:[me|user@example.com]',
           className: 'icon-user',
-          value: 'assigned:'
+          value: 'assigned:',
         },
         {
           title: t('Bookmarked By'),
           desc: t('team member who bookmarked an issue'),
           example: 'bookmarks:[me|user@example.com]',
           className: 'icon-user',
-          value: 'bookmarks:'
+          value: 'bookmarks:',
         },
         {
           desc: t('or paste an event id to jump straight to it'),
           className: 'icon-hash',
-          value: ''
-        }
-      ]
+          value: '',
+        },
+      ],
     };
   },
 
@@ -113,7 +113,7 @@ const SearchBar = React.createClass({
       members: MemberListStore.getAll(),
 
       dropdownVisible: false,
-      loading: false
+      loading: false,
     };
   },
 
@@ -121,7 +121,7 @@ const SearchBar = React.createClass({
     // query was updated by another source (e.g. sidebar filters)
     if (nextProps.query !== this.state.query) {
       this.setState({
-        query: nextProps.query
+        query: nextProps.query,
       });
     }
   },
@@ -139,15 +139,12 @@ const SearchBar = React.createClass({
   },
 
   clearSearch() {
-    this.setState(
-      {query: ''},
-      () => this.props.onSearch(this.state.query)
-    );
+    this.setState({query: ''}, () => this.props.onSearch(this.state.query));
   },
 
   onQueryFocus() {
     this.setState({
-      dropdownVisible: true
+      dropdownVisible: true,
     });
   },
 
@@ -161,10 +158,7 @@ const SearchBar = React.createClass({
   },
 
   onQueryChange(evt) {
-    this.setState(
-      {query: evt.target.value},
-      () => this.updateAutoCompleteItems()
-    );
+    this.setState({query: evt.target.value}, () => this.updateAutoCompleteItems());
   },
 
   onKeyUp(evt) {
@@ -183,7 +177,7 @@ const SearchBar = React.createClass({
    *
    * e.g. ['is:', 'assigned:', 'url:', 'release:']
    */
-  getTagKeys: function (query) {
+  getTagKeys: function(query) {
     return StreamTagStore.getTagKeys()
       .map(key => key + ':')
       .filter(key => key.indexOf(query) > -1);
@@ -193,27 +187,31 @@ const SearchBar = React.createClass({
    * Returns array of tag values that substring match `query`; invokes `callback`
    * with data when ready
    */
-  getTagValues: _.debounce(function (tag, query, callback) {
+  getTagValues: _.debounce(function(tag, query, callback) {
     // Strip double quotes if there are any
     query = query.replace('"', '').trim();
 
     this.setState({
-      loading: true
+      loading: true,
     });
 
     let {orgId, projectId} = this.props;
     this.api.request(`/projects/${orgId}/${projectId}/tags/${tag.key}/values/`, {
       data: {
-        query: query
+        query,
       },
       method: 'GET',
-      success: (values) => {
+      success: values => {
         this.setState({loading: false});
-        callback(values.map((v) => {
-          // Wrap in quotes if there is a space
-          return v.value.indexOf(' ') > -1 ? `"${v.value}"` : v.value;
-        }), tag.key, query);
-      }
+        callback(
+          values.map(v => {
+            // Wrap in quotes if there is a space
+            return v.value.indexOf(' ') > -1 ? `"${v.value}"` : v.value;
+          }),
+          tag.key,
+          query
+        );
+      },
     });
   }, 300),
 
@@ -221,9 +219,8 @@ const SearchBar = React.createClass({
    * Returns array of tag values that substring match `query`; invokes `callback`
    * with results
    */
-  getPredefinedTagValues: function (tag, query, callback) {
-    let values = tag.values
-      .filter(value => value.indexOf(query) > -1);
+  getPredefinedTagValues: function(tag, query, callback) {
+    let values = tag.values.filter(value => value.indexOf(query) > -1);
 
     callback(values, tag.key);
   },
@@ -231,16 +228,19 @@ const SearchBar = React.createClass({
   onInputClick() {
     let cursor = this.getCursorPosition();
 
-    if (cursor === this.state.query.length && this.state.query.charAt(cursor - 1) !== ' ') {
+    if (
+      cursor === this.state.query.length &&
+      this.state.query.charAt(cursor - 1) !== ' '
+    ) {
       // If the cursor lands at the end of the input value, and the preceding character
       // is not whitespace, then add a space and move the cursor beyond that space.
-      this.setState(
-        {query: this.state.query + ' '},
-        () => {
-          ReactDOM.findDOMNode(this.refs.searchInput).setSelectionRange(cursor + 1, cursor + 1);
-          this.updateAutoCompleteItems();
-        }
-      );
+      this.setState({query: this.state.query + ' '}, () => {
+        ReactDOM.findDOMNode(this.refs.searchInput).setSelectionRange(
+          cursor + 1,
+          cursor + 1
+        );
+        this.updateAutoCompleteItems();
+      });
     } else {
       this.updateAutoCompleteItems();
     }
@@ -258,16 +258,18 @@ const SearchBar = React.createClass({
     let lastTermIndex = SearchBar.getLastTermIndex(query, cursor);
     let terms = SearchBar.getQueryTerms(query.slice(0, lastTermIndex));
 
-    if (!terms || // no terms
-        terms.length === 0 || // no terms
-        terms.length === 1 && terms[0] === this.props.defaultQuery || // default term
-        /^\s+$/.test(query.slice(cursor - 1, cursor + 1))) // cursor on whitespace
-    {
+    if (
+      !terms || // no terms
+      terms.length === 0 || // no terms
+      (terms.length === 1 && terms[0] === this.props.defaultQuery) || // default term
+      /^\s+$/.test(query.slice(cursor - 1, cursor + 1))
+    ) {
+      // cursor on whitespace
       // show default "help" search terms
       return void this.setState({
         searchTerm: '',
         searchItems: this.props.defaultSearchItems,
-        activeSearchItem: 0
+        activeSearchItem: 0,
       });
     }
 
@@ -290,23 +292,25 @@ const SearchBar = React.createClass({
 
       // filter existing items immediately, until API can return
       // with actual tag value results
-      let filteredSearchItems = this.state.searchItems.filter(item => query && item.value.indexOf(query) !== -1);
+      let filteredSearchItems = this.state.searchItems.filter(
+        item => query && item.value.indexOf(query) !== -1
+      );
 
       this.setState({
         searchTerm: query,
-        searchItems: filteredSearchItems
+        searchItems: filteredSearchItems,
       });
 
       let tag = StreamTagStore.getTag(tagName);
-      if (!tag)
-        return undefined;
+      if (!tag) return undefined;
 
-      return void (
-        tag.predefined
-          ? this.getPredefinedTagValues
-          : this.getTagValues
-        )(tag, query, this.updateAutoCompleteState);
+      return void (tag.predefined ? this.getPredefinedTagValues : this.getTagValues)(
+        tag,
+        query,
+        this.updateAutoCompleteState
+      );
     }
+    return undefined;
   },
 
   isDefaultDropdown() {
@@ -341,7 +345,7 @@ const SearchBar = React.createClass({
 
     this.setState({
       searchItems: autoCompleteItems.slice(0, 5), // only show 5
-      activeSearchItem: 0
+      activeSearchItem: 0,
     });
   },
 
@@ -349,8 +353,7 @@ const SearchBar = React.createClass({
     let state = this.state;
     let searchItems = state.searchItems;
 
-    if (!searchItems.length)
-      return;
+    if (!searchItems.length) return;
 
     if (evt.key === 'ArrowDown' || evt.key === 'ArrowUp') {
       evt.preventDefault();
@@ -358,13 +361,13 @@ const SearchBar = React.createClass({
       // Move active selection up/down
       delete searchItems[state.activeSearchItem].active;
 
-      state.activeSearchItem = evt.key === 'ArrowDown'
-        ? Math.min(state.activeSearchItem + 1, searchItems.length - 1)
-        : Math.max(state.activeSearchItem - 1, 0);
+      state.activeSearchItem =
+        evt.key === 'ArrowDown'
+          ? Math.min(state.activeSearchItem + 1, searchItems.length - 1)
+          : Math.max(state.activeSearchItem - 1, 0);
 
       searchItems[state.activeSearchItem].active = true;
       this.setState({searchItems: searchItems.slice(0)});
-
     } else if (evt.key === 'Tab' && !this.isDefaultDropdown()) {
       evt.preventDefault();
 
@@ -390,47 +393,55 @@ const SearchBar = React.createClass({
 
       newQuery = query.slice(0, lastTermIndex); // get text preceding last term
 
-      newQuery = last.indexOf(':') > -1
-        // tag key present: replace everything after colon with replaceText
-        ? newQuery.replace(/\:"[^"]*"?$|\:\S*$/, ':' + replaceText)
-        // no tag key present: replace last token with replaceText
-        : newQuery.replace(/\S+$/, replaceText);
+      newQuery =
+        last.indexOf(':') > -1
+          ? // tag key present: replace everything after colon with replaceText
+            newQuery.replace(/\:"[^"]*"?$|\:\S*$/, ':' + replaceText)
+          : // no tag key present: replace last token with replaceText
+            newQuery.replace(/\S+$/, replaceText);
 
       newQuery = newQuery.concat(query.slice(lastTermIndex));
     }
 
-    this.setState({
-      query: newQuery
-    }, () => {
-      // setting a new input value will lose focus; restore it
-      let node = ReactDOM.findDOMNode(this.refs.searchInput);
-      node.focus();
+    this.setState(
+      {
+        query: newQuery,
+      },
+      () => {
+        // setting a new input value will lose focus; restore it
+        let node = ReactDOM.findDOMNode(this.refs.searchInput);
+        node.focus();
 
-      // then update the autocomplete box with new contextTypes
-      this.updateAutoCompleteItems();
-    });
+        // then update the autocomplete box with new contextTypes
+        this.updateAutoCompleteItems();
+      }
+    );
   },
 
   onMemberListStoreChange(members) {
-    this.setState({
-      members: members
-    }, this.updateAutoCompleteItems);
+    this.setState(
+      {
+        members,
+      },
+      this.updateAutoCompleteItems
+    );
   },
 
   render() {
     let dropdownStyle = {
-      display: this.state.dropdownVisible ? 'block' : 'none'
+      display: this.state.dropdownVisible ? 'block' : 'none',
     };
 
     let rootClassNames = ['search'];
-    if (this.props.disabled)
-      rootClassNames.push('disabled');
+    if (this.props.disabled) rootClassNames.push('disabled');
 
     return (
       <div className={classNames(rootClassNames)}>
         <form className="form-horizontal" ref="searchForm" onSubmit={this.onSubmit}>
           <div>
-            <input type="text" className="search-input form-control"
+            <input
+              type="text"
+              className="search-input form-control"
               placeholder={this.props.placeholder}
               name="query"
               ref="searchInput"
@@ -443,18 +454,18 @@ const SearchBar = React.createClass({
               onChange={this.onQueryChange}
               onClick={this.onInputClick}
               disabled={this.props.disabled}
-              />
+            />
             <span className="icon-search" />
-            {this.state.query !== '' &&
+            {this.state.query !== '' && (
               <div>
                 <a className="search-clear-form" onClick={this.clearSearch}>
                   <span className="icon-circle-cross" />
                 </a>
               </div>
-            }
+            )}
           </div>
 
-          {(this.state.loading || this.state.searchItems.length > 0) &&
+          {(this.state.loading || this.state.searchItems.length > 0) && (
             <div style={dropdownStyle}>
               <SearchDropdown
                 style={dropdownStyle}
@@ -462,13 +473,13 @@ const SearchBar = React.createClass({
                 onClick={this.onAutoComplete}
                 loading={this.state.loading}
                 searchSubstring={this.state.searchTerm}
-                />
+              />
             </div>
-          }
+          )}
         </form>
       </div>
     );
-  }
+  },
 });
 
 export default SearchBar;

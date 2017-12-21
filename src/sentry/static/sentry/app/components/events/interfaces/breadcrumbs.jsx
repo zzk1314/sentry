@@ -1,6 +1,7 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import GroupEventDataSection from '../eventDataSection';
-import PropTypes from '../../../proptypes';
+import SentryTypes from '../../../proptypes';
 import Breadcrumb from './breadcrumbs/breadcrumb';
 import {t} from '../../../locale';
 
@@ -8,7 +9,7 @@ function Collapsed(props) {
   return (
     <li className="crumbs-collapsed">
       <span className="icon-container">
-        <span className="icon icon-ellipsis"/>
+        <span className="icon icon-ellipsis" />
       </span>
       <a onClick={props.onClick}>Show {props.count} collapsed crumbs</a>
     </li>
@@ -27,58 +28,60 @@ function moduleToCategory(module) {
 }
 
 Collapsed.propTypes = {
-  onClick: React.PropTypes.func.isRequired,
-  count: React.PropTypes.number.isRequired
+  onClick: PropTypes.func.isRequired,
+  count: PropTypes.number.isRequired,
 };
 
-const BreadcrumbsInterface = React.createClass({
-  propTypes: {
-    group: PropTypes.Group.isRequired,
-    event: PropTypes.Event.isRequired,
-    type: React.PropTypes.string.isRequired,
-    data: React.PropTypes.object.isRequired,
-    isShare: React.PropTypes.bool
-  },
+class BreadcrumbsInterface extends React.Component {
+  static propTypes = {
+    group: SentryTypes.Group.isRequired,
+    event: SentryTypes.Event.isRequired,
+    type: PropTypes.string.isRequired,
+    data: PropTypes.object.isRequired,
+    isShare: PropTypes.bool,
+  };
 
-  contextTypes: {
-    organization: PropTypes.Organization,
-    project: PropTypes.Project
-  },
+  static contextTypes = {
+    organization: SentryTypes.Organization,
+    project: SentryTypes.Project,
+  };
 
-  statics: {
-    MAX_CRUMBS_WHEN_COLLAPSED: 10
-  },
+  static MAX_CRUMBS_WHEN_COLLAPSED = 10;
 
-  getInitialState() {
-    return {
-      collapsed: true,
-      queryValue: ''
-    };
-  },
+  state = {
+    collapsed: true,
+    queryValue: '',
+  };
 
-  onCollapseToggle() {
+  onCollapseToggle = () => {
     this.setState({
-      collapsed: !this.state.collapsed
+      collapsed: !this.state.collapsed,
     });
-  },
+  };
 
-  renderBreadcrumbs(crumbs) {
+  renderBreadcrumbs = crumbs => {
     // reverse array to get consistent idx between collapsed/expanded state
     // (indexes begin and increment from last breadcrumb)
-    return crumbs.reverse().map((item, idx) => {
-      return <Breadcrumb key={idx} crumb={item} />;
-    }).reverse(); // un-reverse rendered result
-  },
+    return crumbs
+      .reverse()
+      .map((item, idx) => {
+        return <Breadcrumb key={idx} crumb={item} />;
+      })
+      .reverse(); // un-reverse rendered result
+  };
 
-  renderNoMatch() {
+  renderNoMatch = () => {
     return (
       <li className="crumb-empty">
-        <p><span className="icon icon-exclamation" /> {t('Sorry, no breadcrumbs match your search query.')}</p>
+        <p>
+          <span className="icon icon-exclamation" />{' '}
+          {t('Sorry, no breadcrumbs match your search query.')}
+        </p>
       </li>
     );
-  },
+  };
 
-  getVirtualCrumb() {
+  getVirtualCrumb = () => {
     let evt = this.props.event;
     let crumb;
 
@@ -90,38 +93,38 @@ const BreadcrumbsInterface = React.createClass({
         level: 'error',
         category: moduleToCategory(module || null) || 'exception',
         data: {
-          type: type,
-          value: value
-        }
+          type,
+          value,
+        },
       };
     } else if (evt.message) {
       let levelTag = (evt.tags || []).find(tag => tag.key === 'level');
       let level = levelTag && levelTag.value;
       crumb = {
         type: 'message',
-        level: level,
+        level,
         category: 'message',
-        message: evt.message
+        message: evt.message,
       };
     }
 
     if (crumb) {
       Object.assign(crumb, {
         timestamp: evt.dateCreated,
-        last: true
+        last: true,
       });
     }
 
     return crumb;
-  },
+  };
 
-  setQuery(evt) {
+  setQuery = evt => {
     this.setState({
-      queryValue: evt.target.value
+      queryValue: evt.target.value,
     });
-  },
+  };
 
-  filterCrumbs(crumbs, queryValue) {
+  filterCrumbs = (crumbs, queryValue) => {
     return crumbs.filter(item => {
       // return true if any of category, message, or level contain queryValue
       return !!['category', 'message', 'level'].find(prop => {
@@ -129,35 +132,37 @@ const BreadcrumbsInterface = React.createClass({
         return propValue.includes(queryValue);
       });
     });
-  },
+  };
 
-  clearSearch() {
+  clearSearch = () => {
     this.setState({
       queryValue: '',
-      collapsed: true
+      collapsed: true,
     });
-  },
+  };
 
-  getSearchField() {
+  getSearchField = () => {
     return (
       <div className="breadcrumb-filter">
-        <input type="text" className="search-input form-control"
+        <input
+          type="text"
+          className="search-input form-control"
           placeholder={t('Search breadcrumbs...')}
           autoComplete="off"
           value={this.state.queryValue}
           onChange={this.setQuery}
-          />
+        />
         <span className="icon-search" />
-        {this.state.queryValue &&
+        {this.state.queryValue && (
           <div>
             <a className="search-clear-form" onClick={this.clearSearch}>
               <span className="icon-circle-cross" />
             </a>
           </div>
-        }
+        )}
       </div>
     );
-  },
+  };
 
   render() {
     let group = this.props.group;
@@ -184,9 +189,7 @@ const BreadcrumbsInterface = React.createClass({
 
     // filter breadcrumbs on text input
     let {queryValue} = this.state;
-    let filtered = queryValue
-      ? this.filterCrumbs(all, queryValue.toLowerCase())
-        : all;
+    let filtered = queryValue ? this.filterCrumbs(all, queryValue.toLowerCase()) : all;
 
     // cap max number of breadcrumbs to show
     const MAX = BreadcrumbsInterface.MAX_CRUMBS_WHEN_COLLAPSED;
@@ -205,19 +208,22 @@ const BreadcrumbsInterface = React.createClass({
     }
     return (
       <GroupEventDataSection
-          className="breadcrumb-box"
-          group={group}
-          event={evt}
-          type={this.props.type}
-          title={title}
-          wrapTitle={false}>
+        className="breadcrumb-box"
+        group={group}
+        event={evt}
+        type={this.props.type}
+        title={title}
+        wrapTitle={false}
+      >
         <ul className="crumbs">
-          {numCollapsed > 0 && <Collapsed onClick={this.onCollapseToggle} count={numCollapsed}/>}
+          {numCollapsed > 0 && (
+            <Collapsed onClick={this.onCollapseToggle} count={numCollapsed} />
+          )}
           {crumbContent}
         </ul>
       </GroupEventDataSection>
     );
   }
-});
+}
 
 export default BreadcrumbsInterface;

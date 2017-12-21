@@ -6,7 +6,8 @@ from datetime import timedelta
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 
-from sentry.models import EventUser, GroupTagValue, OrganizationMemberTeam
+from sentry import tagstore
+from sentry.models import EventUser, OrganizationMemberTeam
 from sentry.testutils import APITestCase
 
 
@@ -20,26 +21,36 @@ class OrganizationUserIssuesSearchTest(APITestCase):
         self.team2 = self.create_team(organization=self.org)
         self.project1 = self.create_project(team=self.team1)
         self.project2 = self.create_project(team=self.team2)
-        group1 = self.create_group(project=self.project1,
-                                   last_seen=timezone.now() - timedelta(minutes=1))
+        group1 = self.create_group(
+            project=self.project1, last_seen=timezone.now() - timedelta(minutes=1)
+        )
         group2 = self.create_group(project=self.project2)
 
-        EventUser.objects.create(email='foo@example.com', project=self.project1)
-        EventUser.objects.create(email='bar@example.com', project=self.project1)
-        EventUser.objects.create(email='foo@example.com', project=self.project2)
+        EventUser.objects.create(email='foo@example.com', project_id=self.project1.id)
+        EventUser.objects.create(email='bar@example.com', project_id=self.project1.id)
+        EventUser.objects.create(email='foo@example.com', project_id=self.project2.id)
 
-        GroupTagValue.objects.create(key='sentry:user',
-                                     value='email:foo@example.com',
-                                     group=group1,
-                                     project=self.project1)
-        GroupTagValue.objects.create(key='sentry:user',
-                                     value='email:bar@example.com',
-                                     group=group1,
-                                     project=self.project1)
-        GroupTagValue.objects.create(key='sentry:user',
-                                     value='email:foo@example.com',
-                                     group=group2,
-                                     project=self.project2)
+        tagstore.create_group_tag_value(
+            key='sentry:user',
+            value='email:foo@example.com',
+            group_id=group1.id,
+            environment_id=None,
+            project_id=self.project1.id
+        )
+        tagstore.create_group_tag_value(
+            key='sentry:user',
+            value='email:bar@example.com',
+            group_id=group1.id,
+            environment_id=None,
+            project_id=self.project1.id
+        )
+        tagstore.create_group_tag_value(
+            key='sentry:user',
+            value='email:foo@example.com',
+            group_id=group2.id,
+            environment_id=None,
+            project_id=self.project2.id
+        )
 
     def get_url(self):
         return reverse('sentry-api-0-organization-issue-search', args=[self.org.slug])

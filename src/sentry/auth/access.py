@@ -6,6 +6,8 @@ import warnings
 
 from django.conf import settings
 
+from sentry import roles
+from sentry.auth.superuser import is_active_superuser
 from sentry.models import AuthIdentity, AuthProvider, OrganizationMember
 
 
@@ -35,6 +37,18 @@ def _sso_params(member):
                 )
             except AuthIdentity.DoesNotExist:
                 sso_is_valid = False
+                # If an owner is trying to gain access,
+                # allow bypassing SSO if there are no other
+                # owners with SSO enabled.
+                if member.role == roles.get_top_dog().id:
+                    requires_sso = AuthIdentity.objects.filter(
+                        auth_provider=auth_provider,
+                        user__in=OrganizationMember.objects.filter(
+                            organization=member.organization_id,
+                            role=roles.get_top_dog().id,
+                            user__is_active=True,
+                        ).exclude(id=member.id).values_list('user_id')
+                    ).exists()
             else:
                 sso_is_valid = auth_identity.is_valid(member)
     return requires_sso, sso_is_valid
@@ -56,8 +70,7 @@ class BaseAccess(object):
         return scope in self.scopes
 
     def has_team(self, team):
-        warnings.warn('has_team() is deprecated in favor of has_team_access',
-                      DeprecationWarning)
+        warnings.warn('has_team() is deprecated in favor of has_team_access', DeprecationWarning)
         return self.has_team_access(team)
 
     def has_team_access(self, team):
@@ -74,18 +87,14 @@ class BaseAccess(object):
         return self.has_team_access(team) and self.has_scope(scope)
 
     def to_django_context(self):
-        return {
-            s.replace(':', '_'): self.has_scope(s)
-            for s in settings.SENTRY_SCOPES
-        }
+        return {s.replace(':', '_'): self.has_scope(s) for s in settings.SENTRY_SCOPES}
 
 
 class Access(BaseAccess):
     # TODO(dcramer): this is still a little gross, and ideally backend access
     # would be based on the same scopes as API access so theres clarity in
     # what things mean
-    def __init__(self, scopes, is_active, teams, memberships, sso_is_valid,
-                 requires_sso):
+    def __init__(self, scopes, is_active, teams, memberships, sso_is_valid, requires_sso):
         self.teams = teams
         self.memberships = memberships
         self.scopes = scopes
@@ -99,7 +108,7 @@ def from_request(request, organization, scopes=None):
     if not organization:
         return DEFAULT
 
-    if request.is_superuser():
+    if is_active_superuser(request):
         # we special case superuser so that if they're a member of the org
         # they must still follow SSO checks, but they gain global access
         try:
@@ -178,5 +187,6 @@ class NoAccess(BaseAccess):
     teams = ()
     memberships = ()
     scopes = frozenset()
+
 
 DEFAULT = NoAccess()

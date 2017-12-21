@@ -1,108 +1,87 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import queryString from 'query-string';
 
 import ClippedBox from '../../clippedBox';
 import KeyValueList from './keyValueList';
 import ContextData from '../../contextData';
 
+import {objectToSortedTupleArray} from './utils';
 import {objectIsEmpty} from '../../../utils';
-import queryString from 'query-string';
 import {t} from '../../../locale';
 
-const RichHttpContent = React.createClass({
-  propTypes: {
-    data: React.PropTypes.object.isRequired
-  },
+class RichHttpContent extends React.Component {
+  static propTypes = {
+    data: PropTypes.object.isRequired,
+  };
 
-  /**
-   * Converts an object of body/querystring key/value pairs
-   * into a tuple of [key, value] pairs, and sorts them.
-   *
-   * Note that the query-string parser returns dupes like this:
-   *   { foo: ['bar', 'baz'] } // ?foo=bar&bar=baz
-   *
-   * This method accounts for this.
-   */
-  objectToSortedTupleArray(obj) {
-    return Object.keys(obj).reduce((out, k) => {
-      let val = obj[k];
-      return out.concat(
-        {}.toString.call(val) === '[object Array]' ?
-          val.map(v => [k, v]) : // key has multiple values (array)
-          [[k, val]]             // key has single value
-      );
-    }, []).sort(function ([keyA], [keyB]) {
-      return keyA < keyB ? -1 : 1;
-    });
-  },
-
-  getBodySection(data) {
-    /*eslint no-empty:0*/
-    let contentType = data.headers.find(h => h[0] === 'Content-Type');
-    contentType = contentType && contentType[1].split(';')[0].toLowerCase();
-
-    // Ignoring Content-Type, we immediately just check if the body is parseable
-    // as JSON. Why? Because many applications don't set proper Content-Type values,
-    // e.g. x-www-form-urlencoded  actually contains JSON.
-    try {
-      return <ContextData data={JSON.parse(data.data)} />;
-    } catch (e) {}
-
-    if (contentType === 'application/x-www-form-urlencoded') {
-      return this.getQueryStringOrRaw(data.data);
-    } else {
-      return <pre>{JSON.stringify(data.data, null, 2)}</pre>;
+  getBodySection = data => {
+    // The http interface provides an inferred content type for the data body.
+    switch (data.inferredContentType) {
+      case 'application/json':
+        return <ContextData data={data.data} />;
+      case 'application/x-www-form-urlencoded':
+        return (
+          <KeyValueList data={objectToSortedTupleArray(data.data)} isContextData={true} />
+        );
+      default:
+        return <pre>{JSON.stringify(data.data, null, 2)}</pre>;
     }
-  },
+  };
 
-  getQueryStringOrRaw(data) {
+  getQueryStringOrRaw = data => {
     try {
       // Sentry API abbreviates long query string values, sometimes resulting in
       // an un-parsable querystring ... stay safe kids
-      return <KeyValueList data={this.objectToSortedTupleArray(queryString.parse(data))}/>;
+      return (
+        <KeyValueList
+          data={objectToSortedTupleArray(queryString.parse(data))}
+          isContextData={true}
+        />
+      );
     } catch (e) {
       return <pre>{data}</pre>;
     }
-  },
+  };
 
-  render(){
+  render() {
     let data = this.props.data;
     return (
       <div>
-        {data.query &&
+        {data.query && (
           <ClippedBox title={t('Query String')}>
             {this.getQueryStringOrRaw(data.query)}
           </ClippedBox>
-        }
-        {data.fragment &&
+        )}
+        {data.fragment && (
           <ClippedBox title={t('Fragment')}>
             <pre>{data.fragment}</pre>
           </ClippedBox>
-        }
+        )}
 
-        {data.data &&
-          <ClippedBox title={t('Body')}>
-            {this.getBodySection(data)}
-          </ClippedBox>
-        }
+        {data.data && (
+          <ClippedBox title={t('Body')}>{this.getBodySection(data)}</ClippedBox>
+        )}
 
-        {data.cookies && !objectIsEmpty(data.cookies) &&
-          <ClippedBox title={t('Cookies')} defaultCollapsed>
-            <KeyValueList data={data.cookies} />
-          </ClippedBox>
-        }
-        {!objectIsEmpty(data.headers) &&
+        {data.cookies &&
+          !objectIsEmpty(data.cookies) && (
+            <ClippedBox title={t('Cookies')} defaultCollapsed>
+              <KeyValueList data={data.cookies} />
+            </ClippedBox>
+          )}
+        {!objectIsEmpty(data.headers) && (
           <ClippedBox title={t('Headers')}>
             <KeyValueList data={data.headers} />
           </ClippedBox>
-        }
-        {!objectIsEmpty(data.env) &&
+        )}
+        {!objectIsEmpty(data.env) && (
           <ClippedBox title={t('Environment')} defaultCollapsed>
-            <KeyValueList data={this.objectToSortedTupleArray(data.env)}/>
+            <KeyValueList data={objectToSortedTupleArray(data.env)} />
           </ClippedBox>
-        }
+        )}
       </div>
     );
   }
-});
+}
 
 export default RichHttpContent;

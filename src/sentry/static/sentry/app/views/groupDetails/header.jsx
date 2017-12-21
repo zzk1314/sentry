@@ -1,6 +1,6 @@
+import PropTypes from 'prop-types';
 import React from 'react';
-import {Link, browserHistory} from 'react-router';
-
+import {Link} from 'react-router';
 import ApiMixin from '../../mixins/apiMixin';
 import AssigneeSelector from '../../components/assigneeSelector';
 import Count from '../../components/count';
@@ -9,23 +9,26 @@ import GroupSeenBy from './seenBy';
 import IndicatorStore from '../../stores/indicatorStore';
 import ListLink from '../../components/listLink';
 import ShortId from '../../components/shortId';
-import GroupTitle from '../../components/group/title';
+import EventOrGroupTitle from '../../components/eventOrGroupTitle';
 import ProjectState from '../../mixins/projectState';
+import TooltipMixin from '../../mixins/tooltip';
 import {t} from '../../locale';
 
 const GroupHeader = React.createClass({
   propTypes: {
-    group: React.PropTypes.object.isRequired,
-    memberList: React.PropTypes.array.isRequired
+    group: PropTypes.object.isRequired,
   },
 
   contextTypes: {
-    location: React.PropTypes.object
+    location: PropTypes.object,
   },
 
   mixins: [
     ApiMixin,
-    ProjectState
+    ProjectState,
+    TooltipMixin({
+      selector: '.tip',
+    }),
   ],
 
   onToggleMute() {
@@ -34,43 +37,21 @@ const GroupHeader = React.createClass({
     let org = this.getOrganization();
     let loadingIndicator = IndicatorStore.add(t('Saving changes..'));
 
-    this.api.bulkUpdate({
-      orgId: org.slug,
-      projectId: project.slug,
-      itemIds: [group.id],
-      data: {
-        status: group.status === 'ignored' ? 'unresolved' : 'ignored'
+    this.api.bulkUpdate(
+      {
+        orgId: org.slug,
+        projectId: project.slug,
+        itemIds: [group.id],
+        data: {
+          status: group.status === 'ignored' ? 'unresolved' : 'ignored',
+        },
+      },
+      {
+        complete: () => {
+          IndicatorStore.remove(loadingIndicator);
+        },
       }
-    }, {
-      complete: () => {
-        IndicatorStore.remove(loadingIndicator);
-      }
-    });
-  },
-
-  onShare() {
-    let {shareId} = this.props.group;
-    return browserHistory.pushState(null, `/share/issue/${shareId}/`);
-  },
-
-  onTogglePublic() {
-    let group = this.props.group;
-    let project = this.getProject();
-    let org = this.getOrganization();
-    let loadingIndicator = IndicatorStore.add(t('Saving changes..'));
-
-    this.api.bulkUpdate({
-      orgId: org.slug,
-      projectId: project.slug,
-      itemIds: [group.id],
-      data: {
-        isPublic: !group.isPublic
-      }
-    }, {
-      complete: () => {
-        IndicatorStore.remove(loadingIndicator);
-      }
-    });
+    );
   },
 
   getMessage() {
@@ -88,8 +69,9 @@ const GroupHeader = React.createClass({
 
   render() {
     let group = this.props.group,
-        orgFeatures = new Set(this.getOrganization().features),
-        userCount = group.userCount;
+      orgFeatures = new Set(this.getOrganization().features),
+      projectFeatures = this.getProjectFeatures(),
+      userCount = group.userCount;
 
     let className = 'group-detail';
 
@@ -109,47 +91,62 @@ const GroupHeader = React.createClass({
     let groupId = group.id,
       projectId = this.getProject().slug,
       orgId = this.getOrganization().slug;
-
     let message = this.getMessage();
+
+    let hasSimilarView = projectFeatures.has('similarity-view');
+    let hasMergeView = orgFeatures.has('group-unmerge');
 
     return (
       <div className={className}>
         <div className="row">
           <div className="col-sm-7">
             <h3>
-              <GroupTitle data={group} />
+              <EventOrGroupTitle data={group} />
             </h3>
             <div className="event-message">
               <span className="error-level">{group.level}</span>
-              {message &&
-                <span className="message">{message}</span>
-              }
-              {group.logger &&
+              {message && <span className="message">{message}</span>}
+              {group.logger && (
                 <span className="event-annotation">
-                  <Link to={{
-                      pathname:`/${orgId}/${projectId}/`,
-                      query: {query: 'logger:' + group.logger}
-                    }}>
+                  <Link
+                    to={{
+                      pathname: `/${orgId}/${projectId}/`,
+                      query: {query: 'logger:' + group.logger},
+                    }}
+                  >
                     {group.logger}
                   </Link>
                 </span>
-              }
+              )}
               {group.annotations.map((annotation, i) => {
                 return (
-                  <span className="event-annotation" key={i}
-                      dangerouslySetInnerHTML={{__html: annotation}} />
+                  <span
+                    className="event-annotation"
+                    key={i}
+                    dangerouslySetInnerHTML={{__html: annotation}}
+                  />
                 );
               })}
             </div>
           </div>
           <div className="col-sm-5 stats">
             <div className="flex flex-justify-right">
-              {group.shortId && this.getFeatures().has('callsigns') &&
+              {group.shortId && (
                 <div className="short-id-box count align-right">
-                  <h6 className="nav-header">{t('Issue #')}</h6>
+                  <h6 className="nav-header">
+                    <a
+                      className="help-link tip"
+                      title={t(
+                        'This identifier is unique across your organization, and can be used to reference an issue in various places, like commit messages.'
+                      )}
+                      href="https://docs.sentry.io/learn/releases/#resolving-issues-via-commits"
+                    >
+                      {t('Issue #')}
+                    </a>
+                  </h6>
                   <ShortId shortId={group.shortId} />
                 </div>
-              }
+              )}
               <div className="assigned-to">
                 <h6 className="nav-header">{t('Assigned')}</h6>
                 <AssigneeSelector id={group.id} />
@@ -162,43 +159,38 @@ const GroupHeader = React.createClass({
               </div>
               <div className="count align-right">
                 <h6 className="nav-header">{t('Users')}</h6>
-                {userCount !== 0 ?
+                {userCount !== 0 ? (
                   <Link to={`/${orgId}/${projectId}/issues/${groupId}/tags/user/`}>
                     <Count className="count" value={userCount} />
                   </Link>
-                :
+                ) : (
                   <span>0</span>
-                }
+                )}
               </div>
             </div>
           </div>
         </div>
         <GroupSeenBy />
         <GroupActions />
-        {orgFeatures.has('shared-issues') &&
-          <div className="pull-right">
-            <div className="group-privacy">
-              <a onClick={this.onShare}>
-                <span className="icon" /> {t('Share this event')}
-              </a>
-            </div>
-          </div>
-        }
         <ul className="nav nav-tabs">
-          <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/`} isActive={() => {
-            let rootGroupPath = `/${orgId}/${projectId}/issues/${groupId}/`;
-            let pathname = this.context.location.pathname;
+          <ListLink
+            to={`/${orgId}/${projectId}/issues/${groupId}/`}
+            isActive={() => {
+              let rootGroupPath = `/${orgId}/${projectId}/issues/${groupId}/`;
+              let pathname = this.context.location.pathname;
 
-            // Because react-router 1.0 removes router.isActive(route)
-            return pathname === rootGroupPath || /events\/\w+\/$/.test(pathname);
-          }}>
+              // Because react-router 1.0 removes router.isActive(route)
+              return pathname === rootGroupPath || /events\/\w+\/$/.test(pathname);
+            }}
+          >
             {t('Details')}
           </ListLink>
           <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/activity/`}>
             {t('Comments')} <span className="badge animated">{group.numComments}</span>
           </ListLink>
           <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/feedback/`}>
-            {t('User Feedback')} <span className="badge animated">{group.userReportCount}</span>
+            {t('User Feedback')}{' '}
+            <span className="badge animated">{group.userReportCount}</span>
           </ListLink>
           <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/tags/`}>
             {t('Tags')}
@@ -207,12 +199,22 @@ const GroupHeader = React.createClass({
             {t('Geo')}
           </ListLink>
           <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/events/`}>
-            {t('Related Events')}
+            {t('Events')}
           </ListLink>
+          {hasMergeView && (
+            <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/merged/`}>
+              {t('Merged')}
+            </ListLink>
+          )}
+          {hasSimilarView && (
+            <ListLink to={`/${orgId}/${projectId}/issues/${groupId}/similar/`}>
+              {t('Similar Issues')}
+            </ListLink>
+          )}
         </ul>
       </div>
     );
-  }
+  },
 });
 
 export default GroupHeader;

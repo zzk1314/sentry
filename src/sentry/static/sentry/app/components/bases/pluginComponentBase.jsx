@@ -1,11 +1,10 @@
 import React from 'react';
-import _ from 'underscore';
+import _ from 'lodash';
 
 import {Client} from '../../api';
 import {FormState, GenericField} from '../../components/forms';
 import IndicatorStore from '../../stores/indicatorStore';
 import {t} from '../../locale';
-
 
 const callbackWithArgs = function(callback, ...args) {
   if (_.isFunction(callback)) {
@@ -16,18 +15,19 @@ const callbackWithArgs = function(callback, ...args) {
   return callback;
 };
 
-
 class PluginComponentBase extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
 
-    ['onLoadSuccess',
-     'onLoadError',
-     'onSave',
-     'onSaveSuccess',
-     'onSaveError',
-     'onSaveComplete',
-     'renderField'].map(method => this[method] = this[method].bind(this));
+    [
+      'onLoadSuccess',
+      'onLoadError',
+      'onSave',
+      'onSaveSuccess',
+      'onSaveError',
+      'onSaveComplete',
+      'renderField',
+    ].map(method => (this[method] = this[method].bind(this)));
 
     if (this.fetchData) {
       this.fetchData = this.onLoad.bind(this, this.fetchData.bind(this));
@@ -37,7 +37,7 @@ class PluginComponentBase extends React.Component {
     }
 
     this.state = {
-      state: FormState.READY
+      state: FormState.READY,
     };
   }
 
@@ -50,23 +50,32 @@ class PluginComponentBase extends React.Component {
   }
 
   onLoad(callback, ...args) {
-    this.setState({
-      state: FormState.LOADING
-    }, callbackWithArgs(callback, ...args));
+    this.setState(
+      {
+        state: FormState.LOADING,
+      },
+      callbackWithArgs(callback, ...args)
+    );
   }
 
   onLoadSuccess(callback, ...args) {
-    this.setState({
-      state: FormState.READY
-    }, callbackWithArgs(callback, ...args));
+    this.setState(
+      {
+        state: FormState.READY,
+      },
+      callbackWithArgs(callback, ...args)
+    );
   }
 
   onLoadError(callback, ...args) {
-    this.setState({
-      state: FormState.ERROR
-    }, callbackWithArgs(callback, ...args));
+    this.setState(
+      {
+        state: FormState.ERROR,
+      },
+      callbackWithArgs(callback, ...args)
+    );
     IndicatorStore.add(t('An error occurred.'), 'error', {
-      duration: 3000
+      duration: 3000,
     });
   }
 
@@ -75,33 +84,42 @@ class PluginComponentBase extends React.Component {
       return;
     }
     callback = callbackWithArgs(callback, ...args);
-    this.setState({
-      state: FormState.SAVING,
-    }, () => {
-      this._loadingIndicator = IndicatorStore.add(t('Saving changes..'));
-      callback && callback();
-    });
+    this.setState(
+      {
+        state: FormState.SAVING,
+      },
+      () => {
+        this._loadingIndicator = IndicatorStore.add(t('Saving changes..'));
+        callback && callback();
+      }
+    );
   }
 
   onSaveSuccess(callback, ...args) {
-    this.setState({
-      state: FormState.READY
-    }, callbackWithArgs(callback, ...args));
+    this.setState(
+      {
+        state: FormState.READY,
+      },
+      callbackWithArgs(callback, ...args)
+    );
     IndicatorStore.add(t('Success!'), 'success', {
-      duration: 3000
+      duration: 3000,
     });
   }
 
   onSaveError(callback, ...args) {
     callback = callbackWithArgs(callback, ...args);
-    this.setState({
-      state: FormState.ERROR,
-    }, () => {
-      IndicatorStore.add(t('Unable to save changes. Please try again.'), 'error', {
-        duration: 3000
-      });
-      callback && callback();
-    });
+    this.setState(
+      {
+        state: FormState.ERROR,
+      },
+      () => {
+        IndicatorStore.add(t('Unable to save changes. Please try again.'), 'error', {
+          duration: 3000,
+        });
+        callback && callback();
+      }
+    );
   }
 
   onSaveComplete(callback, ...args) {
@@ -113,7 +131,7 @@ class PluginComponentBase extends React.Component {
   renderField(props) {
     props = {...props};
     props.formState = this.state.state;
-    return <GenericField {...props}/>;
+    return <GenericField {...props} />;
   }
 }
 

@@ -13,10 +13,7 @@ class ProjectListTest(AcceptanceTestCase):
             name='Rowdy Tiger',
             owner=None,
         )
-        self.team = self.create_team(
-            organization=self.org,
-            name='Mariachi Band'
-        )
+        self.team = self.create_team(organization=self.org, name='Mariachi Band')
         self.project = self.create_project(
             organization=self.org,
             team=self.team,
@@ -39,4 +36,5 @@ class ProjectListTest(AcceptanceTestCase):
         # enough of a check
         self.browser.wait_until('.organization-home')
         self.browser.wait_until_not('.loading-indicator')
+        self.browser.wait_until('.stats-column .count')
         self.browser.snapshot('organization project list')

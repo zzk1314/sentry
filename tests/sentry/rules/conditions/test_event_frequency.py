@@ -12,6 +12,7 @@ from sentry.rules.conditions.event_frequency import (
     EventFrequencyCondition, EventUniqueUserFrequencyCondition
 )
 from sentry.testutils.cases import RuleTestCase
+from six.moves import xrange
 
 
 class FrequencyConditionMixin(object):
@@ -125,7 +126,6 @@ class EventUniqueUserFrequencyConditionTestCase(FrequencyConditionMixin, RuleTes
     def increment(self, event, count, timestamp=None):
         tsdb.record(
             tsdb.models.users_affected_by_group,
-            event.group_id,
-            [next(self.sequence) for _ in xrange(0, count)],
+            event.group_id, [next(self.sequence) for _ in xrange(0, count)],
             timestamp=timestamp
         )

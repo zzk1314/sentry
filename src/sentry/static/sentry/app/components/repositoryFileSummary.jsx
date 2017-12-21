@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import FileChange from './fileChange';
 import {t, tn} from '../locale';
@@ -5,40 +6,37 @@ import {t, tn} from '../locale';
 function Collapsed(props) {
   return (
     <li className="list-group-item list-group-item-sm align-center">
-      <span className="icon-container">
-      </span>
-      <a onClick={props.onClick}>{tn(('Show %d collapsed file'), ('Show %d collapsed files'), props.count)}</a>
+      <span className="icon-container" />
+      <a onClick={props.onClick}>
+        {tn('Show %d collapsed file', 'Show %d collapsed files', props.count)}
+      </a>
     </li>
   );
 }
 
 Collapsed.propTypes = {
-  onClick: React.PropTypes.func.isRequired,
-  count: React.PropTypes.number.isRequired
+  onClick: PropTypes.func.isRequired,
+  count: PropTypes.number.isRequired,
 };
 
-const RepositoryFileSummary = React.createClass({
-  propTypes: {
-    fileChangeSummary: React.PropTypes.object,
-    repository: React.PropTypes.string,
-  },
+class RepositoryFileSummary extends React.Component {
+  static propTypes = {
+    fileChangeSummary: PropTypes.object,
+    repository: PropTypes.string,
+  };
 
-  statics: {
-    MAX_WHEN_COLLAPSED: 5
-  },
+  static MAX_WHEN_COLLAPSED = 5;
 
-  getInitialState() {
-    return {
-      loading: true,
-      collapsed: true,
-    };
-  },
+  state = {
+    loading: true,
+    collapsed: true,
+  };
 
-  onCollapseToggle() {
+  onCollapseToggle = () => {
     this.setState({
-      collapsed: !this.state.collapsed
+      collapsed: !this.state.collapsed,
     });
-  },
+  };
 
   render() {
     let {repository, fileChangeSummary} = this.props;
@@ -51,33 +49,41 @@ const RepositoryFileSummary = React.createClass({
     }
     let numCollapsed = fileCount - files.length;
     let canCollapse = fileCount > MAX;
-    return(
+    return (
       <div>
         <h5>
-          {tn(('%d file changed in ' + repository), ('%d files changed in ' + repository), fileCount)}
+          {tn(
+            '%d file changed in ' + repository,
+            '%d files changed in ' + repository,
+            fileCount
+          )}
         </h5>
         <ul className="list-group list-group-striped m-b-2">
-        {files.map(filename => {
-          let {id, authors, types} = fileChangeSummary[filename];
-          return (
-            <FileChange
-              key={id}
-              filename={filename}
-              authors={Object.values(authors)}
-              types={types}
+          {files.map(filename => {
+            let {id, authors, types} = fileChangeSummary[filename];
+            return (
+              <FileChange
+                key={id}
+                filename={filename}
+                authors={Object.values(authors)}
+                types={types}
               />
-          );
-        })}
-        {numCollapsed > 0 && <Collapsed onClick={this.onCollapseToggle} count={numCollapsed}/>}
-        {numCollapsed === 0 && canCollapse &&
-          <li className="list-group-item list-group-item-sm align-center">
-            <span className="icon-container"></span>
-            <a onClick={this.onCollapseToggle}>{t('Collapse')}</a>
-          </li>
-        }
+            );
+          })}
+          {numCollapsed > 0 && (
+            <Collapsed onClick={this.onCollapseToggle} count={numCollapsed} />
+          )}
+          {numCollapsed === 0 &&
+            canCollapse && (
+              <li className="list-group-item list-group-item-sm align-center">
+                <span className="icon-container" />
+                <a onClick={this.onCollapseToggle}>{t('Collapse')}</a>
+              </li>
+            )}
         </ul>
-      </div>);
+      </div>
+    );
+  }
 }
-});
 
 export default RepositoryFileSummary;

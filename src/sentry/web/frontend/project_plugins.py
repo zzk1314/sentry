@@ -20,13 +20,7 @@ class ProjectPluginsView(ProjectView):
                     plugin.disable(project)
 
             messages.add_message(
-                request, messages.SUCCESS,
-                _('Your settings were saved successfully.'))
+                request, messages.SUCCESS, _('Your settings were saved successfully.')
+            )
 
             return self.redirect(request.path)
-
-        context = {
-            'page': 'plugins',
-        }
-
-        return self.respond('sentry/projects/plugins/list.html', context)

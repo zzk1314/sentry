@@ -1,16 +1,49 @@
 {
   "presets": [
     "react",
-    ["latest", {
-      "es2015": {
-        "modules": false
+    [
+      "latest",
+      {
+        "es2015": {
+          "modules": false
+        }
       }
-    }]
+    ]
   ],
   "plugins": [
+    "emotion",
+    "transform-decorators-legacy",
+    "transform-class-properties",
     "transform-object-rest-spread",
-    ["babel-plugin-transform-builtin-extend", {
-      "globals": ["Array"]
-    }]
-  ]
+    "lodash",
+    "syntax-dynamic-import",
+    "react-hot-loader/babel",
+    [
+      "babel-plugin-transform-builtin-extend",
+      {
+        "globals": ["Array"]
+      }
+    ],
+    "idx"
+  ],
+  "env": {
+    "test": {
+      "presets": ["react", "latest"],
+      "plugins": [
+        "emotion",
+        "transform-decorators-legacy",
+        "transform-class-properties",
+        "transform-object-rest-spread",
+        "dynamic-import-node",
+        "syntax-dynamic-import",
+        [
+          "babel-plugin-transform-builtin-extend",
+          {
+            "globals": ["Array"]
+          }
+        ],
+        "idx"
+      ]
+    }
+  }
 }

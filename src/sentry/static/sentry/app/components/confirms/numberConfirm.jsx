@@ -1,20 +1,19 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import ReactCodeInput from 'react-code-input';
 import Modal from 'react-bootstrap/lib/Modal';
 import {t} from '../../locale';
 
-const NumberConfirm = React.createClass({
-  propTypes: {
-    digits: React.PropTypes.number.isRequired,
-    show: React.PropTypes.bool,
-    onFinished: React.PropTypes.func,
-  },
+class NumberConfirm extends React.Component {
+  static propTypes = {
+    digits: PropTypes.number.isRequired,
+    show: PropTypes.bool,
+    onFinished: PropTypes.func,
+  };
 
-  getInitialState() {
-    return {
-      showModal: this.props.show || false,
-    };
-  },
+  state = {
+    showModal: this.props.show || false,
+  };
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.show != this.props.show) {
@@ -22,40 +21,49 @@ const NumberConfirm = React.createClass({
         showModal: nextProps.show,
       });
     }
-  },
+  }
 
-  closeModal() {
+  closeModal = () => {
     this.setState({
       showModal: false,
     });
-  },
+  };
 
-  onChange(number) {
+  onChange = number => {
     if (number === undefined && !Number.isInteger(number)) {
-        return;
+      return;
     }
     if (number.length === this.props.digits) {
-        if (this.props.onFinished) {
-            this.props.onFinished(number);
-        }
-        this.closeModal();
+      if (this.props.onFinished) {
+        this.props.onFinished(number);
+      }
+      this.closeModal();
     }
-  },
+  };
 
   render() {
     return (
-      <Modal show={this.state.showModal} onHide={this.closeModal}
-        animation={true} backdrop="static" enforceFocus={true} bsSize="sm">
-          <Modal.Header closeButton>
-            <Modal.Title>{t('Please enter your code:')}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <ReactCodeInput type="number" digits={this.props.digits}
-              onChange={this.onChange} />
-          </Modal.Body>
+      <Modal
+        show={this.state.showModal}
+        onHide={this.closeModal}
+        animation={true}
+        backdrop="static"
+        enforceFocus={true}
+        bsSize="sm"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{t('Please enter your code:')}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ReactCodeInput
+            type="number"
+            digits={this.props.digits}
+            onChange={this.onChange}
+          />
+        </Modal.Body>
       </Modal>
     );
   }
-});
+}
 
 export default NumberConfirm;

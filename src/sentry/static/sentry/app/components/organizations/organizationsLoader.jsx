@@ -1,7 +1,7 @@
 import React from 'react';
 
 import ApiMixin from '../../mixins/apiMixin';
-import OrganizationStore from '../../stores/organizationStore';
+import OrganizationsStore from '../../stores/organizationsStore';
 
 const OrganizationsLoader = React.createClass({
   mixins: [ApiMixin],
@@ -9,10 +9,10 @@ const OrganizationsLoader = React.createClass({
   componentWillMount() {
     this.api.request('/organizations/', {
       query: {
-        'member': '1'
+        member: '1',
       },
-      success: (data) => {
-        OrganizationStore.load(data);
+      success: data => {
+        OrganizationsStore.load(data);
         this.setState({
           loading: false,
         });
@@ -20,19 +20,19 @@ const OrganizationsLoader = React.createClass({
       error: () => {
         this.setState({
           loading: false,
-          error: true
+          error: true,
         });
-      }
+      },
     });
   },
 
   componentWillUnmount() {
-    OrganizationStore.load([]);
+    OrganizationsStore.load([]);
   },
 
   render() {
     return <div>{this.props.children}</div>;
-  }
+  },
 });
 
 export default OrganizationsLoader;

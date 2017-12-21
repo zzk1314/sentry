@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
-__all__ = ('ApiClient',)
+__all__ = ('ApiClient', )
 
 from django.core.urlresolvers import resolve
 from rest_framework.test import APIRequestFactory, force_authenticate
 
+from sentry.auth.superuser import Superuser
 from sentry.utils import json
 from sentry.utils.compat import implements_to_string
 
@@ -27,9 +28,22 @@ class ApiClient(object):
 
     ApiError = ApiError
 
-    def request(self, method, path, user=None, auth=None, params=None, data=None,
-                is_sudo=None, is_superuser=None, request=None):
-        full_path = self.prefix + path
+    def request(
+        self,
+        method,
+        path,
+        user=None,
+        auth=None,
+        params=None,
+        data=None,
+        is_sudo=None,
+        is_superuser=None,
+        request=None
+    ):
+        if self.prefix not in path:
+            full_path = self.prefix + path
+        else:
+            full_path = path
 
         # we explicitly do not allow you to override the request *and* the user
         # as then other checks like is_superuser would need overwritten
@@ -55,18 +69,20 @@ class ApiClient(object):
                 mock_request.is_sudo = lambda: request.is_sudo()
             else:
                 mock_request.is_sudo = lambda: is_sudo
+            mock_request.session = request.session
 
             if is_superuser is None:
-                mock_request.is_superuser = lambda: request.is_superuser()
+                mock_request.superuser = request.superuser
             else:
-                mock_request.is_superuser = lambda: is_superuser
-            mock_request.session = request.session
+                mock_request.superuser = Superuser(mock_request)
         else:
             mock_request.auth = auth
             mock_request.user = user
             mock_request.is_sudo = lambda: is_sudo
-            mock_request.is_superuser = lambda: is_superuser
             mock_request.session = {}
+            mock_request.superuser = Superuser(mock_request)
+
+        mock_request.is_superuser = lambda: mock_request.superuser.is_active
 
         if request:
             # superuser checks require access to IP

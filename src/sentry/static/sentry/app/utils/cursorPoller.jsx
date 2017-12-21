@@ -70,10 +70,9 @@ class CursorPoller {
         if (this._active) {
           this._timeoutId = window.setTimeout(this.poll.bind(this), this.getDelay());
         }
-      }
+      },
     });
   }
 }
 
 export default CursorPoller;
-

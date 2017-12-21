@@ -1,50 +1,51 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {t} from '../locale';
 
-const ClippedBox = React.createClass({
-  propTypes: {
-    title: React.PropTypes.string,
-    defaultClipped: React.PropTypes.bool,
-    clipHeight: React.PropTypes.number
-  },
+class ClippedBox extends React.Component {
+  static propTypes = {
+    title: PropTypes.string,
+    defaultClipped: PropTypes.bool,
+    clipHeight: PropTypes.number,
+    btnClassName: PropTypes.string,
+    btnText: PropTypes.string,
+  };
 
-  getDefaultProps() {
-    return {
-      defaultClipped: false,
-      clipHeight: 200,
-      renderedHeight: null
-    };
-  },
+  static defaultProps = {
+    defaultClipped: false,
+    clipHeight: 200,
+    renderedHeight: null,
+    btnClassName: 'btn btn-primary btn-xs show-more',
+    btnText: t('Show More'),
+  };
 
-  getInitialState() {
-    return {
-      clipped: this.props.defaultClipped,
-      revealed: false, // True once user has clicked "Show More" button
-    };
-  },
+  state = {
+    clipped: this.props.defaultClipped,
+    revealed: false, // True once user has clicked "Show More" button
+  };
 
   componentDidMount() {
     let renderedHeight = ReactDOM.findDOMNode(this).offsetHeight;
 
-    if (renderedHeight > this.props.clipHeight ) {
+    if (!this.state.clipped && renderedHeight > this.props.clipHeight) {
       /*eslint react/no-did-mount-set-state:0*/
       // okay if this causes re-render; cannot determine until
       // rendered first anyways
       this.setState({
-        clipped: true
+        clipped: true,
       });
     }
-  },
+  }
 
-  reveal(e) {
+  reveal = e => {
     e.stopPropagation();
 
     this.setState({
       clipped: false,
-      revealed: true
+      revealed: true,
     });
-  },
+  };
 
   render() {
     let className = 'box-clippable';
@@ -56,22 +57,23 @@ const ClippedBox = React.createClass({
     }
 
     return (
-      <div className={className}>
-        {this.props.title &&
-          <h5>{this.props.title}</h5>
-        }
+      <div
+        className={className}
+        style={{maxHeight: this.state.clipped ? this.props.clipHeight : null}}
+      >
+        {this.props.title && <h5>{this.props.title}</h5>}
         {this.props.children}
 
-        {this.state.clipped &&
+        {this.state.clipped && (
           <div className="clip-fade">
-            <a onClick={this.reveal} className="show-more btn btn-primary btn-xs">
-              {t('Show more')}
+            <a onClick={this.reveal} className={this.props.btnClassName}>
+              {this.props.btnText}
             </a>
           </div>
-        }
+        )}
       </div>
     );
   }
-});
+}
 
 export default ClippedBox;

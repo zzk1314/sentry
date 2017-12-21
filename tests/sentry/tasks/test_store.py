@@ -1,10 +1,15 @@
 from __future__ import absolute_import
 
 import mock
+import uuid
+from time import time
 
+from sentry import quotas, tsdb
+from sentry.event_manager import EventManager, HashDiscarded
 from sentry.plugins import Plugin2
-from sentry.tasks.store import preprocess_event, process_event
+from sentry.tasks.store import preprocess_event, process_event, save_event
 from sentry.testutils import PluginTestCase
+from sentry.utils.dates import to_datetime
 
 
 class BasicPreprocessorPlugin(Plugin2):
@@ -44,7 +49,9 @@ class StoreTasksTest(PluginTestCase):
             'project': project.id,
             'platform': 'mattlang',
             'message': 'test',
-            'extra': {'foo': 'bar'},
+            'extra': {
+                'foo': 'bar'
+            },
         }
 
         preprocess_event(data=data)
@@ -61,7 +68,9 @@ class StoreTasksTest(PluginTestCase):
             'project': project.id,
             'platform': 'NOTMATTLANG',
             'message': 'test',
-            'extra': {'foo': 'bar'},
+            'extra': {
+                'foo': 'bar'
+            },
         }
 
         preprocess_event(data=data)
@@ -78,7 +87,9 @@ class StoreTasksTest(PluginTestCase):
             'project': project.id,
             'platform': 'mattlang',
             'message': 'test',
-            'extra': {'foo': 'bar'},
+            'extra': {
+                'foo': 'bar'
+            },
         }
 
         mock_default_cache.get.return_value = data
@@ -87,15 +98,17 @@ class StoreTasksTest(PluginTestCase):
 
         # The event mutated, so make sure we save it back
         mock_default_cache.set.assert_called_once_with(
-            'e:1', {
+            'e:1',
+            {
                 'project': project.id,
                 'platform': 'mattlang',
                 'message': 'test',
-            }, 3600,
+            },
+            3600,
         )
 
         mock_save_event.delay.assert_called_once_with(
-            cache_key='e:1', data=None, start_time=1, event_id=None
+            cache_key='e:1', data=None, start_time=1, event_id=None,
         )
 
     @mock.patch('sentry.tasks.store.save_event')
@@ -107,7 +120,9 @@ class StoreTasksTest(PluginTestCase):
             'project': project.id,
             'platform': 'noop',
             'message': 'test',
-            'extra': {'foo': 'bar'},
+            'extra': {
+                'foo': 'bar'
+            },
         }
 
         mock_default_cache.get.return_value = data
@@ -118,7 +133,7 @@ class StoreTasksTest(PluginTestCase):
         mock_default_cache.set.call_count == 0
 
         mock_save_event.delay.assert_called_once_with(
-            cache_key='e:1', data=None, start_time=1, event_id=None
+            cache_key='e:1', data=None, start_time=1, event_id=None,
         )
 
     @mock.patch('sentry.tasks.store.save_event')
@@ -130,7 +145,9 @@ class StoreTasksTest(PluginTestCase):
             'project': project.id,
             'platform': 'holdmeclose',
             'message': 'test',
-            'extra': {'foo': 'bar'},
+            'extra': {
+                'foo': 'bar'
+            },
         }
 
         mock_default_cache.get.return_value = data
@@ -142,11 +159,39 @@ class StoreTasksTest(PluginTestCase):
                 'project': project.id,
                 'platform': 'holdmeclose',
                 'message': 'test',
-                'extra': {'foo': 'bar'},
+                'extra': {
+                    'foo': 'bar'
+                },
                 'unprocessed': True,
             }, 3600
         )
 
         mock_save_event.delay.assert_called_once_with(
-            cache_key='e:1', data=None, start_time=1, event_id=None
+            cache_key='e:1', data=None, start_time=1, event_id=None,
         )
+
+    @mock.patch.object(tsdb, 'incr')
+    @mock.patch.object(quotas, 'refund')
+    def test_hash_discarded_raised(self, mock_refund, mock_incr):
+        project = self.create_project()
+
+        data = {
+            'project': project.id,
+            'platform': 'NOTMATTLANG',
+            'message': 'test',
+            'event_id': uuid.uuid4().hex,
+            'extra': {
+                'foo': 'bar'
+            },
+        }
+
+        now = time()
+        mock_save = mock.Mock()
+        mock_save.side_effect = HashDiscarded
+        with mock.patch.object(EventManager, 'save', mock_save):
+            save_event(data=data, start_time=now)
+            mock_incr.assert_called_with(
+                tsdb.models.project_total_received_discarded,
+                project.id,
+                timestamp=to_datetime(now),
+            )

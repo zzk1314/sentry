@@ -6,30 +6,71 @@ from django.db.models import Q
 from django.utils import timezone
 
 from sentry.db.models import (
-    BaseManager, BoundedPositiveIntegerField, FlexibleForeignKey, Model,
-    sane_repr
+    BaseManager, BoundedPositiveIntegerField, FlexibleForeignKey, Model, sane_repr
 )
 
 
 class GroupSubscriptionReason(object):
+    implicit = -1  # not for use as a persisted field value
     committed = -2  # not for use as a persisted field value
-    implicit = -1   # not for use as a persisted field value
+    processing_issue = -3  # not for use as a persisted field value
 
     unknown = 0
     comment = 1
     assigned = 2
     bookmark = 3
     status_change = 4
+    deploy_setting = 5
+    mentioned = 6
 
     descriptions = {
-        implicit: u"have opted to receive updates for all issues within "
-                  "projects that you are a member of",
-        committed: u"were involved in a commit that is part of this release",
-        comment: u"have commented on this issue",
-        assigned: u"have been assigned to this issue",
-        bookmark: u"have bookmarked this issue",
-        status_change: u"have changed the resolution status of this issue",
+        implicit:
+        u"have opted to receive updates for all issues within "
+        "projects that you are a member of",
+        committed:
+        u"were involved in a commit that is part of this release",
+        processing_issue:
+        u"are subscribed to alerts for this project",
+        comment:
+        u"have commented on this issue",
+        assigned:
+        u"have been assigned to this issue",
+        bookmark:
+        u"have bookmarked this issue",
+        status_change:
+        u"have changed the resolution status of this issue",
+        deploy_setting:
+        u"opted to receive all deploy notifications for this organization",
+        mentioned:
+        u"have been mentioned in this issue",
     }
+
+
+def get_user_options(key, user_ids, project, default):
+    from sentry.models import UserOption
+
+    options = {
+        (option.user_id, option.project_id): option.value
+        for option in
+        UserOption.objects.filter(
+            Q(project__isnull=True) | Q(project=project),
+            user_id__in=user_ids,
+            key='workflow:notifications',
+        )
+    }
+
+    results = {}
+
+    for user_id in user_ids:
+        results[user_id] = options.get(
+            (user_id, project.id),
+            options.get(
+                (user_id, None),
+                default,
+            ),
+        )
+
+    return results
 
 
 class GroupSubscriptionManager(BaseManager):
@@ -54,69 +95,57 @@ class GroupSubscriptionManager(BaseManager):
         """
         Identify all users who are participating with a given issue.
         """
-        from sentry.models import User, UserOption, UserOptionValue
+        from sentry.models import User, UserOptionValue
 
-        # Identify all members of a project -- we'll use this to start figuring
-        # out who could possibly be associated with this group due to implied
-        # subscriptions.
-        users = User.objects.filter(
-            sentry_orgmember_set__teams=group.project.team,
-            is_active=True,
-        )
+        users = {
+            user.id: user
+            for user in
+            User.objects.filter(
+                sentry_orgmember_set__teams=group.project.team,
+                is_active=True,
+            )
+        }
 
-        # Obviously, users who have explicitly unsubscribed from this issue
-        # aren't considered participants.
-        users = users.exclude(
-            id__in=GroupSubscription.objects.filter(
-                group=group,
-                is_active=False,
-                user__in=users,
-            ).values('user')
-        )
+        excluded_ids = set()
 
-        # Fetch all of the users that have been explicitly associated with this
-        # issue.
-        participants = {
-            subscription.user: subscription.reason
+        subscriptions = {
+            subscription.user_id: subscription
             for subscription in
             GroupSubscription.objects.filter(
                 group=group,
-                is_active=True,
-                user__in=users,
-            ).select_related('user')
+                user_id__in=users.keys(),
+            )
         }
 
-        # Find users which by default do not subscribe.
-        participating_only = set(
-            uo.user_id for uo in UserOption.objects.filter(
-                Q(project__isnull=True) | Q(project=group.project),
-                user__in=users,
-                key='workflow:notifications',
-            ).exclude(
-                user__in=[
-                    uo.user_id for uo in UserOption.objects.filter(
-                        project=group.project,
-                        user__in=users,
-                        key='workflow:notifications',
-                    )
-                    if uo.value == UserOptionValue.all_conversations
-                ]
-            )
-            if uo.value == UserOptionValue.participating_only
+        for user_id, subscription in subscriptions.items():
+            if not subscription.is_active:
+                excluded_ids.add(user_id)
+
+        options = get_user_options(
+            'workflow:notifications',
+            users.keys(),
+            group.project,
+            UserOptionValue.all_conversations,
         )
 
-        if participating_only:
-            excluded = participating_only.difference(participants.keys())
-            if excluded:
-                users = users.exclude(id__in=excluded)
+        for user_id, option in options.items():
+            if option == UserOptionValue.no_conversations:
+                excluded_ids.add(user_id)
+            elif option == UserOptionValue.participating_only:
+                if user_id not in subscriptions:
+                    excluded_ids.add(user_id)
 
         results = {}
 
-        for user in users:
-            results[user] = GroupSubscriptionReason.implicit
+        for user_id, user in users.items():
+            if user_id in excluded_ids:
+                continue
 
-        for user, reason in participants.items():
-            results[user] = reason
+            subscription = subscriptions.get(user_id)
+            if subscription is not None:
+                results[user] = subscription.reason
+            else:
+                results[user] = GroupSubscriptionReason.implicit
 
         return results
 
@@ -142,6 +171,6 @@ class GroupSubscription(Model):
     class Meta:
         app_label = 'sentry'
         db_table = 'sentry_groupsubscription'
-        unique_together = (('group', 'user'),)
+        unique_together = (('group', 'user'), )
 
     __repr__ = sane_repr('project_id', 'group_id', 'user_id')

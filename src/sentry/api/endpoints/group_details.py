@@ -1,23 +1,29 @@
 from __future__ import absolute_import
 
 from datetime import timedelta
+import functools
 import logging
 from uuid import uuid4
 
 from django.utils import timezone
-from rest_framework import serializers
 from rest_framework.response import Response
 
-from sentry import tsdb
+from sentry import tsdb, tagstore
 from sentry.api import client
-from sentry.api.base import DocSection
+from sentry.api.base import DocSection, EnvironmentMixin
 from sentry.api.bases import GroupEndpoint
-from sentry.api.fields import UserField
-from sentry.api.serializers import serialize
+from sentry.api.serializers import serialize, GroupSerializer
 from sentry.api.serializers.models.plugin import PluginSerializer
 from sentry.models import (
-    Activity, Group, GroupHash, GroupSeen, GroupStatus, GroupTagKey,
-    Release, User, UserReport,
+    Activity,
+    Environment,
+    Group,
+    GroupHash,
+    GroupSeen,
+    GroupStatus,
+    Release,
+    User,
+    UserReport,
 )
 from sentry.plugins import IssueTrackingPlugin2, plugins
 from sentry.utils.safe import safe_execute
@@ -38,11 +44,7 @@ def retrieve_aggregate_scenario(runner):
 @scenario('UpdateAggregate')
 def update_aggregate_scenario(runner):
     group = Group.objects.filter(project=runner.default_project).first()
-    runner.request(
-        method='PUT',
-        path='/issues/%s/' % group.id,
-        data={'status': 'unresolved'}
-    )
+    runner.request(method='PUT', path='/issues/%s/' % group.id, data={'status': 'unresolved'})
 
 
 @scenario('DeleteAggregate')
@@ -66,21 +68,7 @@ STATUS_CHOICES = {
 }
 
 
-class GroupSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=zip(
-        STATUS_CHOICES.keys(), STATUS_CHOICES.keys()
-    ))
-    isBookmarked = serializers.BooleanField()
-    isSubscribed = serializers.BooleanField()
-    hasSeen = serializers.BooleanField()
-    assignedTo = UserField()
-    ignoreDuration = serializers.IntegerField()
-
-    # TODO(dcramer): remove in 9.0
-    snoozeDuration = serializers.IntegerField()
-
-
-class GroupDetailsEndpoint(GroupEndpoint):
+class GroupDetailsEndpoint(GroupEndpoint, EnvironmentMixin):
     doc_section = DocSection.EVENTS
 
     def _get_activity(self, request, group, num):
@@ -100,20 +88,22 @@ class GroupDetailsEndpoint(GroupEndpoint):
                 activity_items.add(sig)
                 activity.append(item)
 
-        activity.append(Activity(
-            id=0,
-            project=group.project,
-            group=group,
-            type=Activity.FIRST_SEEN,
-            datetime=group.first_seen,
-        ))
+        activity.append(
+            Activity(
+                id=0,
+                project=group.project,
+                group=group,
+                type=Activity.FIRST_SEEN,
+                datetime=group.first_seen,
+            )
+        )
 
         return activity[:num]
 
     def _get_seen_by(self, request, group):
-        seen_by = list(GroupSeen.objects.filter(
-            group=group
-        ).select_related('user').order_by('-last_seen'))
+        seen_by = list(
+            GroupSeen.objects.filter(group=group).select_related('user').order_by('-last_seen')
+        )
         return serialize(seen_by, request.user)
 
     def _get_actions(self, request, group):
@@ -121,8 +111,9 @@ class GroupDetailsEndpoint(GroupEndpoint):
 
         action_list = []
         for plugin in plugins.for_project(project, version=1):
-            results = safe_execute(plugin.actions, request, group, action_list,
-                                   _with_transaction=False)
+            results = safe_execute(
+                plugin.actions, request, group, action_list, _with_transaction=False
+            )
 
             if not results:
                 continue
@@ -130,8 +121,9 @@ class GroupDetailsEndpoint(GroupEndpoint):
             action_list = results
 
         for plugin in plugins.for_project(project, version=2):
-            for action in (safe_execute(plugin.get_actions, request, group,
-                                        _with_transaction=False) or ()):
+            for action in (
+                safe_execute(plugin.get_actions, request, group, _with_transaction=False) or ()
+            ):
                 action_list.append(action)
 
         return action_list
@@ -142,18 +134,20 @@ class GroupDetailsEndpoint(GroupEndpoint):
         plugin_issues = []
         for plugin in plugins.for_project(project, version=1):
             if isinstance(plugin, IssueTrackingPlugin2):
-                plugin_issues = safe_execute(plugin.plugin_issues, request, group, plugin_issues,
-                                             _with_transaction=False)
+                plugin_issues = safe_execute(
+                    plugin.plugin_issues, request, group, plugin_issues, _with_transaction=False
+                )
         return plugin_issues
 
     def _get_context_plugins(self, request, group):
         project = group.project
-        return serialize([
-            plugin
-            for plugin in plugins.for_project(project, version=None)
-            if plugin.has_project_conf() and hasattr(plugin, 'get_custom_contexts')
-            and plugin.get_custom_contexts()
-        ], request.user, PluginSerializer(project))
+        return serialize(
+            [
+                plugin for plugin in plugins.for_project(project, version=None)
+                if plugin.has_project_conf() and hasattr(plugin, 'get_custom_contexts') and
+                plugin.get_custom_contexts()
+            ], request.user, PluginSerializer(project)
+        )
 
     def _get_release_info(self, request, group, version):
         try:
@@ -180,7 +174,14 @@ class GroupDetailsEndpoint(GroupEndpoint):
         :auth: required
         """
         # TODO(dcramer): handle unauthenticated/public response
-        data = serialize(group, request.user)
+        data = serialize(
+            group,
+            request.user,
+            GroupSerializer(
+                environment_id_func=self._get_environment_id_func(
+                    request, group.project.organization_id)
+            )
+        )
 
         # TODO: these probably should be another endpoint
         activity = self._get_activity(request, group, num=100)
@@ -195,50 +196,66 @@ class GroupDetailsEndpoint(GroupEndpoint):
 
         action_list = self._get_actions(request, group)
 
-        now = timezone.now()
-        hourly_stats = tsdb.rollup(tsdb.get_range(
-            model=tsdb.models.group,
-            keys=[group.id],
-            end=now,
-            start=now - timedelta(days=1),
-        ), 3600)[group.id]
-        daily_stats = tsdb.rollup(tsdb.get_range(
-            model=tsdb.models.group,
-            keys=[group.id],
-            end=now,
-            start=now - timedelta(days=30),
-        ), 3600 * 24)[group.id]
-
         if first_release:
             first_release = self._get_release_info(request, group, first_release)
         if last_release:
             last_release = self._get_release_info(request, group, last_release)
 
-        tags = list(GroupTagKey.objects.filter(
-            group=group,
-        )[:100])
+        try:
+            environment_id = self._get_environment_id_from_request(
+                request, group.project.organization_id)
+        except Environment.DoesNotExist:
+            get_range = lambda model, keys, start, end, **kwargs: \
+                {k: tsdb.make_series(0, start, end) for k in keys}
+            tags = []
+        else:
+            get_range = functools.partial(tsdb.get_range, environment_id=environment_id)
+            tags = tagstore.get_group_tag_keys(
+                group.project_id, group.id, environment_id, limit=100)
 
-        participants = list(User.objects.filter(
-            groupsubscription__is_active=True,
-            groupsubscription__group=group,
-        ))
+        now = timezone.now()
+        hourly_stats = tsdb.rollup(
+            get_range(
+                model=tsdb.models.group,
+                keys=[group.id],
+                end=now,
+                start=now - timedelta(days=1),
+            ), 3600
+        )[group.id]
+        daily_stats = tsdb.rollup(
+            get_range(
+                model=tsdb.models.group,
+                keys=[group.id],
+                end=now,
+                start=now - timedelta(days=30),
+            ), 3600 * 24
+        )[group.id]
 
-        data.update({
-            'firstRelease': first_release,
-            'lastRelease': last_release,
-            'activity': serialize(activity, request.user),
-            'seenBy': seen_by,
-            'participants': serialize(participants, request.user),
-            'pluginActions': action_list,
-            'pluginIssues': self._get_available_issue_plugins(request, group),
-            'pluginContexts': self._get_context_plugins(request, group),
-            'userReportCount': UserReport.objects.filter(group=group).count(),
-            'tags': sorted(serialize(tags, request.user), key=lambda x: x['name']),
-            'stats': {
-                '24h': hourly_stats,
-                '30d': daily_stats,
+        participants = list(
+            User.objects.filter(
+                groupsubscription__is_active=True,
+                groupsubscription__group=group,
+            )
+        )
+
+        data.update(
+            {
+                'firstRelease': first_release,
+                'lastRelease': last_release,
+                'activity': serialize(activity, request.user),
+                'seenBy': seen_by,
+                'participants': serialize(participants, request.user),
+                'pluginActions': action_list,
+                'pluginIssues': self._get_available_issue_plugins(request, group),
+                'pluginContexts': self._get_context_plugins(request, group),
+                'userReportCount': UserReport.objects.filter(group=group).count(),
+                'tags': sorted(serialize(tags, request.user), key=lambda x: x['name']),
+                'stats': {
+                    '24h': hourly_stats,
+                    '30d': daily_stats,
+                }
             }
-        })
+        )
 
         return Response(data)
 
@@ -265,14 +282,13 @@ class GroupDetailsEndpoint(GroupEndpoint):
                                      user context this allows changing of
                                      the bookmark flag.
         :param boolean isSubscribed:
+        :param boolean isPublic: sets the issue to public or private.
         :auth: required
         """
+        discard = request.DATA.get('discard')
+
         # TODO(dcramer): we need to implement assignedTo in the bulk mutation
         # endpoint
-        serializer = GroupSerializer(data=request.DATA, partial=True)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
-
         response = client.put(
             path='/projects/{}/{}/issues/'.format(
                 group.project.organization.slug,
@@ -285,6 +301,10 @@ class GroupDetailsEndpoint(GroupEndpoint):
             request=request,
         )
 
+        # if action was discard, there isn't a group to serialize anymore
+        if discard:
+            return response
+
         # we need to fetch the object against as the bulk mutation endpoint
         # only returns a delta, and object mutation returns a complete updated
         # entity.
@@ -293,8 +313,16 @@ class GroupDetailsEndpoint(GroupEndpoint):
         # for mutation.
         group = Group.objects.get(id=group.id)
 
-        return Response(serialize(group, request.user),
-                        status=response.status_code)
+        serialized = serialize(
+            group,
+            request.user,
+            GroupSerializer(
+                environment_id_func=self._get_environment_id_func(
+                    request, group.project.organization_id)
+            )
+        )
+
+        return Response(serialized, status=response.status_code)
 
     @attach_scenarios([delete_aggregate_scenario])
     def delete(self, request, group):
@@ -311,12 +339,10 @@ class GroupDetailsEndpoint(GroupEndpoint):
 
         updated = Group.objects.filter(
             id=group.id,
-        ).exclude(
-            status__in=[
-                GroupStatus.PENDING_DELETION,
-                GroupStatus.DELETION_IN_PROGRESS,
-            ]
-        ).update(status=GroupStatus.PENDING_DELETION)
+        ).exclude(status__in=[
+            GroupStatus.PENDING_DELETION,
+            GroupStatus.DELETION_IN_PROGRESS,
+        ]).update(status=GroupStatus.PENDING_DELETION)
         if updated:
             GroupHash.objects.filter(group=group).delete()
 
@@ -338,10 +364,13 @@ class GroupDetailsEndpoint(GroupEndpoint):
                 transaction_id=transaction_id,
             )
 
-            delete_logger.info('object.delete.queued', extra={
-                'object_id': group.id,
-                'transaction_id': transaction_id,
-                'model': type(group).__name__,
-            })
+            delete_logger.info(
+                'object.delete.queued',
+                extra={
+                    'object_id': group.id,
+                    'transaction_id': transaction_id,
+                    'model': type(group).__name__,
+                }
+            )
 
         return Response(status=202)

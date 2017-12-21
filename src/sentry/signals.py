@@ -13,6 +13,7 @@ class BetterSignal(Signal):
         >>>     pass
 
         """
+
         def wrapped(func):
             return super(BetterSignal, self).connect(func, **kwargs)
 
@@ -31,11 +32,13 @@ class BetterSignal(Signal):
 regression_signal = BetterSignal(providing_args=["instance"])
 buffer_incr_complete = BetterSignal(providing_args=["model", "columns", "extra", "result"])
 event_accepted = BetterSignal(providing_args=["ip", "data", "project"])
+event_discarded = BetterSignal(providing_args=["project"])
 event_dropped = BetterSignal(providing_args=["ip", "data", "project", "reason_code"])
 event_filtered = BetterSignal(providing_args=["ip", "data", "project"])
 event_received = BetterSignal(providing_args=["ip", "project"])
 pending_delete = BetterSignal(providing_args=['instance', 'actor'])
 event_processed = BetterSignal(providing_args=['project', 'group', 'event'])
+event_saved = BetterSignal(providing_args=["project"])
 
 # Organization Onboarding Signals
 project_created = BetterSignal(providing_args=["project", "user"])
@@ -51,7 +54,6 @@ email_verified = BetterSignal(providing_args=["email"])
 mocks_loaded = BetterSignal(providing_args=["project"])
 
 user_feedback_received = BetterSignal(providing_args=["project"])
-api_called = BetterSignal(providing_args=["project"])
 issue_assigned = BetterSignal(providing_args=["project", "group"])
 issue_resolved_in_release = BetterSignal(providing_args=["project"])
 advanced_search = BetterSignal(providing_args=["project"])
@@ -59,3 +61,4 @@ save_search_created = BetterSignal(providing_args=["project"])
 inbound_filter_toggled = BetterSignal(providing_args=["project"])
 sso_enabled = BetterSignal(providing_args=["organization"])
 data_scrubber_enabled = BetterSignal(providing_args=["organization"])
+alert_rule_created = BetterSignal(providing_args=["project", "rule"])

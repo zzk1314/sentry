@@ -4,59 +4,80 @@ from __future__ import absolute_import
 
 from exam import fixture
 
-from sentry.interfaces.exception import (
-    SingleException, Exception, slim_exception_data
-)
+from sentry.interfaces.exception import (SingleException, Exception, slim_exception_data)
 from sentry.testutils import TestCase
+from sentry.stacktraces import normalize_in_app
 
 
 class ExceptionTest(TestCase):
     @fixture
     def interface(self):
-        return Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': True,
-            }]},
-        }, {
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': True,
-            }]},
-        }]))
+        return Exception.to_python(
+            dict(
+                values=[
+                    {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [{
+                                'filename': 'foo/baz.py',
+                                'lineno': 1,
+                                'in_app': True,
+                            }]
+                        },
+                    }, {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [{
+                                'filename': 'foo/baz.py',
+                                'lineno': 1,
+                                'in_app': True,
+                            }]
+                        },
+                    }
+                ]
+            )
+        )
 
     def test_path(self):
         assert self.interface.get_path() == 'sentry.interfaces.Exception'
 
     def test_args_as_keyword_args(self):
-        inst = Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-        }]))
+        inst = Exception.to_python(
+            dict(values=[{
+                'type': 'ValueError',
+                'value': 'hello world',
+                'module': 'foo.bar',
+            }])
+        )
         assert type(inst.values[0]) is SingleException
         assert inst.values[0].type == 'ValueError'
         assert inst.values[0].value == 'hello world'
         assert inst.values[0].module == 'foo.bar'
 
     def test_args_as_old_style(self):
-        inst = Exception.to_python({
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-        })
+        inst = Exception.to_python(
+            {
+                'type': 'ValueError',
+                'value': 'hello world',
+                'module': 'foo.bar',
+            }
+        )
         assert type(inst.values[0]) is SingleException
         assert inst.values[0].type == 'ValueError'
         assert inst.values[0].value == 'hello world'
         assert inst.values[0].module == 'foo.bar'
+
+    def test_non_string_value_with_no_type(self):
+        inst = Exception.to_python(
+            {
+                'value': {'foo': 'bar'},
+            }
+        )
+        assert inst.values[0].value == '{"foo":"bar"}'
 
     def test_serialize_unserialize_behavior(self):
         result = type(self.interface).to_python(self.interface.to_json())
@@ -77,25 +98,35 @@ ValueError: hello world
         assert inst.get_hash() == all_values
 
     def test_context_with_mixed_frames(self):
-        inst = Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': True,
-            }]},
-        }, {
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': False,
-            }]},
-        }]))
+        inst = Exception.to_python(
+            dict(
+                values=[
+                    {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [{
+                                'filename': 'foo/baz.py',
+                                'lineno': 1,
+                                'in_app': True,
+                            }]
+                        },
+                    }, {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [{
+                                'filename': 'foo/baz.py',
+                                'lineno': 1,
+                                'in_app': False,
+                            }]
+                        },
+                    }
+                ]
+            )
+        )
 
         self.create_event(data={
             'sentry.interfaces.Exception': inst.to_json(),
@@ -104,46 +135,65 @@ ValueError: hello world
         assert context['hasSystemFrames']
 
     def test_context_with_symbols(self):
-        inst = Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'function': 'myfunc',
-                'symbol': 'Class.myfunc',
-                'lineno': 1,
-                'in_app': True,
-            }]},
-        }]))
+        inst = Exception.to_python(
+            dict(
+                values=[
+                    {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [
+                                {
+                                    'filename': 'foo/baz.py',
+                                    'function': 'myfunc',
+                                    'symbol': 'Class.myfunc',
+                                    'lineno': 1,
+                                    'in_app': True,
+                                }
+                            ]
+                        },
+                    }
+                ]
+            )
+        )
 
         self.create_event(data={
             'sentry.interfaces.Exception': inst.to_json(),
         })
         context = inst.get_api_context()
-        assert context['values'][0]['stacktrace']['frames'][
-            0]['symbol'] == 'Class.myfunc'
+        assert context['values'][0]['stacktrace']['frames'][0]['symbol'] == 'Class.myfunc'
 
     def test_context_with_only_system_frames(self):
-        inst = Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': False,
-            }]},
-        }, {
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': False,
-            }]},
-        }]))
+        inst = Exception.to_python(
+            dict(
+                values=[
+                    {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [{
+                                'filename': 'foo/baz.py',
+                                'lineno': 1,
+                                'in_app': False,
+                            }]
+                        },
+                    }, {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foo.bar',
+                        'stacktrace': {
+                            'frames': [{
+                                'filename': 'foo/baz.py',
+                                'lineno': 1,
+                                'in_app': False,
+                            }]
+                        },
+                    }
+                ]
+            )
+        )
 
         self.create_event(data={
             'sentry.interfaces.Exception': inst.to_json(),
@@ -152,25 +202,34 @@ ValueError: hello world
         assert not context['hasSystemFrames']
 
     def test_context_with_only_app_frames(self):
-        inst = Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': True,
-            }]},
-        }, {
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foo.bar',
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.py',
-                'lineno': 1,
-                'in_app': True,
-            }]},
-        }]))
+        values = [
+            {
+                'type': 'ValueError',
+                'value': 'hello world',
+                'module': 'foo.bar',
+                'stacktrace': {
+                    'frames': [{
+                        'filename': 'foo/baz.py',
+                        'lineno': 1,
+                        'in_app': True,
+                    }]
+                },
+            }, {
+                'type': 'ValueError',
+                'value': 'hello world',
+                'module': 'foo.bar',
+                'stacktrace': {
+                    'frames': [{
+                        'filename': 'foo/baz.py',
+                        'lineno': 1,
+                        'in_app': True,
+                    }]
+                },
+            }
+        ]
+        exc = dict(values=values)
+        normalize_in_app({'sentry.interfaces.Exception': exc})
+        inst = Exception.to_python(exc)
 
         self.create_event(data={
             'sentry.interfaces.Exception': inst.to_json(),
@@ -179,23 +238,37 @@ ValueError: hello world
         assert not context['hasSystemFrames']
 
     def test_context_with_raw_stacks(self):
-        inst = Exception.to_python(dict(values=[{
-            'type': 'ValueError',
-            'value': 'hello world',
-            'module': 'foobar',
-            'raw_stacktrace': {'frames': [{
-                'filename': None,
-                'lineno': 1,
-                'function': '<redacted>',
-                'in_app': True,
-            }]},
-            'stacktrace': {'frames': [{
-                'filename': 'foo/baz.c',
-                'lineno': 1,
-                'function': 'main',
-                'in_app': True,
-            }]},
-        }]))
+        inst = Exception.to_python(
+            dict(
+                values=[
+                    {
+                        'type': 'ValueError',
+                        'value': 'hello world',
+                        'module': 'foobar',
+                        'raw_stacktrace': {
+                            'frames': [
+                                {
+                                    'filename': None,
+                                    'lineno': 1,
+                                    'function': '<redacted>',
+                                    'in_app': True,
+                                }
+                            ]
+                        },
+                        'stacktrace': {
+                            'frames': [
+                                {
+                                    'filename': 'foo/baz.c',
+                                    'lineno': 1,
+                                    'function': 'main',
+                                    'in_app': True,
+                                }
+                            ]
+                        },
+                    }
+                ]
+            )
+        )
 
         self.create_event(data={
             'sentry.interfaces.Exception': inst.to_json(),
@@ -208,11 +281,13 @@ ValueError: hello world
 class SingleExceptionTest(TestCase):
     @fixture
     def interface(self):
-        return SingleException.to_python(dict(
-            type='ValueError',
-            value='hello world',
-            module='foo.bar',
-        ))
+        return SingleException.to_python(
+            dict(
+                type='ValueError',
+                value='hello world',
+                module='foo.bar',
+            )
+        )
 
     def test_serialize_behavior(self):
         assert self.interface.to_json() == {
@@ -256,18 +331,20 @@ class SingleExceptionTest(TestCase):
         ))
 
     def test_throws_away_empty_stacktrace(self):
-        result = SingleException.to_python(dict(
-            type='ValueError',
-            value='foo',
-            stacktrace={'frames': []},
-        ))
+        result = SingleException.to_python(
+            dict(
+                type='ValueError',
+                value='foo',
+                stacktrace={'frames': []},
+            )
+        )
         assert not result.stacktrace
 
     def test_coerces_object_value_to_string(self):
-        result = SingleException.to_python(dict(
-            type='ValueError',
-            value={'unauthorized': True},
-        ))
+        result = SingleException.to_python({
+            'type': 'ValueError',
+            'value': {'unauthorized': True},
+        })
         assert result.value == '{"unauthorized":true}'
 
     def test_handles_type_in_value(self):
@@ -283,14 +360,35 @@ class SingleExceptionTest(TestCase):
         assert result.type == 'ValueError'
         assert result.value == 'unauthorized'
 
+    def test_value_serialization_idempotent(self):
+        result = SingleException.to_python({
+            'type': None,
+            'value': {'unauthorized': True},
+        }).to_json()
+
+        assert result['type'] is None
+        assert result['value'] == '{"unauthorized":true}'
+
+        # Don't re-split a json-serialized value on the colon
+        result = SingleException.to_python(result).to_json()
+        assert result['type'] is None
+        assert result['value'] == '{"unauthorized":true}'
+
 
 class SlimExceptionDataTest(TestCase):
     def test_under_max(self):
-        interface = Exception.to_python({'values': [
-            {'value': 'foo',
-             'stacktrace': {'frames': [{'filename': 'foo'}]},
+        interface = Exception.to_python(
+            {
+                'values': [{
+                    'value': 'foo',
+                    'stacktrace': {
+                        'frames': [{
+                            'filename': 'foo'
+                        }]
+                    },
+                }]
             }
-        ]})
+        )
         slim_exception_data(interface)
         assert len(interface.values[0].stacktrace.frames) == 1
 
@@ -300,13 +398,17 @@ class SlimExceptionDataTest(TestCase):
             exc = {'value': 'exc %d' % x, 'stacktrace': {'frames': []}}
             values.append(exc)
             for y in range(5):
-                exc['stacktrace']['frames'].append({
-                    'filename': 'exc %d frame %d' % (x, y),
-                    'vars': {'foo': 'bar'},
-                    'context_line': 'b',
-                    'pre_context': ['a'],
-                    'post_context': ['c'],
-                })
+                exc['stacktrace']['frames'].append(
+                    {
+                        'filename': 'exc %d frame %d' % (x, y),
+                        'vars': {
+                            'foo': 'bar'
+                        },
+                        'context_line': 'b',
+                        'pre_context': ['a'],
+                        'post_context': ['c'],
+                    }
+                )
 
         interface = Exception.to_python({'values': values})
 

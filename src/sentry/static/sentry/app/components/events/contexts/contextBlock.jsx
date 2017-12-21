@@ -1,15 +1,16 @@
+import PropTypes from 'prop-types';
 import React from 'react';
-import _ from 'underscore';
+import _ from 'lodash';
 
 import KeyValueList from '../interfaces/keyValueList';
 import {defined} from '../../../utils';
 
-const ContextBlock = React.createClass({
-  propTypes: {
-    alias: React.PropTypes.string.isRequired,
-    data: React.PropTypes.object.isRequired,
-    knownData: React.PropTypes.array,
-  },
+class ContextBlock extends React.Component {
+  static propTypes = {
+    alias: PropTypes.string.isRequired,
+    data: PropTypes.object.isRequired,
+    knownData: PropTypes.array,
+  };
 
   render() {
     let data = [];
@@ -47,6 +48,6 @@ const ContextBlock = React.createClass({
       </div>
     );
   }
-});
+}
 
 export default ContextBlock;

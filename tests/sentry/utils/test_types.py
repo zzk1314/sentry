@@ -4,7 +4,13 @@ from __future__ import absolute_import
 
 from sentry.utils.types import (
     InvalidTypeError,
-    Any, Bool, Int, Float, String, Dict, Sequence,
+    Any,
+    Bool,
+    Int,
+    Float,
+    String,
+    Dict,
+    Sequence,
 )
 from sentry.testutils import TestCase
 
@@ -21,6 +27,7 @@ class OptionsTypesTest(TestCase):
 
     def test_bool(self):
         assert Bool(True) is True
+        assert Bool(1) is True
         assert Bool('y') is True
         assert Bool('YES') is True
         assert Bool('t') is True
@@ -28,6 +35,7 @@ class OptionsTypesTest(TestCase):
         assert Bool('1') is True
         assert Bool('on') is True
         assert Bool(False) is False
+        assert Bool(0) is False
         assert Bool('n') is False
         assert Bool('NO') is False
         assert Bool('f') is False

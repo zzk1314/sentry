@@ -3,11 +3,11 @@
 import marked from 'app/utils/marked';
 
 function expectMarkdown(test) {
-  expect(marked(test[0])).to.eql('<p>' + test[1] + '</p>\n');
+  expect(marked(test[0])).toEqual('<p>' + test[1] + '</p>\n');
 }
 
-describe('marked', function () {
-  it('normal links get rendered as html', function () {
+describe('marked', function() {
+  it('normal links get rendered as html', function() {
     for (let test of [
       ['[x](http://example.com)', '<a href="http://example.com">x</a>'],
       ['[x](https://example.com)', '<a href="https://example.com">x</a>'],
@@ -17,9 +17,10 @@ describe('marked', function () {
     }
   });
 
-  it('rejected links should be rendered as plain text', function () {
+  it('rejected links should be rendered as plain text', function() {
     for (let test of [
       ['[x](javascript:foo)', 'javascript:foo'],
+      ['[x](java\nscript:foo)', 'java\nscript:foo'],
       ['[x](data:foo)', 'data:foo'],
       ['[x](vbscript:foo)', 'vbscript:foo'],
     ]) {
@@ -27,7 +28,7 @@ describe('marked', function () {
     }
   });
 
-  it('normal images get rendered as html', function () {
+  it('normal images get rendered as html', function() {
     for (let test of [
       ['![](http://example.com)', '<img src="http://example.com" alt="">'],
       ['![x](http://example.com)', '<img src="http://example.com" alt="x">'],
@@ -37,10 +38,8 @@ describe('marked', function () {
     }
   });
 
-  it('rejected images shouldn\'t be rendered at all', function() {
-    for (let test of [
-      ['![x](javascript:foo)', ''],
-    ]) {
+  it("rejected images shouldn't be rendered at all", function() {
+    for (let test of [['![x](javascript:foo)', '']]) {
       expectMarkdown(test);
     }
   });

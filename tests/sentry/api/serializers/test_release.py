@@ -3,13 +3,25 @@
 from __future__ import absolute_import
 
 import datetime
+import six
 
 from django.utils import timezone
 from uuid import uuid4
 
+from sentry import tagstore
+from sentry.api.endpoints.organization_releases import ReleaseSerializerWithProjects
 from sentry.api.serializers import serialize
-from sentry.models import (Commit, CommitAuthor,
-    Release, ReleaseCommit, ReleaseProject, TagValue, User, UserEmail,)
+from sentry.models import (
+    Commit,
+    CommitAuthor,
+    Deploy,
+    Environment,
+    Release,
+    ReleaseCommit,
+    ReleaseProject,
+    User,
+    UserEmail,
+)
 from sentry.testutils import TestCase
 
 
@@ -19,31 +31,28 @@ class ReleaseSerializerTest(TestCase):
         project = self.create_project()
         project2 = self.create_project(organization=project.organization)
         release = Release.objects.create(
-            organization_id=project.organization_id,
-            version=uuid4().hex
+            organization_id=project.organization_id, version=uuid4().hex
         )
         release.add_project(project)
         release.add_project(project2)
-        ReleaseProject.objects.filter(
-            release=release,
-            project=project
-        ).update(new_groups=1)
-        ReleaseProject.objects.filter(
-            release=release,
-            project=project2
-        ).update(new_groups=1)
-        tag1 = TagValue.objects.create(
-            project=project,
-            key='sentry:release',
-            value=release.version,
+        ReleaseProject.objects.filter(release=release, project=project).update(new_groups=1)
+        ReleaseProject.objects.filter(release=release, project=project2).update(new_groups=1)
+        key = 'sentry:release'
+        value = release.version
+        tagstore.create_tag_value(
+            project_id=project.id,
+            environment_id=None,
+            key=key,
+            value=value,
             first_seen=timezone.now(),
             last_seen=timezone.now(),
             times_seen=5,
         )
-        tag2 = TagValue.objects.create(
-            project=project2,
-            key='sentry:release',
-            value=release.version,
+        tagstore.create_tag_value(
+            project_id=project2.id,
+            environment_id=None,
+            key=key,
+            value=value,
             first_seen=timezone.now() - datetime.timedelta(days=2),
             last_seen=timezone.now() - datetime.timedelta(days=1),
             times_seen=5,
@@ -67,6 +76,11 @@ class ReleaseSerializerTest(TestCase):
             commit=commit,
             order=1,
         )
+        release.update(
+            authors=[six.text_type(commit_author.id)],
+            commit_count=1,
+            last_commit_id=commit.id,
+        )
 
         result = serialize(release, user)
         assert result['version'] == release.version
@@ -74,8 +88,10 @@ class ReleaseSerializerTest(TestCase):
         # should be sum of all projects
         assert result['newGroups'] == 2
         # should be tags from all projects
-        assert result['firstEvent'] == TagValue.objects.get(id=tag2.id).first_seen
-        assert result['lastEvent'] == TagValue.objects.get(id=tag1.id).last_seen
+        tagvalue1 = tagstore.get_tag_value(project.id, None, key, value)
+        tagvalue2 = tagstore.get_tag_value(project2.id, None, key, value)
+        assert result['firstEvent'] == tagvalue2.first_seen
+        assert result['lastEvent'] == tagvalue1.last_seen
         assert result['commitCount'] == 1
         assert result['authors'] == [{'name': 'stebe', 'email': 'stebe@sentry.io'}]
 
@@ -83,13 +99,13 @@ class ReleaseSerializerTest(TestCase):
         # should be groups from one project
         assert result['newGroups'] == 1
         # should be tags from one project
-        assert result['firstEvent'] == TagValue.objects.get(id=tag1.id).first_seen
-        assert result['lastEvent'] == TagValue.objects.get(id=tag1.id).last_seen
+        assert result['firstEvent'] == tagvalue1.first_seen
+        assert result['lastEvent'] == tagvalue1.last_seen
 
         # Make sure a sha1 value gets truncated
         release.version = '0' * 40
         result = serialize(release, user)
-        assert result['shortVersion'] == '0' * 12
+        assert result['shortVersion'] == '0' * 7
 
     def test_no_tag_data(self):
         user = self.create_user()
@@ -154,6 +170,11 @@ class ReleaseSerializerTest(TestCase):
             commit=commit,
             order=1,
         )
+        release.update(
+            authors=[six.text_type(commit_author.id)],
+            commit_count=1,
+            last_commit_id=commit.id,
+        )
 
         result = serialize(release, user)
         result_author = result['authors'][0]
@@ -198,6 +219,12 @@ class ReleaseSerializerTest(TestCase):
             order=1,
         )
 
+        release.update(
+            authors=[six.text_type(commit_author.id)],
+            commit_count=1,
+            last_commit_id=commit.id,
+        )
+
         result = serialize(release, user)
         assert len(result['authors']) == 1
         result_author = result['authors'][0]
@@ -240,6 +267,12 @@ class ReleaseSerializerTest(TestCase):
             release=release,
             commit=commit,
             order=1,
+        )
+
+        release.update(
+            authors=[six.text_type(commit_author.id)],
+            commit_count=1,
+            last_commit_id=commit.id,
         )
 
         assert email.id < otheremail.id
@@ -333,6 +366,87 @@ class ReleaseSerializerTest(TestCase):
             commit=commit2,
             order=2,
         )
+        release.update(
+            authors=[
+                six.text_type(commit_author1.id),
+                six.text_type(commit_author2.id),
+            ],
+            commit_count=2,
+            last_commit_id=commit2.id,
+        )
         result = serialize(release, user)
         assert len(result['authors']) == 1
         assert result['authors'][0]['email'] == 'stebe@sentry.io'
+
+    def test_with_deploy(self):
+        user = self.create_user()
+        project = self.create_project()
+        release = Release.objects.create(
+            organization_id=project.organization_id, version=uuid4().hex
+        )
+        release.add_project(project)
+        ReleaseProject.objects.filter(release=release, project=project).update(new_groups=1)
+        env = Environment.objects.create(
+            organization_id=project.organization_id,
+            name='production',
+        )
+        env.add_project(project)
+        deploy = Deploy.objects.create(
+            organization_id=project.organization_id,
+            release=release,
+            environment_id=env.id,
+        )
+        release.update(total_deploys=1, last_deploy_id=deploy.id)
+
+        result = serialize(release, user)
+        assert result['version'] == release.version
+        assert result['deployCount'] == 1
+        assert result['lastDeploy']['id'] == six.text_type(deploy.id)
+
+    def test_release_no_users(self):
+        """
+        Testing when a repo gets deleted leaving dangling last commit id and author_ids
+        Made the decision that the Serializer must handle the data even in the case that the
+        commit_id or the author_ids point to records that do not exist.
+        """
+        commit_id = 9999999
+        commit_author_id = 9999999
+
+        project = self.create_project()
+        release = Release.objects.create(
+            organization_id=project.organization_id, version=uuid4().hex,
+            authors=[
+                six.text_type(commit_author_id),
+            ],
+            commit_count=1,
+            last_commit_id=commit_id,
+        )
+        release.add_project(project)
+        serialize(release)
+
+
+class ReleaseRefsSerializerTest(TestCase):
+    def test_simple(self):
+        # test bad refs
+        data = {'version': 'a' * 40, 'projects': ['earth'], 'refs': [None]}
+
+        serializer = ReleaseSerializerWithProjects(data=data)
+
+        assert not serializer.is_valid()
+        assert serializer.errors == {
+            'refs': ['non_field_errors: No input provided'],
+        }
+
+        # test good refs
+        data = {
+            'version': 'a' * 40,
+            'projects': ['earth'],
+            'refs': [{
+                'repository': 'my-repo',
+                'commit': 'b' * 40,
+            }]
+        }
+
+        serializer = ReleaseSerializerWithProjects(data=data)
+
+        assert serializer.is_valid()

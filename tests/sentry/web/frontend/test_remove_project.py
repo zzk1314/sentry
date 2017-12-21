@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from django.core.urlresolvers import reverse
 
-from sentry.models import Project, ProjectStatus
+from sentry.models import Project, ProjectStatus, DeletedProject
 from sentry.testutils import TestCase, PermissionTestCase
 
 
@@ -10,7 +10,9 @@ class RemoveProjectPermissionTest(PermissionTestCase):
     def setUp(self):
         super(RemoveProjectPermissionTest, self).setUp()
         self.project = self.create_project(team=self.team)
-        self.path = reverse('sentry-remove-project', args=[self.organization.slug, self.project.slug])
+        self.path = reverse(
+            'sentry-remove-project', args=[self.organization.slug, self.project.slug]
+        )
 
     def test_teamless_admin_cannot_load(self):
         self.assert_teamless_admin_cannot_access(self.path)
@@ -49,3 +51,6 @@ class RemoveProjectTest(TestCase):
         resp = self.client.post(self.path, {})
         assert resp.status_code == 302
         assert Project.objects.get(id=self.project.id).status == ProjectStatus.PENDING_DELETION
+
+        deleted_project = DeletedProject.objects.get(slug=self.project.slug)
+        self.assert_valid_deleted_log(deleted_project, self.project)

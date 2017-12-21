@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GroupActions render() renders correctly 1`] = `
+<div
+  className="group-actions"
+>
+  <ResolveActions
+    confirmLabel="Resolve"
+    hasRelease={false}
+    isAutoResolved={false}
+    isResolved={false}
+    onUpdate={[Function]}
+    orgId="org"
+    projectId="project"
+  />
+  <IgnoreActions
+    confirmLabel="Ignore"
+    isIgnored={false}
+    onUpdate={[Function]}
+  />
+  <div
+    className="btn-group"
+  >
+    <a
+      className="group-bookmark btn btn-default btn-sm"
+      onClick={[Function]}
+      title="Bookmark"
+    >
+      <span
+        className="icon-star-solid"
+      />
+    </a>
+  </div>
+  <DeleteActions
+    onDelete={[Function]}
+    onDiscard={[Function]}
+    organization={
+      Object {
+        "id": "4660",
+        "slug": "org",
+      }
+    }
+    project={
+      Object {
+        "id": "2448",
+        "name": "project name",
+        "slug": "project",
+      }
+    }
+  />
+  <a
+    className="btn btn-default btn-sm btn-config-issue-tracking"
+    href="/org/project/settings/issue-tracking/"
+  >
+    Link Issue Tracker
+  </a>
+</div>
+`;

@@ -5,9 +5,10 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.response import Response
 
 from sentry.api.authentication import QuietBasicAuthentication
-from sentry.models import Authenticator
 from sentry.api.base import Endpoint
 from sentry.api.serializers import serialize
+from sentry.auth.superuser import is_active_superuser
+from sentry.models import Authenticator
 from sentry.utils import auth
 
 
@@ -33,7 +34,7 @@ class AuthIndexEndpoint(Endpoint):
             return Response(status=400)
 
         data = serialize(request.user, request.user)
-        data['isSuperuser'] = request.is_superuser()
+        data['isSuperuser'] = is_active_superuser(request)
         return Response(data)
 
     def post(self, request):
@@ -58,18 +59,24 @@ class AuthIndexEndpoint(Endpoint):
         # If 2fa login is enabled then we cannot sign in with username and
         # password through this api endpoint.
         if Authenticator.objects.user_has_2fa(request.user):
-            return Response({
-                '2fa_required': True,
-                'message': 'Cannot sign-in with basic auth when 2fa is enabled.'
-            }, status=403)
+            return Response(
+                {
+                    '2fa_required': True,
+                    'message': 'Cannot sign-in with basic auth when 2fa is enabled.'
+                },
+                status=403
+            )
 
         try:
             # Must use the real request object that Django knows about
             auth.login(request._request, request.user)
         except auth.AuthUserPasswordExpired:
-            return Response({
-                'message': 'Cannot sign-in with basic auth because password has expired.',
-            }, status=403)
+            return Response(
+                {
+                    'message': 'Cannot sign-in with basic auth because password has expired.',
+                },
+                status=403
+            )
 
         return self.get(request)
 

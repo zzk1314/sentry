@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import DocumentTitle from 'react-document-title';
 import {Link} from 'react-router';
@@ -10,8 +11,8 @@ import {t} from '../locale';
 
 const ApiApplicationRow = React.createClass({
   propTypes: {
-    app: React.PropTypes.object.isRequired,
-    onRemove: React.PropTypes.func.isRequired
+    app: PropTypes.object.isRequired,
+    onRemove: PropTypes.func.isRequired,
   },
 
   mixins: [ApiMixin],
@@ -27,32 +28,38 @@ const ApiApplicationRow = React.createClass({
 
     let app = this.props.app;
 
-    this.setState({
-      loading: true,
-    }, () => {
-      let loadingIndicator = IndicatorStore.add(t('Saving changes..'));
-      this.api.request(`/api-applications/${app.id}/`, {
-        method: 'DELETE',
-        success: (data) => {
-          IndicatorStore.remove(loadingIndicator);
-          this.props.onRemove();
-        },
-        error: () => {
-          IndicatorStore.remove(loadingIndicator);
-          IndicatorStore.add(t('Unable to remove application. Please try again.'), 'error', {
-            duration: 3000
-          });
-        }
-      });
-    });
+    this.setState(
+      {
+        loading: true,
+      },
+      () => {
+        let loadingIndicator = IndicatorStore.add(t('Saving changes..'));
+        this.api.request(`/api-applications/${app.id}/`, {
+          method: 'DELETE',
+          success: data => {
+            IndicatorStore.remove(loadingIndicator);
+            this.props.onRemove();
+          },
+          error: () => {
+            IndicatorStore.remove(loadingIndicator);
+            IndicatorStore.add(
+              t('Unable to remove application. Please try again.'),
+              'error',
+              {
+                duration: 3000,
+              }
+            );
+          },
+        });
+      }
+    );
   },
 
   render() {
     let app = this.props.app;
 
     let btnClassName = 'btn btn-default';
-    if (this.state.loading)
-      btnClassName += ' disabled';
+    if (this.state.loading) btnClassName += ' disabled';
 
     return (
       <tr>
@@ -63,20 +70,22 @@ const ApiApplicationRow = React.createClass({
           <small style={{color: '#999'}}>{app.clientID}</small>
         </td>
         <td style={{width: 32}}>
-          <a onClick={this.onRemove.bind(this, app)}
-             className={btnClassName}
-             disabled={this.state.loading}>
+          <a
+            onClick={this.onRemove.bind(this, app)}
+            className={btnClassName}
+            disabled={this.state.loading}
+          >
             <span className="icon icon-trash" />
           </a>
         </td>
       </tr>
     );
-  }
+  },
 });
 
 const ApiApplications = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: PropTypes.object.isRequired,
   },
 
   mixins: [ApiMixin],
@@ -107,7 +116,7 @@ const ApiApplications = React.createClass({
         this.setState({
           loading: false,
           error: false,
-          appList: data
+          appList: data,
         });
       },
       error: () => {
@@ -115,7 +124,7 @@ const ApiApplications = React.createClass({
           loading: false,
           error: true,
         });
-      }
+      },
     });
   },
 
@@ -123,20 +132,20 @@ const ApiApplications = React.createClass({
     let loadingIndicator = IndicatorStore.add(t('Saving changes..'));
     this.api.request('/api-applications/', {
       method: 'POST',
-      success: (app) => {
+      success: app => {
         IndicatorStore.remove(loadingIndicator);
         this.context.router.push(`/api/applications/${app.id}/`);
       },
-      error: (error) => {
+      error: error => {
         IndicatorStore.remove(loadingIndicator);
         IndicatorStore.add(t('Unable to remove application. Please try again.'), 'error');
-      }
+      },
     });
   },
 
   onRemoveApplication(app) {
     this.setState({
-      appList: this.state.appList.filter((a) => a.id !== app.id),
+      appList: this.state.appList.filter(a => a.id !== app.id),
     });
   },
 
@@ -145,18 +154,19 @@ const ApiApplications = React.createClass({
       return (
         <tr colSpan="2">
           <td className="blankslate well">
-            {t('You haven\'t created any applications yet.')}
+            {t("You haven't created any applications yet.")}
           </td>
         </tr>
       );
     }
 
-    return this.state.appList.map((app) => {
+    return this.state.appList.map(app => {
       return (
         <ApiApplicationRow
           key={app.id}
           app={app}
-          onRemove={this.onRemoveApplication.bind(this, app)} />
+          onRemove={this.onRemoveApplication.bind(this, app)}
+        />
       );
     });
   },
@@ -171,24 +181,36 @@ const ApiApplications = React.createClass({
         <div>
           <table className="table">
             <tbody>
-              {(this.state.loading ?
-                <tr><td colSpan="2"><LoadingIndicator /></td></tr>
-              : (this.state.error ?
-                <tr><td colSpan="2"><LoadingError onRetry={this.fetchData} /></td></tr>
-              :
+              {this.state.loading ? (
+                <tr>
+                  <td colSpan="2">
+                    <LoadingIndicator />
+                  </td>
+                </tr>
+              ) : this.state.error ? (
+                <tr>
+                  <td colSpan="2">
+                    <LoadingError onRetry={this.fetchData} />
+                  </td>
+                </tr>
+              ) : (
                 this.renderResults()
-              ))}
+              )}
             </tbody>
           </table>
 
           <div className="form-actions" style={{textAlign: 'right'}}>
-            <a className="btn btn-primary ref-create-application"
-               onClick={this.createApplication}>{t('Create New Application')}</a>
+            <a
+              className="btn btn-primary ref-create-application"
+              onClick={this.createApplication}
+            >
+              {t('Create New Application')}
+            </a>
           </div>
         </div>
       </DocumentTitle>
     );
-  }
+  },
 });
 
 export default ApiApplications;

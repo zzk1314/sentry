@@ -2,12 +2,14 @@
 
 from __future__ import absolute_import
 
-import six
+import functools
 
+import mock
+import six
 from django.core.urlresolvers import reverse
 from exam import fixture
 
-from sentry.models import ProjectStatus, UserOption, UserOptionValue
+from sentry.models import ProjectStatus, UserOption
 from sentry.testutils import TestCase
 
 
@@ -31,7 +33,9 @@ class NotificationSettingsTest(TestCase):
         team = self.create_team(organization=organization)
         project = self.create_project(organization=organization, team=team)
         team2 = self.create_team(organization=organization)
-        self.create_project(organization=organization, team=team, status=ProjectStatus.PENDING_DELETION)
+        self.create_project(
+            organization=organization, team=team, status=ProjectStatus.PENDING_DELETION
+        )
         self.create_project(organization=organization, team=team2)
         self.create_member(organization=organization, user=user, teams=[project.team])
         self.login_as(user)
@@ -51,7 +55,7 @@ class NotificationSettingsTest(TestCase):
         resp = self.client.post(self.path, params)
         assert resp.status_code == 302
 
-        options = UserOption.objects.get_all_values(user=self.user, project=None)
+        options = UserOption.objects.get_all_values(user=self.user)
 
         assert options.get('alert_email') == 'foo@example.com'
 
@@ -63,23 +67,29 @@ class NotificationSettingsTest(TestCase):
         })
         assert resp.status_code == 302
 
-        options = UserOption.objects.get_all_values(
-            user=self.user, project=None
-        )
+        options = UserOption.objects.get_all_values(user=self.user)
 
-        assert options.get('workflow:notifications') == '0'
+        assert options.get('workflow:notifications') == '1'
 
         resp = self.client.post(self.path, {
             'workflow_notifications': '',
         })
         assert resp.status_code == 302
 
-        options = UserOption.objects.get_all_values(
-            user=self.user, project=None
-        )
+        options = UserOption.objects.get_all_values(user=self.user)
 
-        assert options.get('workflow:notifications') == \
-            UserOptionValue.participating_only
+        assert options.get('workflow:notifications', mock.sentinel.UNSET) == mock.sentinel.UNSET
+
+        with self.assertDoesNotChange(
+                functools.partial(
+                    UserOption.objects.get_value,
+                    user=self.user,
+                    project=None,
+                    key='workflow:notifications'
+                )):
+            resp = self.client.post(self.path, {
+                'workflow_notifications': 'invalid',
+            })
 
     def test_can_change_subscribe_by_default(self):
         self.login_as(self.user)
@@ -89,9 +99,7 @@ class NotificationSettingsTest(TestCase):
         })
         assert resp.status_code == 302
 
-        options = UserOption.objects.get_all_values(
-            user=self.user, project=None
-        )
+        options = UserOption.objects.get_all_values(user=self.user)
 
         assert options.get('subscribe_by_default') == '1'
 
@@ -106,9 +114,7 @@ class NotificationSettingsTest(TestCase):
         })
         assert resp.status_code == 302
 
-        options = UserOption.objects.get_all_values(
-            user=self.user, project=None
-        )
+        options = UserOption.objects.get_all_values(user=self.user)
 
         disabled_orgs = set(options.get('reports:disabled-organizations', []))
         assert org1.id not in disabled_orgs

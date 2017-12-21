@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import logging
 
 from sentry.utils.imports import import_string
-
+from sentry.utils.services import Service
 
 logger = logging.getLogger('sentry.digests')
 
@@ -24,11 +24,11 @@ class InvalidState(Exception):
     """
 
 
-class Backend(object):
+class Backend(Service):
     """
     A digest backend coordinates the addition of records to timelines, as well
     as scheduling their digestion (processing.) This allows for summarizations
-    of activity that was recorded as having occurrred during a window of time.
+    of activity that was recorded as having occurred during a window of time.
 
     A timeline is the central abstraction for digests. A timeline is a
     reverse-chronological set of records. Timelines are identified by a unique
@@ -56,10 +56,7 @@ class Backend(object):
     be preempted by a new record being added to the timeline, requiring it to
     be transitioned to "waiting" instead.)
     """
-    __all__ = (
-        'add', 'delete', 'digest', 'enabled', 'maintenance', 'schedule',
-        'validate'
-    )
+    __all__ = ('add', 'delete', 'digest', 'enabled', 'maintenance', 'schedule', 'validate')
 
     def __init__(self, **options):
         # The ``minimum_delay`` option defines the default minimum amount of
@@ -100,12 +97,11 @@ class Backend(object):
             self.truncation_chance = options.pop('truncation_chance', 1.0 / self.capacity)
         else:
             if options.get('truncation_chance') is not None:
-                raise TypeError('No timeline capacity has been set, "truncation_chance" must be None.')
+                raise TypeError(
+                    'No timeline capacity has been set, "truncation_chance" must be None.'
+                )
             else:
                 self.truncation_chance = 0.0
-
-    def validate(self):
-        pass
 
     def enabled(self, project):
         """
@@ -186,7 +182,7 @@ class Backend(object):
 
         This is designed to handle the situation where task execution is
         managed by a separate system such as RabbitMQ & Celery from scheduling.
-        A digest task may not be able to be succesfully retried after a failure
+        A digest task may not be able to be successfully retried after a failure
         (e.g. if the process executing the task can no longer communicate with
         the messaging broker) which can result in a task remaining in the ready
         state without an execution plan.
@@ -196,7 +192,7 @@ class Backend(object):
         "ready" state that were scheduled for execution prior to the deadline
         may still have outstanding tasks associated with them -- remember that
         without the ability to interrogate the queue, we are unable to identify
-        if these tasks have finished but were unable to bea removed from the
+        if these tasks have finished but were unable to be removed from the
         schedule, failed outright, or are still pending. As part of
         maintenance, those timelines are moved back to the "waiting" state for
         rescheduling, and if a pending task for a timeline that was previously

@@ -24,4 +24,3 @@ const IncidentStore = Reflux.createStore({
 });
 
 export default IncidentStore;
-

@@ -1,46 +1,41 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'underscore';
+import _ from 'lodash';
 
-const StreamTagFilter = React.createClass({
-  propTypes: {
-    tag: React.PropTypes.object.isRequired,
-    orgId: React.PropTypes.string.isRequired,
-    projectId: React.PropTypes.string.isRequired,
-    value: React.PropTypes.string,
-    onSelect: React.PropTypes.func
-  },
+class StreamTagFilter extends React.Component {
+  static propTypes = {
+    tag: PropTypes.object.isRequired,
+    orgId: PropTypes.string.isRequired,
+    projectId: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    onSelect: PropTypes.func,
+  };
 
-  statics: {
-    tagValueToSelect2Format: (key) => {
-      return {
-        id: key,
-        text: key
-      };
-    }
-  },
-
-  getDefaultProps() {
+  static tagValueToSelect2Format = key => {
     return {
-      tag: {},
-      value: ''
+      id: key,
+      text: key,
     };
-  },
+  };
 
-  getInitialState() {
-    return {
-      query: '',
-      loading: false,
-      value: this.props.value
-    };
-  },
+  static defaultProps = {
+    tag: {},
+    value: '',
+  };
+
+  state = {
+    query: '',
+    loading: false,
+    value: this.props.value,
+  };
 
   componentDidMount() {
     let select = this.refs.select;
 
     let selectOpts = {
       placeholder: '--',
-      allowClear: true
+      allowClear: true,
     };
 
     if (!this.props.tag.predefined) {
@@ -54,17 +49,19 @@ const StreamTagFilter = React.createClass({
           delay: 250,
           data: (term, page) => {
             return {
-              query: term
+              query: term,
             };
           },
           results: (data, page) => {
             // parse the results into the format expected by Select2
             return {
-              results: _.map(data, (val) => StreamTagFilter.tagValueToSelect2Format(val.value))
+              results: _.map(data, val =>
+                StreamTagFilter.tagValueToSelect2Format(val.value)
+              ),
             };
           },
-          cache: true
-        }
+          cache: true,
+        },
       });
     }
 
@@ -72,36 +69,40 @@ const StreamTagFilter = React.createClass({
       .select2(selectOpts)
       .select2('val', this.state.value)
       .on('change', this.onSelectValue);
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.value !== this.state.value) {
-      this.setState({
-        value: nextProps.value
-      }, () => {
-        let select = this.refs.select;
-        $(select).select2('val', this.state.value);
-      });
+      this.setState(
+        {
+          value: nextProps.value,
+        },
+        () => {
+          let select = this.refs.select;
+          $(select).select2('val', this.state.value);
+        }
+      );
     }
-  },
+  }
 
   componentWillUnmount() {
     let select = ReactDOM.findDOMNode(this.refs.select);
     $(select).select2('destroy');
-  },
+  }
 
-  getTagValuesAPIEndpoint() {
-    return `/api/0/projects/${this.props.orgId}/${this.props.projectId}/tags/${this.props.tag.key}/values/`;
-  },
+  getTagValuesAPIEndpoint = () => {
+    return `/api/0/projects/${this.props.orgId}/${this.props.projectId}/tags/${this.props
+      .tag.key}/values/`;
+  };
 
-  onSelectValue(evt) {
+  onSelectValue = evt => {
     let val = evt.target.value;
     this.setState({
-      value: val
+      value: val,
     });
 
     this.props.onSelect && this.props.onSelect(this.props.tag, val);
-  },
+  };
 
   render() {
     // NOTE: need to specify empty onChange handler on <select> - even though this
@@ -112,22 +113,19 @@ const StreamTagFilter = React.createClass({
       <div className="stream-tag-filter">
         <h6 className="nav-header">{tag.name}</h6>
 
-        {this.props.tag.predefined ?
-
-          <select ref="select" onChange={function(){}}>
-            <option key="empty"></option>
-            {this.props.tag.values.map((val) => {
-              return (
-                <option key={val}>{val}</option>
-              );
+        {this.props.tag.predefined ? (
+          <select ref="select" onChange={function() {}}>
+            <option key="empty" />
+            {this.props.tag.values.map(val => {
+              return <option key={val}>{val}</option>;
             })}
-          </select> :
-          <input type="hidden" ref="select" value={this.props.value}/>
-        }
-
+          </select>
+        ) : (
+          <input type="hidden" ref="select" value={this.props.value} />
+        )}
       </div>
     );
   }
-});
+}
 
 export default StreamTagFilter;

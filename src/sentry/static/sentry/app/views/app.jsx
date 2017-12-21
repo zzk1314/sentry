@@ -1,6 +1,11 @@
+/*global __webpack_public_path__ */
+/*eslint no-native-reassign:0 */
+import PropTypes from 'prop-types';
 import React from 'react';
 import $ from 'jquery';
 import Cookies from 'js-cookie';
+import {ThemeProvider} from 'emotion-theming';
+import theme from '../utils/theme';
 
 import ApiMixin from '../mixins/apiMixin';
 import Alerts from '../components/alerts';
@@ -10,9 +15,11 @@ import Indicators from '../components/indicators';
 import InstallWizard from './installWizard';
 import LoadingIndicator from '../components/loadingIndicator';
 import OrganizationsLoader from '../components/organizations/organizationsLoader';
-import OrganizationStore from '../stores/organizationStore';
+import OrganizationsStore from '../stores/organizationsStore';
 
 import {t} from '../locale';
+
+if (window.globalStaticUrl) __webpack_public_path__ = window.globalStaticUrl; // defined in layout.html
 
 function getAlertTypeForProblem(problem) {
   switch (problem.severity) {
@@ -25,12 +32,10 @@ function getAlertTypeForProblem(problem) {
 
 const App = React.createClass({
   childContextTypes: {
-    location: React.PropTypes.object
+    location: PropTypes.object,
   },
 
-  mixins: [
-    ApiMixin
-  ],
+  mixins: [ApiMixin],
 
   getInitialState() {
     return {
@@ -42,17 +47,17 @@ const App = React.createClass({
 
   getChildContext() {
     return {
-      location: this.props.location
+      location: this.props.location,
     };
   },
 
   componentWillMount() {
     this.api.request('/organizations/', {
       query: {
-        'member': '1'
+        member: '1',
       },
-      success: (data) => {
-        OrganizationStore.load(data);
+      success: data => {
+        OrganizationsStore.load(data);
         this.setState({
           loading: false,
         });
@@ -60,35 +65,35 @@ const App = React.createClass({
       error: () => {
         this.setState({
           loading: false,
-          error: true
+          error: true,
         });
-      }
+      },
     });
 
     this.api.request('/internal/health/', {
-      success: (data) => {
+      success: data => {
         if (data && data.problems) {
           data.problems.forEach(problem => {
             AlertActions.addAlert({
               id: problem.id,
               message: problem.message,
               type: getAlertTypeForProblem(problem),
-              url: problem.url
+              url: problem.url,
             });
           });
         }
       },
-      error: () => {} // TODO: do something?
+      error: () => {}, // TODO: do something?
     });
 
-    ConfigStore.get('messages').forEach((msg) => {
+    ConfigStore.get('messages').forEach(msg => {
       AlertActions.addAlert({
         message: msg.message,
-        type: msg.level
+        type: msg.level,
       });
     });
 
-    $(document).ajaxError(function (evt, jqXHR) {
+    $(document).ajaxError(function(evt, jqXHR) {
       // TODO: Need better way of identifying anonymous pages
       //       that don't trigger redirect
       let pageAllowsAnon = /^\/share\//.test(window.location.pathname);
@@ -102,7 +107,7 @@ const App = React.createClass({
   },
 
   componentWillUnmount() {
-    OrganizationStore.load([]);
+    OrganizationsStore.load([]);
   },
 
   onConfigured() {
@@ -131,13 +136,15 @@ const App = React.createClass({
     }
 
     return (
-      <OrganizationsLoader>
-        <Alerts className="messages-container" />
-        <Indicators className="indicators-container" />
-        {this.props.children}
-      </OrganizationsLoader>
+      <ThemeProvider theme={theme}>
+        <OrganizationsLoader>
+          <Alerts className="messages-container" />
+          <Indicators className="indicators-container" />
+          {this.props.children}
+        </OrganizationsLoader>
+      </ThemeProvider>
     );
-  }
+  },
 });
 
 export default App;

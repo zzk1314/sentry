@@ -7,12 +7,12 @@ export function update(api, params) {
   api.request(endpoint, {
     method: 'PUT',
     data: params.data,
-    success: (data) => {
+    success: data => {
       ProjectActions.updateSuccess(data);
     },
-    error: (data) => {
+    error: data => {
       ProjectActions.updateError(data);
-    }
+    },
   });
 }
 
@@ -22,11 +22,15 @@ export function loadStats(api, params) {
   let endpoint = `/organizations/${params.orgId}/stats/`;
   api.request(endpoint, {
     query: params.query,
-    success: (data) => {
+    success: data => {
       ProjectActions.loadStatsSuccess(data);
     },
-    error: (data) => {
+    error: data => {
       ProjectActions.loadStatsError(data);
-    }
+    },
   });
+}
+
+export function setActiveProject(project) {
+  ProjectActions.setActive(project);
 }

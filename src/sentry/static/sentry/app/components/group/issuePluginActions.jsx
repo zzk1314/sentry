@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import Modal from 'react-bootstrap/lib/Modal';
 import ApiMixin from '../../mixins/apiMixin';
@@ -8,22 +9,18 @@ import plugins from '../../plugins';
 import {t} from '../../locale';
 import {toTitleCase} from '../../utils';
 
-
 const IssuePluginActions = React.createClass({
   propTypes: {
-    plugin: React.PropTypes.object.isRequired
+    plugin: PropTypes.object.isRequired,
   },
 
-  mixins: [
-    ApiMixin,
-    GroupState
-  ],
+  mixins: [ApiMixin, GroupState],
 
   getInitialState() {
     return {
       showModal: false,
       actionType: null,
-      pluginLoading: false
+      pluginLoading: false,
     };
   },
 
@@ -40,30 +37,33 @@ const IssuePluginActions = React.createClass({
   ACTION_LABELS: {
     create: t('Create New Issue'),
     link: t('Link with Existing Issue'),
-    unlink: t('Unlink Issue')
+    unlink: t('Unlink Issue'),
   },
 
   loadPlugin(data) {
-    this.setState({
-      pluginLoading: true,
-    }, () => {
-      plugins.load(data, () => {
-        this.setState({pluginLoading: false});
-      });
-    });
+    this.setState(
+      {
+        pluginLoading: true,
+      },
+      () => {
+        plugins.load(data, () => {
+          this.setState({pluginLoading: false});
+        });
+      }
+    );
   },
 
   openModal(action) {
     this.setState({
       showModal: true,
-      actionType: action
+      actionType: action,
     });
   },
 
   closeModal() {
     this.setState({
       showModal: false,
-      actionType: null
+      actionType: null,
     });
   },
 
@@ -75,33 +75,46 @@ const IssuePluginActions = React.createClass({
     }
 
     let allowedActions = plugin.allowed_actions.filter(
-      plugin.issue
-        ? action => action === 'unlink'
-        : action => action !== 'unlink'
+      plugin.issue ? action => action === 'unlink' : action => action !== 'unlink'
     );
 
     let button;
     if (allowedActions.length === 1) {
+      // # TODO(dcramer): remove plugin.title check in Sentry 8.22+
       button = (
-        <button className={'btn btn-default btn-sm btn-plugin-' + plugin.slug}
-                onClick={this.openModal.bind(this, allowedActions[0])}>
-          {toTitleCase(allowedActions[0]) + ' ' + plugin.title + ' Issue'}
+        <button
+          className={'btn btn-default btn-sm btn-plugin-' + plugin.slug}
+          onClick={this.openModal.bind(this, allowedActions[0])}
+        >
+          {toTitleCase(allowedActions[0]) +
+            ' ' +
+            (plugin.shortName || plugin.name || plugin.title) +
+            ' Issue'}
         </button>
       );
     } else {
+      // # TODO(dcramer): remove plugin.title check in Sentry 8.22+
       button = (
-        <div className={'btn-group btn-plugin-' + plugin.slug}>
+        <div className={'btn-plugin-' + plugin.slug}>
           <DropdownLink
             caret={false}
             className="btn btn-default btn-sm"
-            title={<span>
-                     {plugin.title}
-                     <span className="icon-arrow-down" style={{marginLeft: 3, marginRight: -3}} />
-                   </span>}>
+            title={
+              <span style={{display: 'flex'}}>
+                {plugin.shortName || plugin.name || plugin.title}
+                <span
+                  className="icon-arrow-down"
+                  style={{marginLeft: 3, marginRight: -3}}
+                />
+              </span>
+            }
+          >
             {allowedActions.map(action => {
               return (
                 <MenuItem key={action} noAnchor={true}>
-                  <a onClick={this.openModal.bind(this, action)}>{this.ACTION_LABELS[action]}</a>
+                  <a onClick={this.openModal.bind(this, action)}>
+                    {this.ACTION_LABELS[action]}
+                  </a>
                 </MenuItem>
               );
             })}
@@ -110,31 +123,36 @@ const IssuePluginActions = React.createClass({
       );
     }
 
+    // # TODO(dcramer): remove plugin.title check in Sentry 8.22+
     return (
-      <span>
+      <div className="btn-group">
         {button}
-        <Modal show={this.state.showModal} onHide={this.closeModal}
-               animation={false} backdrop="static" enforceFocus={false}>
+        <Modal
+          show={this.state.showModal}
+          onHide={this.closeModal}
+          animation={false}
+          backdrop="static"
+          enforceFocus={false}
+        >
           <Modal.Header closeButton>
-            <Modal.Title>{plugin.title + ' Issue'}</Modal.Title>
+            <Modal.Title>{`${plugin.name || plugin.title} Issue`}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {!this.state.pluginLoading &&
-                this.state.actionType &&
-                plugins.get(this.props.plugin).renderGroupActions({
-                    plugin: this.props.plugin,
-                    group: this.getGroup(),
-                    project: this.getProject(),
-                    organization: this.getOrganization(),
-                    actionType: this.state.actionType,
-                    onSuccess: this.closeModal
-                })
-            }
+              this.state.actionType &&
+              plugins.get(this.props.plugin).renderGroupActions({
+                plugin: this.props.plugin,
+                group: this.getGroup(),
+                project: this.getProject(),
+                organization: this.getOrganization(),
+                actionType: this.state.actionType,
+                onSuccess: this.closeModal,
+              })}
           </Modal.Body>
         </Modal>
-      </span>
+      </div>
     );
-  }
+  },
 });
 
 export default IssuePluginActions;

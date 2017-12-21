@@ -8,7 +8,7 @@ sentry.interfaces.http
 
 from __future__ import absolute_import
 
-__all__ = ('Http',)
+__all__ = ('Http', )
 
 import re
 import six
@@ -18,8 +18,10 @@ from django.utils.translation import ugettext as _
 from six.moves.urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from sentry.interfaces.base import Interface, InterfaceValidationError
-from sentry.utils import json
+from sentry.interfaces.schemas import validate_and_default_interface
 from sentry.utils.safe import trim, trim_dict, trim_pairs
+from sentry.utils.http import heuristic_decode
+from sentry.utils.validators import validate_ip
 from sentry.web.helpers import render_to_string
 
 # Instead of relying on a list of hardcoded methods, just loosly match
@@ -69,10 +71,7 @@ def format_cookies(value):
     if isinstance(value, dict):
         value = value.items()
 
-    return [
-        list(map(fix_broken_encoding, (k.strip(), v)))
-        for k, v in value
-    ]
+    return [list(map(fix_broken_encoding, (k.strip(), v))) for k, v in value]
 
 
 def fix_broken_encoding(value):
@@ -119,13 +118,15 @@ class Http(Interface):
     """
     display_score = 1000
     score = 800
+    path = 'sentry.interfaces.Http'
 
     FORM_TYPE = 'application/x-www-form-urlencoded'
 
     @classmethod
     def to_python(cls, data):
-        if not data.get('url'):
-            raise InterfaceValidationError("No value for 'url'")
+        is_valid, errors = validate_and_default_interface(data, cls.path)
+        if not is_valid:
+            raise InterfaceValidationError("Invalid interface data")
 
         kwargs = {}
 
@@ -145,10 +146,10 @@ class Http(Interface):
         if query_string:
             # if querystring was a dict, convert it to a string
             if isinstance(query_string, dict):
-                query_string = urlencode([(to_bytes(k), to_bytes(v))
-                                          for k, v in query_string.items()])
+                query_string = urlencode(
+                    [(to_bytes(k), to_bytes(v)) for k, v in query_string.items()]
+                )
             else:
-                query_string = query_string
                 if query_string[0] == '?':
                     # remove '?' prefix
                     query_string = query_string[1:]
@@ -169,15 +170,39 @@ class Http(Interface):
         else:
             headers = ()
 
+        # We prefer the body to be a string, since we can then attempt to parse it
+        # as JSON OR decode it as a URL encoded query string, without relying on
+        # the correct content type header being passed.
         body = data.get('data')
-        if isinstance(body, dict):
-            body = json.dumps(body)
+
+        content_type = next((v for k, v in headers if k == 'Content-Type'), None)
+
+        # Remove content type parameters
+        if content_type is not None:
+            content_type = content_type.partition(';')[0].rstrip()
+
+        # We process request data once during ingestion and again when
+        # requesting the http interface over the API. Avoid overwriting
+        # decoding the body again.
+        inferred_content_type = data.get('inferred_content_type', content_type)
+
+        if 'inferred_content_type' not in data and not isinstance(body, dict):
+            body, inferred_content_type = heuristic_decode(body, content_type)
 
         if body:
             body = trim(body, settings.SENTRY_MAX_HTTP_BODY_SIZE)
 
+        env = data.get('env', {})
+        # TODO (alex) This could also be accomplished with schema (with formats)
+        if 'REMOTE_ADDR' in env:
+            try:
+                validate_ip(env['REMOTE_ADDR'], required=False)
+            except ValueError:
+                del env['REMOTE_ADDR']
+
+        kwargs['inferred_content_type'] = inferred_content_type
         kwargs['cookies'] = trim_pairs(format_cookies(cookies))
-        kwargs['env'] = trim_dict(data.get('env') or {})
+        kwargs['env'] = trim_dict(env)
         kwargs['headers'] = trim_pairs(headers)
         kwargs['data'] = fix_broken_encoding(body)
         kwargs['url'] = urlunsplit((scheme, netloc, path, '', ''))
@@ -186,7 +211,7 @@ class Http(Interface):
         return cls(**kwargs)
 
     def get_path(self):
-        return 'sentry.interfaces.Http'
+        return self.path
 
     @property
     def full_url(self):
@@ -198,14 +223,16 @@ class Http(Interface):
         return url
 
     def to_email_html(self, event, **kwargs):
-        return render_to_string('sentry/partial/interfaces/http_email.html', {
-            'event': event,
-            'url': self.full_url,
-            'short_url': self.url,
-            'method': self.method,
-            'query_string': self.query_string,
-            'fragment': self.fragment,
-        })
+        return render_to_string(
+            'sentry/partial/interfaces/http_email.html', {
+                'event': event,
+                'url': self.full_url,
+                'short_url': self.url,
+                'method': self.method,
+                'query_string': self.query_string,
+                'fragment': self.fragment,
+            }
+        )
 
     def get_alias(self):
         return 'request'
@@ -216,10 +243,6 @@ class Http(Interface):
     def get_api_context(self, is_public=False):
         if is_public:
             return {}
-
-        data = self.data
-        if isinstance(data, dict):
-            data = json.dumps(data)
 
         cookies = self.cookies or ()
         if isinstance(cookies, dict):
@@ -234,9 +257,10 @@ class Http(Interface):
             'url': self.url,
             'query': self.query_string,
             'fragment': self.fragment,
-            'data': data,
+            'data': self.data,
             'headers': headers,
             'cookies': cookies,
             'env': self.env or None,
+            'inferredContentType': self.inferred_content_type,
         }
         return data

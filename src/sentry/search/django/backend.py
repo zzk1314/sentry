@@ -8,77 +8,57 @@ sentry.search.django.backend
 
 from __future__ import absolute_import
 
-import six
 from django.db import router
 from django.db.models import Q
 
+from sentry import tagstore
 from sentry.api.paginator import DateTimePaginator, Paginator
-from sentry.search.base import ANY, EMPTY, SearchBackend
+from sentry.search.base import EMPTY, SearchBackend
 from sentry.search.django.constants import (
-    MSSQL_ENGINES, MSSQL_SORT_CLAUSES, MYSQL_SORT_CLAUSES, ORACLE_SORT_CLAUSES,
-    SORT_CLAUSES, SQLITE_SORT_CLAUSES
+    MSSQL_ENGINES, MSSQL_SORT_CLAUSES, MYSQL_SORT_CLAUSES, ORACLE_SORT_CLAUSES, SORT_CLAUSES,
+    SQLITE_SORT_CLAUSES
 )
 from sentry.utils.db import get_db_engine
 
 
 class DjangoSearchBackend(SearchBackend):
-    def _tags_to_filter(self, project, tags):
-        # Django doesnt support union, so we limit results and try to find
-        # reasonable matches
-        from sentry.models import GroupTagValue
-
-        # ANY matches should come last since they're the least specific and
-        # will provide the largest range of matches
-        tag_lookups = sorted(six.iteritems(tags), key=lambda x: x != ANY)
-
-        # get initial matches to start the filter
-        matches = None
-
-        # for each remaining tag, find matches contained in our
-        # existing set, pruning it down each iteration
-        for k, v in tag_lookups:
-            if v is EMPTY:
-                return None
-
-            elif v != ANY:
-                base_qs = GroupTagValue.objects.filter(
-                    key=k,
-                    value=v,
-                    project=project,
-                )
-
-            else:
-                base_qs = GroupTagValue.objects.filter(
-                    key=k,
-                    project=project,
-                ).distinct()
-
-            if matches:
-                base_qs = base_qs.filter(group_id__in=matches)
-            else:
-                # restrict matches to only the most recently seen issues
-                base_qs = base_qs.order_by('-last_seen')
-
-            matches = list(base_qs.values_list('group_id', flat=True)[:1000])
-            if not matches:
-                return None
-        return matches
-
-    def _build_queryset(self, project, query=None, status=None, tags=None,
-                        bookmarked_by=None, assigned_to=None, first_release=None,
-                        sort_by='date', unassigned=None, subscribed_by=None,
-                        age_from=None, age_from_inclusive=True,
-                        age_to=None, age_to_inclusive=True,
-                        last_seen_from=None, last_seen_from_inclusive=True,
-                        last_seen_to=None, last_seen_to_inclusive=True,
-                        date_from=None, date_from_inclusive=True,
-                        date_to=None, date_to_inclusive=True,
-                        active_at_from=None, active_at_from_inclusive=True,
-                        active_at_to=None, active_at_to_inclusive=True,
-                        times_seen=None,
-                        times_seen_lower=None, times_seen_lower_inclusive=True,
-                        times_seen_upper=None, times_seen_upper_inclusive=True,
-                        cursor=None, limit=None):
+    def _build_queryset(
+        self,
+        project,
+        query=None,
+        status=None,
+        tags=None,
+        bookmarked_by=None,
+        assigned_to=None,
+        first_release=None,
+        sort_by='date',
+        unassigned=None,
+        subscribed_by=None,
+        age_from=None,
+        age_from_inclusive=True,
+        age_to=None,
+        age_to_inclusive=True,
+        last_seen_from=None,
+        last_seen_from_inclusive=True,
+        last_seen_to=None,
+        last_seen_to_inclusive=True,
+        date_from=None,
+        date_from_inclusive=True,
+        date_to=None,
+        date_to_inclusive=True,
+        active_at_from=None,
+        active_at_from_inclusive=True,
+        active_at_to=None,
+        active_at_to_inclusive=True,
+        times_seen=None,
+        times_seen_lower=None,
+        times_seen_lower_inclusive=True,
+        times_seen_upper=None,
+        times_seen_upper_inclusive=True,
+        cursor=None,
+        limit=None,
+        environment_id=None,
+    ):
         from sentry.models import Event, Group, GroupSubscription, GroupStatus
 
         engine = get_db_engine('default')
@@ -91,14 +71,11 @@ class DjangoSearchBackend(SearchBackend):
             # the query filter **after** the index filters, and restricts the
             # result set
             queryset = queryset.filter(
-                Q(message__icontains=query) |
-                Q(culprit__icontains=query)
-            )
+                Q(message__icontains=query) | Q(culprit__icontains=query))
 
         if status is None:
             status_in = (
-                GroupStatus.PENDING_DELETION,
-                GroupStatus.DELETION_IN_PROGRESS,
+                GroupStatus.PENDING_DELETION, GroupStatus.DELETION_IN_PROGRESS,
                 GroupStatus.PENDING_MERGE,
             )
             queryset = queryset.exclude(status__in=status_in)
@@ -139,7 +116,7 @@ class DjangoSearchBackend(SearchBackend):
             )
 
         if tags:
-            matches = self._tags_to_filter(project, tags)
+            matches = tagstore.get_group_ids_for_search_filter(project.id, environment_id, tags)
             if not matches:
                 return queryset.none()
             queryset = queryset.filter(
@@ -223,13 +200,12 @@ class DjangoSearchBackend(SearchBackend):
             event_queryset = Event.objects.filter(**params)
 
             if query:
-                event_queryset = event_queryset.filter(message__icontains=query)
+                event_queryset = event_queryset.filter(
+                    message__icontains=query)
 
             # limit to the first 1000 results
             group_ids = event_queryset.distinct().values_list(
-                'group_id',
-                flat=True
-            )[:1000]
+                'group_id', flat=True)[:1000]
 
             # if Event is not on the primary database remove Django's
             # implicit subquery by coercing to a list
@@ -259,7 +235,10 @@ class DjangoSearchBackend(SearchBackend):
         )
         return queryset
 
-    def query(self, project, **kwargs):
+    def query(self, project, count_hits=False, paginator_options=None, **kwargs):
+        if paginator_options is None:
+            paginator_options = {}
+
         queryset = self._build_queryset(project=project, **kwargs)
 
         sort_by = kwargs.get('sort_by', 'date')
@@ -284,6 +263,5 @@ class DjangoSearchBackend(SearchBackend):
             sort_clause = '-sort_value'
 
         queryset = queryset.order_by(sort_clause)
-
-        paginator = paginator_cls(queryset, sort_clause)
-        return paginator.get_result(limit, cursor)
+        paginator = paginator_cls(queryset, sort_clause, **paginator_options)
+        return paginator.get_result(limit, cursor, count_hits=count_hits)
