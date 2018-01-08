@@ -105,6 +105,9 @@ class Organization(Model):
             ), (
                 'early_adopter',
                 'Enable early adopter status, gaining access to features prior to public release.'
+            ), (
+                'require_2fa',
+                'Require and enforce two-factor authentication for all members.'
             ),
         ),
         default=1
@@ -321,3 +324,7 @@ class Organization(Model):
             type='org.confirm_delete',
             context=context,
         ).send_async([o.email for o in owners])
+
+    def flag_has_changed(self, flag_name):
+        "Returns ``True`` if ``flag`` has changed since initialization."
+        return getattr(self.old_value('flags'), flag_name, None) != getattr(self.flags, flag_name)

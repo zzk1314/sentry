@@ -4,13 +4,15 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import styled from 'react-emotion';
 
-import IconCircleExclamation from '../../icons/icon-circle-exclamation';
+import InlineSvg from '../../components/inlineSvg';
 import SettingsActivity from './components/settingsActivity';
 import SettingsBreadcrumb from './components/settingsBreadcrumb';
 import SettingsHeader from './components/settingsHeader';
 import SettingsSearch from './components/settingsSearch';
 
-const StyledIconCircleExclamation = styled(IconCircleExclamation)`
+const StyledIconCircleExclamation = styled(props => (
+  <InlineSvg size="36px" src="icon-circle-exclamation" {...props} />
+))`
   color: ${p => p.theme.blue};
   opacity: 0.6;
 `;
@@ -29,14 +31,23 @@ let StyledWarning = styled.div`
 // TODO(billy): Temp
 let NewSettingsWarning = ({location = {}}) => {
   // TODO(billy): Remove this warning when ready
-  let oldLocation = location.pathname
-    ? location.pathname.replace(/^\/settings\/organization\//, '/organizations/')
-    : '';
+  let projectRegex = /^\/settings\/organization\/([^\/]+)\/project\/([^\/]+)\//;
+  let isProject = projectRegex.test(location.pathname);
+  let oldLocation;
 
-  if (oldLocation === location.pathname) return null;
+  if (isProject) {
+    oldLocation = location.pathname.replace(projectRegex, '/$1/$2/settings/');
+  } else {
+    oldLocation = location.pathname.replace(
+      /^\/settings\/organization\//,
+      '/organizations/'
+    );
+  }
 
-  // members or auth should not be react routes
-  let isRouter = !/\/(members|auth)\//.test(location.pathname);
+  //if (oldLocation === location.pathname) return null;
+
+  // auth should not be react routes
+  let isRouter = !/\/(auth)\//.test(location.pathname);
   let linkProps = {
     href: isRouter ? undefined : oldLocation,
     to: isRouter ? oldLocation : undefined,
@@ -46,7 +57,7 @@ let NewSettingsWarning = ({location = {}}) => {
     <StyledWarning>
       <Flex align="center">
         <Box w={32} mr={2}>
-          <StyledIconCircleExclamation size="32" />
+          <StyledIconCircleExclamation />
         </Box>
         <Box>
           These settings are currently in beta. Please report any issues. You can

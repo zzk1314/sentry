@@ -1,6 +1,7 @@
 import {browserHistory} from 'react-router';
 import PropTypes from 'prop-types';
 import React from 'react';
+import createReactClass from 'create-react-class';
 import Reflux from 'reflux';
 
 import {
@@ -10,14 +11,23 @@ import {
 } from '../../../../actionCreators/organizations';
 import {t, tct} from '../../../../locale';
 import ApiMixin from '../../../../mixins/apiMixin';
+import FormFieldWrapper from '../../components/forms/formField/formFieldWrapper';
+import FormFieldDescription from '../../components/forms/formField/formFieldDescription';
+import FormFieldControl from '../../components/forms/formField/formFieldControl';
+import FormFieldHelp from '../../components/forms/formField/formFieldHelp';
+import FormFieldLabel from '../../components/forms/formField/formFieldLabel';
 import LinkWithConfirmation from '../../../../components/linkWithConfirmation';
 import LoadingIndicator from '../../../../components/loadingIndicator';
 import OrganizationsStore from '../../../../stores/organizationsStore';
+import Panel from '../../components/panel';
+import PanelHeader from '../../components/panelHeader';
 import SettingsPageHeader from '../../components/settingsPageHeader';
 import getSettingsComponent from '../../../../utils/getSettingsComponent';
 import recreateRoute from '../../../../utils/recreateRoute';
 
-const OrganizationGeneralSettingsView = React.createClass({
+const OrganizationGeneralSettingsView = createReactClass({
+  displayName: 'OrganizationGeneralSettingsView',
+
   propTypes: {
     routes: PropTypes.arrayOf(PropTypes.object),
   },
@@ -135,21 +145,23 @@ const OrganizationGeneralSettingsView = React.createClass({
               {access.has('org:admin') &&
                 !data.isDefault &&
                 hasMultipleOrgs && (
-                  <div className="box">
-                    <div className="box-header">
-                      <h3>{t('Remove Organization')}</h3>
-                    </div>
-                    <div className="box-content with-padding">
-                      <p>
-                        {t(
-                          'Removing this organization will delete all data including projects and their associated events.'
-                        )}
-                      </p>
+                  <Panel>
+                    <PanelHeader>{t('Remove Organization')}</PanelHeader>
+                    <FormFieldWrapper>
+                      <FormFieldDescription>
+                        <FormFieldLabel>{t('Remove Organization')}</FormFieldLabel>
+                        <FormFieldHelp>
+                          {t(
+                            'Removing this organization will delete all data including projects and their associated events.'
+                          )}
+                        </FormFieldHelp>
+                      </FormFieldDescription>
 
-                      <fieldset className="form-actions">
+                      <FormFieldControl>
                         <LinkWithConfirmation
                           className="btn btn-danger"
                           priority="danger"
+                          size="small"
                           title={tct('Remove [name] organization', {
                             name: data && data.name,
                           })}
@@ -182,9 +194,9 @@ const OrganizationGeneralSettingsView = React.createClass({
                         >
                           {t('Remove Organization')}
                         </LinkWithConfirmation>
-                      </fieldset>
-                    </div>
-                  </div>
+                      </FormFieldControl>
+                    </FormFieldWrapper>
+                  </Panel>
                 )}
             </div>
           )}

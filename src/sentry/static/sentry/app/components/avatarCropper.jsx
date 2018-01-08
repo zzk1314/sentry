@@ -11,17 +11,20 @@ class AvatarCropper extends React.Component {
     savedDataUrl: PropTypes.string,
   };
 
-  state = {
-    mousePosition: {
-      pageX: null,
-      pageY: null,
-    },
-    resizeDimensions: {
-      top: 0,
-      left: 0,
-      size: 0,
-    },
-  };
+  constructor(...args) {
+    super(...args);
+    this.state = {
+      mousePosition: {
+        pageX: null,
+        pageY: null,
+      },
+      resizeDimensions: {
+        top: 0,
+        left: 0,
+        size: 0,
+      },
+    };
+  }
 
   componentWillUnmount() {
     this.revokeObjectUrl();
@@ -366,6 +369,7 @@ class AvatarCropper extends React.Component {
     let src = this.getImgSrc();
     let style = {
       position: 'absolute',
+      opacity: 0,
     };
 
     return (

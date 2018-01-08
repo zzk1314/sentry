@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import createReactClass from 'create-react-class';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 import Reflux from 'reflux';
 import {capitalize} from 'lodash';
@@ -98,7 +99,9 @@ ExtraDescription.propTypes = {
   query: PropTypes.string,
 };
 
-const StreamActions = React.createClass({
+const StreamActions = createReactClass({
+  displayName: 'StreamActions',
+
   propTypes: {
     allResultsVisible: PropTypes.bool,
     orgId: PropTypes.string.isRequired,
@@ -136,11 +139,11 @@ const StreamActions = React.createClass({
   getInitialState() {
     return {
       datePickerActive: false,
-
       anySelected: false,
       multiSelected: false, // more than one selected
       pageSelected: false, // all on current page selected (e.g. 25)
       allInQuerySelected: false, // all in current search query selected (e.g. 1000+)
+      selectedIds: new Set(),
     };
   },
 
@@ -249,6 +252,7 @@ const StreamActions = React.createClass({
       multiSelected: SelectedGroupStore.multiSelected(),
       anySelected: SelectedGroupStore.anySelected(),
       allInQuerySelected: false, // any change resets
+      selectedIds: SelectedGroupStore.getSelectedIds(),
     });
   },
 
@@ -279,7 +283,7 @@ const StreamActions = React.createClass({
 
   render() {
     // TODO(mitsuhiko): very unclear how to translate this
-    let issues = SelectedGroupStore.getSelectedIds();
+    let issues = this.state.selectedIds;
     let numIssues = issues.size;
     let {allInQuerySelected, anySelected} = this.state;
     let disabled = !anySelected;

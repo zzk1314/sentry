@@ -16,10 +16,13 @@ export default class CustomIgnoreCountModal extends React.Component {
     windowChoices: PropTypes.array.isRequired,
   };
 
-  state = {
-    count: 100,
-    window: '',
-  };
+  constructor(...args) {
+    super(...args);
+    this.state = {
+      count: 100,
+      window: '',
+    };
+  }
 
   onSubmit = () => {
     this.props.onSelected({
@@ -56,11 +59,9 @@ export default class CustomIgnoreCountModal extends React.Component {
             <div className="control-group m-b-1">
               <h6 className="nav-header">{t('Time window')}</h6>
               <Select2Field
-                className="form-control"
                 value={window}
                 name="window"
                 onChange={v => this.onChange('window', v)}
-                style={{padding: '3px 10px'}}
                 choices={[['', ' '], ...this.props.windowChoices]}
                 placeholder={t('e.g. per hour')}
                 allowClear={true}

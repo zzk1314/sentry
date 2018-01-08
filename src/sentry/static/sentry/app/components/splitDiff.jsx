@@ -1,4 +1,5 @@
-import React, {PropTypes} from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import classNames from 'classnames';
 import {diffChars, diffWords, diffLines} from 'diff';
 
@@ -20,8 +21,6 @@ class SplitDiff extends React.Component {
   static defaultProps = {
     type: 'lines',
   };
-
-  state = {};
 
   render() {
     let {className, type, base, target} = this.props;

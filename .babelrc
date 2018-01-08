@@ -27,6 +27,11 @@
     "idx"
   ],
   "env": {
+    "development": {
+      "plugins": [
+        ["emotion", {"sourceMap": true, "autoLabel": true}]
+      ]
+    },
     "test": {
       "presets": ["react", "latest"],
       "plugins": [

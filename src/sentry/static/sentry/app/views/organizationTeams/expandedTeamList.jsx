@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import createReactClass from 'create-react-class';
 import {Link} from 'react-router';
 import LazyLoad from 'react-lazy-load';
 
@@ -14,7 +15,9 @@ import TooltipMixin from '../../mixins/tooltip';
 import {sortArray} from '../../utils';
 import {t, tct} from '../../locale';
 
-const ExpandedTeamList = React.createClass({
+const ExpandedTeamList = createReactClass({
+  displayName: 'ExpandedTeamList',
+
   propTypes: {
     access: PropTypes.object.isRequired,
     organization: SentryTypes.Organization.isRequired,
@@ -184,7 +187,8 @@ const ExpandedTeamList = React.createClass({
                 {
                   joinLink: (
                     <Link
-                      to={`/organizations/${this.props.organization.slug}/all-teams/`}
+                      to={`/organizations/${this.props.organization
+                        .slug}/teams/all-teams/`}
                     />
                   ),
                   createLink: <Link to={this.urlPrefix() + '/teams/new/'} />,
@@ -193,7 +197,7 @@ const ExpandedTeamList = React.createClass({
             : tct('You are not a member of any teams. [joinLink:Join a team].', {
                 joinLink: (
                   <Link
-                    to={`/organizations/${this.props.organization.slug}/all-teams/`}
+                    to={`/organizations/${this.props.organization.slug}/teams/all-teams/`}
                   />
                 ),
               })}

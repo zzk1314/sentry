@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import createReactClass from 'create-react-class';
+
 import LoadingIndicator from '../../components/loadingIndicator';
 import LoadingError from '../../components/loadingError';
 import Avatar from '../../components/avatar';
@@ -8,20 +10,18 @@ import TimeSince from '../../components/timeSince';
 import DropdownLink from '../../components/dropdownLink';
 import MenuItem from '../../components/menuItem';
 import ApiMixin from '../../mixins/apiMixin';
-
-import IconGithub from '../../icons/icon-github';
-import IconBitbucket from '../../icons/icon-bitbucket';
+import InlineSvg from '../../components/inlineSvg';
 
 import {t} from '../../locale';
 
-const CommitLink = React.createClass({
-  propTypes: {
+class CommitLink extends React.Component {
+  static propTypes = {
     commitId: PropTypes.string,
     repository: PropTypes.object,
     inline: PropTypes.bool,
-  },
+  };
 
-  getCommitUrl() {
+  getCommitUrl = () => {
     // TODO(jess): move this to plugins
     if (this.props.repository.provider.id === 'github') {
       return this.props.repository.url + '/commit/' + this.props.commitId;
@@ -30,7 +30,7 @@ const CommitLink = React.createClass({
       return this.props.repository.url + '/commits/' + this.props.commitId;
     }
     return undefined;
-  },
+  };
 
   render() {
     let commitUrl = this.getCommitUrl();
@@ -43,10 +43,14 @@ const CommitLink = React.createClass({
         target="_blank"
       >
         {this.props.repository.provider.id == 'github' && (
-          <IconGithub size="16" style={{verticalAlign: 'text-top'}} />
+          <InlineSvg src="icon-github" style={{verticalAlign: 'text-top'}} size="14px" />
         )}
         {this.props.repository.provider.id == 'bitbucket' && (
-          <IconBitbucket size="16" style={{verticalAlign: 'text-top'}} />
+          <InlineSvg
+            src="icon-bitbucket"
+            style={{verticalAlign: 'text-top'}}
+            size="14px"
+          />
         )}
         &nbsp;
         {this.props.inline ? '' : ' '}
@@ -55,19 +59,19 @@ const CommitLink = React.createClass({
     ) : (
       <span>{shortId}</span>
     );
-  },
-});
+  }
+}
 
-const ReleaseCommit = React.createClass({
-  propTypes: {
+class ReleaseCommit extends React.Component {
+  static propTypes = {
     commitId: PropTypes.string,
     commitMessage: PropTypes.string,
     commitDateCreated: PropTypes.string,
     author: PropTypes.object,
     repository: PropTypes.object,
-  },
+  };
 
-  renderMessage(message) {
+  renderMessage = message => {
     if (!message) {
       return t('No message provided');
     }
@@ -75,7 +79,7 @@ const ReleaseCommit = React.createClass({
     let firstLine = message.split(/\n/)[0];
 
     return firstLine;
-  },
+  };
 
   render() {
     let {commitMessage} = this.props;
@@ -99,10 +103,11 @@ const ReleaseCommit = React.createClass({
         </div>
       </li>
     );
-  },
-});
+  }
+}
 
-const ReleaseCommits = React.createClass({
+const ReleaseCommits = createReactClass({
+  displayName: 'ReleaseCommits',
   mixins: [ApiMixin],
 
   getInitialState() {

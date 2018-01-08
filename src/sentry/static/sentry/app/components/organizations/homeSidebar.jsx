@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import createReactClass from 'create-react-class';
+
 import ListLink from '../listLink';
 import OrganizationState from '../../mixins/organizationState';
 import HookStore from '../../stores/hookStore';
@@ -21,7 +23,9 @@ RouterOrBrowserLink.propTypes = {
 };
 
 const OrgSettingsMenu = ({access, org, features}) => {
-  if (!access.has('org:read')) return null;
+  // Everything requires `org:write` or more permission except
+  // "Members" which requires `member:read`
+  if (!access.has('org:write') && !access.has('member:read')) return null;
 
   let hasNewSettings = features.has('new-settings');
   let pathPrefix = `${hasNewSettings
@@ -32,17 +36,18 @@ const OrgSettingsMenu = ({access, org, features}) => {
     <div>
       <h6 className="nav-header with-divider">{t('Manage')}</h6>
       <ul className="nav nav-stacked">
-        {access.has('org:read') && (
-          <RouterOrBrowserLink isRouter={hasNewSettings} path={`${pathPrefix}/members/`}>
-            {t('Members')}&nbsp;
-            {access.has('org:write') &&
-              org.pendingAccessRequests > 0 && (
-                <span className="badge" style={{marginLeft: 5}}>
-                  {org.pendingAccessRequests}
-                </span>
-              )}
-          </RouterOrBrowserLink>
-        )}
+        {access.has('org:read') &&
+          access.has('member:read') && (
+            <ListLink to={`${pathPrefix}/members/`}>
+              {t('Members')}&nbsp;
+              {access.has('org:write') &&
+                org.pendingAccessRequests > 0 && (
+                  <span className="badge" style={{marginLeft: 5}}>
+                    {org.pendingAccessRequests}
+                  </span>
+                )}
+            </ListLink>
+          )}
         {features.has('sso') &&
           access.has('org:admin') && (
             <RouterOrBrowserLink
@@ -85,7 +90,9 @@ OrgSettingsMenu.propTypes = {
   org: PropTypes.object,
 };
 
-const HomeSidebar = React.createClass({
+const HomeSidebar = createReactClass({
+  displayName: 'HomeSidebar',
+
   contextTypes: {
     location: PropTypes.object,
   },

@@ -4,6 +4,7 @@ import moment from 'moment';
 import Raven from 'raven-js';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import createReactClass from 'create-react-class';
 import {AppContainer} from 'react-hot-loader';
 import PropTypes from 'prop-types';
 import {renderToStaticMarkup} from 'react-dom/server';
@@ -12,6 +13,7 @@ import * as Router from 'react-router';
 import ReactBootstrapModal from 'react-bootstrap/lib/Modal';
 import JsCookie from 'js-cookie';
 
+import './utils/emotion-setup';
 import * as api from './api';
 import * as il8n from './locale';
 import plugins from './plugins';
@@ -82,6 +84,7 @@ export default {
   ReactDOMServer: {
     renderToStaticMarkup,
   },
+  createReactClass,
   ReactBootstrap: {
     Modal: ReactBootstrapModal,
   },
@@ -113,6 +116,7 @@ export default {
 
     Alerts: require('./components/alerts').default,
     AlertActions: require('./actions/alertActions').default,
+    // TODO: remove when old personal settings are deprecated
     AvatarSettings: require('./components/avatarSettings').default,
     mixins: {
       ApiMixin: require('./mixins/apiMixin').default,
@@ -140,8 +144,8 @@ export default {
       .default,
     OrganizationsLoader: require('./components/organizations/organizationsLoader')
       .default,
-    OrganizationMembersView:
-      require('./views/settings/organization/members/organizationMembersView').default,
+    OrganizationMembersView: require('./views/settings/organization/members/organizationMembersView')
+      .default,
     Pagination: require('./components/pagination').default,
     PluginConfig: require('./components/pluginConfig').default,
     ProjectIssueTracking: require('./views/projectIssueTracking').default,
@@ -155,7 +159,6 @@ export default {
     U2fSign: require('./components/u2fsign').default,
     Badge: require('./components/badge').default,
     Switch: require('./components/switch').default,
-    NumberConfirm: require('./components/confirms/numberConfirm').default,
     SetupWizard: require('./components/setupWizard').default,
     utils: {
       errorHandler: require('./utils/errorHandler').default,

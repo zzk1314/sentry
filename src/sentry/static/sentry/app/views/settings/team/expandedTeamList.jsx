@@ -2,6 +2,7 @@ import {Link} from 'react-router';
 import LazyLoad from 'react-lazy-load';
 import PropTypes from 'prop-types';
 import React from 'react';
+import createReactClass from 'create-react-class';
 import styled from 'react-emotion';
 
 import {sortArray} from '../../../utils';
@@ -31,7 +32,9 @@ const ProjectTitle = styled.h5`
   padding: 2px 0;
 `;
 
-const ExpandedTeamList = React.createClass({
+const ExpandedTeamList = createReactClass({
+  displayName: 'ExpandedTeamList',
+
   propTypes: {
     access: PropTypes.object.isRequired,
     organization: SentryTypes.Organization.isRequired,
@@ -190,12 +193,12 @@ const ExpandedTeamList = React.createClass({
             ? tct(
                 'You are not a member of any teams. [joinLink:Join an existing team] or [createLink:create a new one].',
                 {
-                  joinLink: <Link to={`${this.urlPrefix()}all-teams/`} />,
+                  joinLink: <Link to={`${this.urlPrefix()}teams/all-teams/`} />,
                   createLink: <Link to={this.urlPrefix() + 'teams/new/'} />,
                 }
               )
             : tct('You are not a member of any teams. [joinLink:Join a team].', {
-                joinLink: <Link to={`${this.urlPrefix()}all-teams/`} />,
+                joinLink: <Link to={`${this.urlPrefix()}teams/all-teams/`} />,
               })}
         </p>
       );

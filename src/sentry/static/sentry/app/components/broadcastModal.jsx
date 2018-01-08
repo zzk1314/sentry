@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import IconCloseLg from '../icons/icon-close-lg';
+import createReactClass from 'create-react-class';
+
+import InlineSvg from '../components/inlineSvg';
 import ConfigStore from '../stores/configStore';
 import ApiMixin from '../mixins/apiMixin';
 import {logAjaxError} from '../utils/logging';
@@ -49,10 +51,13 @@ ReleaseAnnouncement.propTypes = {
   close: PropTypes.func.isRequired,
 };
 
-const BroadcastModal = React.createClass({
+const BroadcastModal = createReactClass({
+  displayName: 'BroadcastModal',
+
   propTypes: {
     closeBroadcast: PropTypes.func.isRequired,
   },
+
   mixins: [ApiMixin],
 
   getInitialState() {
@@ -126,7 +131,7 @@ const BroadcastModal = React.createClass({
                     this.setState({index: this.state.index + 1});
                   }}
                 >
-                  <IconCloseLg />
+                  <InlineSvg src="icon-close-lg" />
                 </span>
               </div>
               {message({close: this.close})}

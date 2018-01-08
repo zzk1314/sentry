@@ -5,7 +5,10 @@ import AccountAuthorizations from './views/accountAuthorizations';
 import AccountLayout from './views/accountLayout';
 import AccountSettingsLayout from './views/settings/account/accountSettingsLayout';
 import AccountNotifications from './views/settings/account/accountNotifications';
+import AccountNotificationFineTuning from './views/settings/account/accountNotificationFineTuning';
 import AccountEmails from './views/settings/account/accountEmails';
+import AccountAvatar from './views/settings/account/avatar';
+
 import AdminBuffer from './views/adminBuffer';
 import AdminLayout from './views/adminLayout';
 import AdminOrganizations from './views/adminOrganizations';
@@ -100,6 +103,7 @@ import RouteNotFound from './views/routeNotFound';
 import SetCallsignsAction from './views/requiredAdminActions/setCallsigns';
 import SettingsIndex from './views/settings/settingsIndex';
 import SettingsWrapper from './views/settings/settingsWrapper';
+import SettingsProjectProvider from './views/settings/settingsProjectProvider';
 import SharedGroupDetails from './views/sharedGroupDetails';
 import Stream from './views/stream';
 import TeamCreate from './views/teamCreate';
@@ -117,17 +121,26 @@ function appendTrailingSlash(nextState, replaceState) {
 
 const accountSettingsRoutes = [
   <IndexRedirect key="account-settings-index" to="notifications/" />,
-  <Route
-    key="notifications/"
-    path="notifications/"
-    name="Notifications"
-    component={errorHandler(AccountNotifications)}
-  />,
+  <Route key="notifications/" path="notifications/" name="Notifications">
+    <IndexRoute component={errorHandler(AccountNotifications)} />,
+    <Route
+      key="project-alerts/"
+      path="project-alerts/"
+      name="Fine Tune Alerts"
+      component={errorHandler(AccountNotificationFineTuning)}
+    />,
+  </Route>,
   <Route
     key="emails/"
     path="emails/"
     name="Emails"
     component={errorHandler(AccountEmails)}
+  />,
+  <Route
+    key="avatar/"
+    path="avatar/"
+    name="Avatar"
+    component={errorHandler(AccountAvatar)}
   />,
 ];
 
@@ -425,7 +438,9 @@ function routes() {
                 path=":projectId/"
                 component={errorHandler(ProjectSettingsLayout)}
               >
-                {projectSettingsRoutes}
+                <Route component={errorHandler(SettingsProjectProvider)}>
+                  {projectSettingsRoutes}
+                </Route>
               </Route>
             </Route>
           </Route>
