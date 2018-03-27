@@ -79,46 +79,72 @@ class LazyServiceWrapper(LazyObject):
                 context[key] = getattr(base, key)
 
 
-import functools
 import time
-import thread
+from collections import OrderedDict
+from functools import partial
+from threading import Thread
+from Queue import Queue
+from concurrent.futures import Future
 
 from sentry.utils.concurrent import FutureSet
 
 
 class MultipleServiceBackend(object):
-    def __init__(self, executor, backends, methods, callback):
-        self.__uuid = uuid.uuid1()
-        self.executor = executor
-        self.backends = backends
+    def __init__(self, backends, methods, callback):
+        self.backends = [(backend, self.__start_worker(backend)) for backend in backends]
         self.methods = methods
         self.callback = callback
 
+    def __start_worker(self, backend):
+        queue = Queue()
+
+        def worker():
+            while True:
+                (name, args, kwargs), response = queue.get()
+                if not response.set_running_or_notify_cancel():
+                    continue
+
+                start = time.time()
+                method = getattr(backend, name)
+                try:
+                    result = True, method(*args, **kwargs)
+                except Exception as error:
+                    result = False, error
+
+                response.set_result((
+                    (start, time.time()),
+                    result,
+                ))
+
+        t = Thread(target=worker)
+        t.daemon = True
+        t.start()
+
+        def submit(request):
+            response = Future()
+            queue.put((request, response))
+            return response
+
+        return submit
+
     def __getattr__(self, name):
         if name not in self.methods:
-            return getattr(self.backends[0], name)
-
-        def execute_and_time(backend, name, *args, **kwargs):
-            start = time.time()
-            try:
-                method = getattr(backend, name)
-                result = True, method(*args, **kwargs)
-            except Exception as error:
-                result = False, error
-            return '{}/{}'.format(self.__uuid.hex, thread.get_ident()), backend, start, time.time(), result
+            return getattr(self.backends[0][0], name)
 
         def execute(*args, **kwargs):
-            futures = []
-            for backend in self.backends:
-                future = self.executor.submit(execute_and_time, backend, name, *args, **kwargs)
-                futures.append(future)
+            request = (name, args, kwargs)
 
-            FutureSet(futures).add_done_callback(functools.partial(self.callback, name, args, kwargs))
+            responses = OrderedDict()
+            for backend, submit in self.backends:
+                responses[backend] = submit(request)
 
-            _, _, start, stop, (success, response) = futures[0].result()
-            if not success:
-                raise response
+            callback = partial(self.callback, request, responses)
+            FutureSet(responses.values()).add_done_callback(callback)
 
-            return response
+            timing, (success, result) = responses.values()[0].result()
+            if success:
+                return result
+            else:
+                raise result
 
         return execute
