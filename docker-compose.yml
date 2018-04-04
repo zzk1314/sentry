@@ -1,9 +1,14 @@
 
 version: "3"
 services:
-
   redis:
     image: redis:alpine
+    ports:
+      - "6379:6379"
+    network_mode: "host"
 
   db:
     image: postgres:9.4
+    ports:
+      - "5432:5432"
+    network_mode: "host"
