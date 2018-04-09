@@ -1,13 +1,18 @@
 
 version: "3"
 services:
+
   redis:
     image: redis:alpine
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
+    command: redis-server /usr/local/etc/redis/redis.conf
   db:
     image: postgres:9.4
     ports:
       - "5432:5432"
+    command: createdb -U postgres -E utf-8 --template template0 sentry
+  dev:
+    build: .
