@@ -1,18 +1,33 @@
 
 version: "3"
 services:
+  dev:
+    build: .
+    depends_on:
+      - redis
+      - db
 
   redis:
     image: redis:alpine
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
+
     ports:
       - "6379:6379"
     command: redis-server /usr/local/etc/redis/redis.conf
+
   db:
     image: postgres:9.4
     ports:
       - "5432:5432"
-    command: createdb -U postgres -E utf-8 --template template0 sentry
-  dev:
-    build: .
+    volumes: #
+      - .:/var/lib/postgresql/data:consistent # https://docs.docker.com/compose/compose-file/#caching-options-for-volume-mounts-docker-for-mac
+    environment:
+      POSTGRES_USER: postgres
+    command: createdb -E utf-8 --template template0 sentry
+
+  # volumes:
+  #   postgres_data:
+    # data:
+    #   external:
+    #     name: postgres_data
