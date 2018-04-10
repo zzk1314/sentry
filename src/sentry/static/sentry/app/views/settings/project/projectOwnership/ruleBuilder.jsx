@@ -5,6 +5,7 @@ import {Flex} from 'grid-emotion';
 
 import memberListStore from '../../../../stores/memberListStore';
 import ProjectsStore from '../../../../stores/projectsStore';
+import TeamStore from '../../../../stores/teamStore';
 import Button from '../../../../components/buttons/button';
 import SelectInput from '../../../../components/selectInput';
 import TextOverflow from '../../../../components/textOverflow';
@@ -39,10 +40,15 @@ class RuleBuilder extends React.Component {
   }
 
   mentionableUsers() {
+    console.log(memberListStore.getAll());
+    let teams = TeamStore.getAll();
+    console.log(teams);
     return memberListStore.getAll().map(member => ({
       value: buildUserId(member.id),
       label: member.email,
       searchKey: `${member.email}  ${name}`,
+      // disabled: !projectTeams.has(team.id),
+
       actor: {
         type: 'user',
         id: member.id,
@@ -53,16 +59,21 @@ class RuleBuilder extends React.Component {
 
   mentionableTeams() {
     let {project} = this.props;
-    let projectData = ProjectsStore.getAll().find(p => p.slug == project.slug);
-
-    if (!projectData) {
+    let projectTeams = new Set(
+      ProjectsStore.getAll()
+        .find(p => p.slug == project.slug)
+        .teams.map(team => team.id)
+    );
+    let teams = TeamStore.getAll();
+    if (!teams) {
       return [];
     }
 
-    return projectData.teams.map(team => ({
+    return teams.map(team => ({
       value: buildTeamId(team.id),
       label: `#${team.slug}`,
       searchKey: `#${team.slug}`,
+      disabled: !projectTeams.has(team.id),
       actor: {
         type: 'team',
         id: team.id,
