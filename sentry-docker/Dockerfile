@@ -105,5 +105,5 @@ ENV C_FORCE_ROOT 1
 # ADD scripts/docker-entrypoint.sh /entrypoint.sh
 # ENTRYPOINT [ "/entrypoint.sh" ]
 
-EXPOSE 8000
-CMD [ "bash" ]
+# EXPOSE 8000
+# CMD [ "bash" ]
