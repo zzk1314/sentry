@@ -1,2 +1,2 @@
 docker:
-	docker-compose up
+	docker-compose up --detach

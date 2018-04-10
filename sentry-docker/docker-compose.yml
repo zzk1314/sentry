@@ -1,29 +1,44 @@
 
 version: "3"
+# define services (containers) that should be running
 services:
+  # this builds the dev environment
   dev:
-    build: .
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+      args:
+        NODE_VERSION: 4.4.5
+        # PYTHONUNBUFFERED: 1
+        # PIP_NO_CACHE_DIR: "off"
+        # PIP_DISABLE_PIP_VERSION_CHECK: "on"
+        # DEBIAN_FRONTEND: noninteractive
+        # SENTRY_CONF: /etc/sentry
+        # C_FORCE_ROOT: 1
+    env_file:
+       - dev/dev.env
+    ports:
+      - "8000"
     depends_on:
       - redis
       - db
-    restart: always
-
+  # build redis service from official image
   redis:
     image: redis:alpine
     volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
     command: redis-server /usr/local/etc/redis/redis.conf
     restart: always
-
+  # build db service from official postgres image
   db:
     image: postgres:9.4
     ports:
       - "5432:5432"
     volumes: #
-      # - "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
-      - "~/postgres_data:/var/lib/postgresql/data" # https://docs.docker.com/compose/compose-file/#caching-options-for-volume-mounts-docker-for-mac
+      # d- "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
+      - "postgres_data:/var/lib/postgresql/data" # https://docs.docker.com/compose/compose-file/#caching-options-for-volume-mounts-docker-for-mac
     environment:
       POSTGRES_USER: postgres
     # command: ["createdb", "-E", "utf-8", "--template='template0'", "sentry"]
