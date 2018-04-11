@@ -16,6 +16,7 @@ services:
     depends_on:
       - redis
       - db
+
   # build redis service from official image
   redis:
     image: redis:alpine
@@ -27,9 +28,9 @@ services:
       - sentry
     command: redis-server /usr/local/etc/redis/redis.conf
     restart: always
+
   # build db service from official postgres image
   db:
-    #image: postgres:9.4
     build:
       context: .
       dockerfile: db/Dockerfile
@@ -38,7 +39,7 @@ services:
     networks:
       - sentry
     volumes:
-      - "pgdata:/var/lib/postgresql/data" # https://docs.docker.com/compose/compose-file/#caching-options-for-volume-mounts-docker-for-mac
+      - "pgdata:/var/lib/postgresql/data"
     env_file:
       - db/db.env
     restart: always
