@@ -11,24 +11,24 @@ ARG NODE_VERSION
         # SENTRY_CONF: /etc/sentry
         # C_FORCE_ROOT: 1
 RUN apt-get update && apt-get install -y --no-install-recommends -q=2\
-        # clang \
+        clang \
         curl \
-        # g++ \
-        # gcc \
-        # git \
-        # libffi-dev \
-        # libjpeg-dev \
-        # libpq-dev \
-        # libxml2-dev \
-        # libxslt-dev \
-        # libyaml-dev \
-        # llvm-3.5 \
-        # bzip2 \
-        # # Extra dev tooling
-        # make \
-        # vim-nox \
-        # less \
-        # ntp \
+        g++ \
+        gcc \
+        git \
+        libffi-dev \
+        libjpeg-dev \
+        libpq-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libyaml-dev \
+        llvm-3.5 \
+        bzip2 \
+        # Extra dev tooling
+        make \
+        vim-nox \
+        less \
+        ntp \
     && rm -rf /var/lib/apt/lists/*
 
 # Sane defaults for pip

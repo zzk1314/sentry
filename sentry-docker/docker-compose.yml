@@ -8,13 +8,7 @@ services:
       context: .
       dockerfile: dev/Dockerfile
       args:
-        NODE_VERSION: 4.4.5
-        # PYTHONUNBUFFERED: 1
-        # PIP_NO_CACHE_DIR: "off"
-        # PIP_DISABLE_PIP_VERSION_CHECK: "on"
-        # DEBIAN_FRONTEND: noninteractive
-        # SENTRY_CONF: /etc/sentry
-        # C_FORCE_ROOT: 1
+        NODE_VERSION: 9.11.1
     env_file:
        - dev/dev.env
     ports:
