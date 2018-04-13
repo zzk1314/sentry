@@ -42,7 +42,7 @@ services:
       - "pgdata:/var/lib/postgresql/data"
     env_file:
       - db/db.env
-    restart: always
+    restart: on-failure
 
 volumes:
   pgdata:
