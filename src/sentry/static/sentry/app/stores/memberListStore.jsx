@@ -10,6 +10,7 @@ const MemberListStore = Reflux.createStore({
 
   // TODO(dcramer): this should actually come from an action of some sorts
   loadInitialData(items) {
+    console.log(items);
     this.items = items;
     this.loaded = true;
     this.trigger(this.items, 'initial');

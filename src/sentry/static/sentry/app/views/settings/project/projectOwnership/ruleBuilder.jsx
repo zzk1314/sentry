@@ -39,10 +39,12 @@ class RuleBuilder extends React.Component {
     this.state = initialState;
   }
 
-  mentionableUsers() {
-    console.log(memberListStore.getAll());
-    let teams = TeamStore.getAll();
-    console.log(teams);
+  mentionableUsers(mentionable) {
+    if (!mentionable) {
+      return [];
+    }
+    // console.log(memberListStore.getAll());
+    // let teams = TeamStore.getAll();
     return memberListStore.getAll().map(member => ({
       value: buildUserId(member.id),
       label: member.email,
@@ -57,7 +59,7 @@ class RuleBuilder extends React.Component {
     }));
   }
 
-  mentionableTeams() {
+  mentionableTeams(mentionable) {
     let {project} = this.props;
     let projectTeams = new Set(
       ProjectsStore.getAll()
@@ -65,19 +67,22 @@ class RuleBuilder extends React.Component {
         .teams.map(team => team.id)
     );
     let teams = TeamStore.getAll();
+
     if (!teams) {
       return [];
     }
 
-    return teams.map(team => ({
+    let negate = v => (mentionable ? v : !v);
+
+    return teams.filter(({id}) => negate(projectTeams.has(id))).map(team => ({
       value: buildTeamId(team.id),
-      label: `#${team.slug}`,
+      label: <ActorItem disabled={!mentionable}>{`#${team.slug}`}</ActorItem>,
       searchKey: `#${team.slug}`,
-      disabled: !projectTeams.has(team.id),
       actor: {
         type: 'team',
         id: team.id,
         name: team.slug,
+        disabled: !mentionable,
       },
     }));
   }
@@ -91,6 +96,12 @@ class RuleBuilder extends React.Component {
   };
 
   onAddActor = ({actor}) => {
+    if (actor.disabled) {
+      addErrorMessage(
+        "This actor can't be the owner because it's not associated with the project."
+      );
+      return;
+    }
     this.setState(({owners}) => {
       if (!owners.find(i => actorEquality(i, actor))) {
         return {owners: [...owners, actor]};
@@ -177,12 +188,22 @@ class RuleBuilder extends React.Component {
                 {
                   value: 'team',
                   label: 'Teams',
-                  items: this.mentionableTeams(),
+                  items: this.mentionableTeams(true),
                 },
                 {
                   value: 'user',
                   label: 'Users',
-                  items: this.mentionableUsers(),
+                  items: this.mentionableUsers(true),
+                },
+                {
+                  value: 'team-unmentionable',
+                  label: 'Teams (unavailable)',
+                  items: this.mentionableTeams(false),
+                },
+                {
+                  value: 'user-unmentionable',
+                  label: 'Users (unavailable)',
+                  items: this.mentionableUsers(false),
                 },
               ]}
               onSelect={this.onAddActor}
@@ -295,6 +316,11 @@ const BuilderDropdownButton = styled(DropdownButton)`
   white-space: nowrap;
   height: 37px;
   color: ${p => p.theme.gray3} !important;
+`;
+
+const ActorItem = styled.div`
+  cursor: ${p => (p.disabled ? 'not-allowed' : 'inherit')}
+  color: ${p => (p.disabled ? p.theme.gray3 : 'inherit')};
 `;
 
 const RuleAddButton = styled(Button)`
