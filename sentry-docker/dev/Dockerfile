@@ -53,7 +53,7 @@ RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-
 RUN mkdir -p /usr/src/sentry
 RUN mkdir -p /etc/sentry
 WORKDIR /usr/src/sentry
-# ADD scripts/docker-entrypoint.sh /entrypoint.sh
-# ENTRYPOINT [ "/entrypoint.sh" ]
+ADD  scripts/docker-entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 CMD [ "bash" ]

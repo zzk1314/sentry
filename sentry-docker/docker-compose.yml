@@ -5,14 +5,16 @@ services:
   # this builds the dev environment
   dev:
     build:
-      context: .
-      dockerfile: dev/Dockerfile
+      context: ../
+      dockerfile: sentry-docker/dev/Dockerfile
       args:
         NODE_VERSION: 9.11.1
     env_file:
        - dev/dev.env
     ports:
       - "8000:8000"
+    volumes:
+      - ../:/usr/src/sentry
     depends_on:
       - redis
       - db
