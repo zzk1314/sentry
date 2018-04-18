@@ -3,8 +3,6 @@ FROM python:2.7.14-slim
 RUN groupadd -r redis --gid=998 && useradd -r -g redis --uid=998 redis \
     && groupadd -r postgres --gid=999 && useradd -r -g postgres --uid=999 postgres
 
-ARG NODE_VERSION
-
 RUN apt-get update -q=2\
     && apt-get install -y --no-install-recommends -q=2\
         clang \
@@ -20,6 +18,7 @@ RUN apt-get update -q=2\
         libyaml-dev \
         llvm-3.5 \
         bzip2 \
+        apt-transport-https \
         # Extra dev tooling
         make \
         vim-nox \
@@ -42,6 +41,9 @@ RUN set -ex \
     gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
   done
 
+# install nodejs; NODE_VERSION is passed from docker-compose.yml
+ARG NODE_VERSION
+
 RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
     && curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" \
     && gpg --verify SHASUMS256.txt.asc \
@@ -49,7 +51,13 @@ RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-
     && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
     && rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc
 
+# install yarn
+RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends yarn
 
+# make directories that we mount from local
 RUN mkdir -p /usr/src/sentry
 RUN mkdir -p /etc/sentry
 WORKDIR /usr/src/sentry
