@@ -121,4 +121,6 @@ ADD scripts/docker-entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 EXPOSE 8000
+EXPOSE 5432
+EXPOSE 6379
 CMD [ "bash" ]

@@ -57,11 +57,21 @@ RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - \
     && apt-get update \
     && apt-get install -y --no-install-recommends yarn
 
+# temp steps to run pip install and yarn install during build
+# WORKDIR ~
+# ADD ./setup.py .
+# ADD ./requirements-dev.txt .
+# ARG SENTRY_LIGHT_BUILD
+# # RUN pip install -vvv -e ./requirements-dev.txt
+# ADD ./yarn.lock .
+# RUN yarn install
+
+
 # make directories that we mount from local
 RUN mkdir -p /usr/src/sentry
 RUN mkdir -p /etc/sentry
 WORKDIR /usr/src/sentry
 ADD  scripts/docker-entrypoint.sh /entrypoint.sh
-ENTRYPOINT [ "/entrypoint.sh" ]
+# ENTRYPOINT [ "/entrypoint.sh" ]
 
-CMD [ "bash" ]
+CMD [ "/bin/bash"]

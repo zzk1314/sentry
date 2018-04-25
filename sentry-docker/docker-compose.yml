@@ -9,15 +9,18 @@ services:
       dockerfile: sentry-docker/dev/Dockerfile
       args:
         NODE_VERSION: 9.11.1
+        SENTRY_LIGHT_BUILD: 1
     env_file:
        - dev/dev.env
     ports:
-      - "8000:8000"
+      - "80:8000"
     volumes:
       - ../:/usr/src/sentry
     depends_on:
       - redis
       - db
+    networks:
+      - sentry
 
   # build redis service from official image
   redis:

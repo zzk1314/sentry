@@ -6,7 +6,7 @@ if [ ! -f /.bootstrapped ]; then
   yarn install
   sentry init $SENTRY_CONF
   sentry upgrade --noinput
-  sentry createuser --email=root@localhost --password=admin --superuser --no-input
+#  sentry createuser --email=root@localhost --password=admin --superuser --no-input
   touch /.bootstrapped
 
   echo "done" && exit 0
