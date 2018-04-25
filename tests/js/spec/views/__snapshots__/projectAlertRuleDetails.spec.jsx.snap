@@ -425,39 +425,42 @@ exports[`ProjectAlertRuleDetails Edit alert rule renders 1`] = `
                                       className="css-1d10zz4-RuleNodeControls css-1f92yv62"
                                     >
                                       <Button
-                                        disabled={false}
                                         onClick={[Function]}
                                         size="small"
                                         tabIndex="-1"
                                         type="button"
                                       >
-                                        <button
-                                          className="button button-default button-sm"
+                                        <UnstyledButton
+                                          className="css-a8laap-Button css-16x0j7h0"
                                           disabled={false}
                                           onClick={[Function]}
-                                          role="button"
+                                          size="small"
                                           tabIndex="-1"
                                           type="button"
                                         >
-                                          <Flex
-                                            align="center"
-                                            className="button-label"
+                                          <button
+                                            className="css-a8laap-Button css-16x0j7h0"
+                                            disabled={false}
+                                            onClick={[Function]}
+                                            role="button"
+                                            size="small"
+                                            tabIndex="-1"
+                                            type="button"
                                           >
-                                            <Base
-                                              align="center"
-                                              className="button-label css-5ipae5"
+                                            <ButtonLabel
+                                              size="small"
                                             >
                                               <div
-                                                className="button-label css-5ipae5"
-                                                is={null}
+                                                className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                size="small"
                                               >
                                                 <span
                                                   className="icon icon-trash"
                                                 />
                                               </div>
-                                            </Base>
-                                          </Flex>
-                                        </button>
+                                            </ButtonLabel>
+                                          </button>
+                                        </UnstyledButton>
                                       </Button>
                                     </div>
                                   </RuleNodeControls>
@@ -665,39 +668,42 @@ exports[`ProjectAlertRuleDetails Edit alert rule renders 1`] = `
                                       className="css-1d10zz4-RuleNodeControls css-1f92yv62"
                                     >
                                       <Button
-                                        disabled={false}
                                         onClick={[Function]}
                                         size="small"
                                         tabIndex="-1"
                                         type="button"
                                       >
-                                        <button
-                                          className="button button-default button-sm"
+                                        <UnstyledButton
+                                          className="css-a8laap-Button css-16x0j7h0"
                                           disabled={false}
                                           onClick={[Function]}
-                                          role="button"
+                                          size="small"
                                           tabIndex="-1"
                                           type="button"
                                         >
-                                          <Flex
-                                            align="center"
-                                            className="button-label"
+                                          <button
+                                            className="css-a8laap-Button css-16x0j7h0"
+                                            disabled={false}
+                                            onClick={[Function]}
+                                            role="button"
+                                            size="small"
+                                            tabIndex="-1"
+                                            type="button"
                                           >
-                                            <Base
-                                              align="center"
-                                              className="button-label css-5ipae5"
+                                            <ButtonLabel
+                                              size="small"
                                             >
                                               <div
-                                                className="button-label css-5ipae5"
-                                                is={null}
+                                                className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                size="small"
                                               >
                                                 <span
                                                   className="icon icon-trash"
                                                 />
                                               </div>
-                                            </Base>
-                                          </Flex>
-                                        </button>
+                                            </ButtonLabel>
+                                          </button>
+                                        </UnstyledButton>
                                       </Button>
                                     </div>
                                   </RuleNodeControls>
@@ -908,13 +914,13 @@ exports[`ProjectAlertRuleDetails Edit alert rule renders 1`] = `
                         <CancelButton
                           to="/settings/org-slug/project-slug/alerts/rules/"
                         >
-                          <Button
-                            className="css-1yc33o1-CancelButton css-1qt54041"
+                          <UnstyledButton
+                            className="css-118wx50-Button-CancelButton css-1qt54041"
                             disabled={false}
                             to="/settings/org-slug/project-slug/alerts/rules/"
                           >
                             <Link
-                              className="css-1yc33o1-CancelButton css-1qt54041 button button-default"
+                              className="css-118wx50-Button-CancelButton css-1qt54041"
                               disabled={false}
                               onClick={[Function]}
                               onlyActiveOnIndex={false}
@@ -923,59 +929,48 @@ exports[`ProjectAlertRuleDetails Edit alert rule renders 1`] = `
                               to="/settings/org-slug/project-slug/alerts/rules/"
                             >
                               <a
-                                className="css-1yc33o1-CancelButton css-1qt54041 button button-default"
+                                className="css-118wx50-Button-CancelButton css-1qt54041"
                                 disabled={false}
                                 onClick={[Function]}
                                 role="button"
                                 style={Object {}}
                               >
-                                <Flex
-                                  align="center"
-                                  className="button-label"
-                                >
-                                  <Base
-                                    align="center"
-                                    className="button-label css-5ipae5"
+                                <ButtonLabel>
+                                  <div
+                                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                                   >
-                                    <div
-                                      className="button-label css-5ipae5"
-                                      is={null}
-                                    >
-                                      Cancel
-                                    </div>
-                                  </Base>
-                                </Flex>
+                                    Cancel
+                                  </div>
+                                </ButtonLabel>
                               </a>
                             </Link>
-                          </Button>
+                          </UnstyledButton>
                         </CancelButton>
                         <Button
                           disabled={false}
                           priority="primary"
                         >
-                          <button
-                            className="button button-primary"
+                          <UnstyledButton
+                            className="css-1e11s1h-Button css-16x0j7h0"
                             disabled={false}
-                            onClick={[Function]}
-                            role="button"
+                            priority="primary"
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <button
+                              className="css-1e11s1h-Button css-16x0j7h0"
+                              disabled={false}
+                              onClick={[Function]}
+                              priority="primary"
+                              role="button"
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
-                              >
+                              <ButtonLabel>
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
                                 >
                                   Save Rule
                                 </div>
-                              </Base>
-                            </Flex>
-                          </button>
+                              </ButtonLabel>
+                            </button>
+                          </UnstyledButton>
                         </Button>
                       </div>
                     </ActionBar>
@@ -1727,13 +1722,13 @@ exports[`ProjectAlertRuleDetails New alert rule renders 1`] = `
                         <CancelButton
                           to="/settings/org-slug/project-slug/alerts/rules/"
                         >
-                          <Button
-                            className="css-1yc33o1-CancelButton css-1qt54041"
+                          <UnstyledButton
+                            className="css-118wx50-Button-CancelButton css-1qt54041"
                             disabled={false}
                             to="/settings/org-slug/project-slug/alerts/rules/"
                           >
                             <Link
-                              className="css-1yc33o1-CancelButton css-1qt54041 button button-default"
+                              className="css-118wx50-Button-CancelButton css-1qt54041"
                               disabled={false}
                               onClick={[Function]}
                               onlyActiveOnIndex={false}
@@ -1742,59 +1737,48 @@ exports[`ProjectAlertRuleDetails New alert rule renders 1`] = `
                               to="/settings/org-slug/project-slug/alerts/rules/"
                             >
                               <a
-                                className="css-1yc33o1-CancelButton css-1qt54041 button button-default"
+                                className="css-118wx50-Button-CancelButton css-1qt54041"
                                 disabled={false}
                                 onClick={[Function]}
                                 role="button"
                                 style={Object {}}
                               >
-                                <Flex
-                                  align="center"
-                                  className="button-label"
-                                >
-                                  <Base
-                                    align="center"
-                                    className="button-label css-5ipae5"
+                                <ButtonLabel>
+                                  <div
+                                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                                   >
-                                    <div
-                                      className="button-label css-5ipae5"
-                                      is={null}
-                                    >
-                                      Cancel
-                                    </div>
-                                  </Base>
-                                </Flex>
+                                    Cancel
+                                  </div>
+                                </ButtonLabel>
                               </a>
                             </Link>
-                          </Button>
+                          </UnstyledButton>
                         </CancelButton>
                         <Button
                           disabled={false}
                           priority="primary"
                         >
-                          <button
-                            className="button button-primary"
+                          <UnstyledButton
+                            className="css-1e11s1h-Button css-16x0j7h0"
                             disabled={false}
-                            onClick={[Function]}
-                            role="button"
+                            priority="primary"
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <button
+                              className="css-1e11s1h-Button css-16x0j7h0"
+                              disabled={false}
+                              onClick={[Function]}
+                              priority="primary"
+                              role="button"
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
-                              >
+                              <ButtonLabel>
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
                                 >
                                   Save Rule
                                 </div>
-                              </Base>
-                            </Flex>
-                          </button>
+                              </ButtonLabel>
+                            </button>
+                          </UnstyledButton>
                         </Button>
                       </div>
                     </ActionBar>

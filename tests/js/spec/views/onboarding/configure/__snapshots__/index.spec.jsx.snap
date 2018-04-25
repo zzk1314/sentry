@@ -230,47 +230,50 @@ exports[`Configure should render correctly render() should render platform docs 
                                         >
                                           Configure node
                                           <Button
-                                            disabled={false}
                                             external={true}
                                             href="https://docs.getsentry.com/hosted/clients/csharp/"
                                             size="small"
                                           >
-                                            <ExternalLink
-                                              className="button button-default button-sm"
+                                            <UnstyledButton
+                                              className="css-a8laap-Button css-16x0j7h0"
                                               disabled={false}
+                                              external={true}
                                               href="https://docs.getsentry.com/hosted/clients/csharp/"
-                                              onClick={[Function]}
-                                              rel="noreferrer noopener"
-                                              role="button"
-                                              target="_blank"
+                                              size="small"
                                             >
-                                              <a
-                                                className="button button-default button-sm"
+                                              <ExternalLink
+                                                className="css-a8laap-Button css-16x0j7h0"
                                                 disabled={false}
                                                 href="https://docs.getsentry.com/hosted/clients/csharp/"
                                                 onClick={[Function]}
                                                 rel="noreferrer noopener"
                                                 role="button"
+                                                size="small"
                                                 target="_blank"
                                               >
-                                                <Flex
-                                                  align="center"
-                                                  className="button-label"
+                                                <a
+                                                  className="css-a8laap-Button css-16x0j7h0"
+                                                  disabled={false}
+                                                  href="https://docs.getsentry.com/hosted/clients/csharp/"
+                                                  onClick={[Function]}
+                                                  rel="noreferrer noopener"
+                                                  role="button"
+                                                  size="small"
+                                                  target="_blank"
                                                 >
-                                                  <Base
-                                                    align="center"
-                                                    className="button-label css-5ipae5"
+                                                  <ButtonLabel
+                                                    size="small"
                                                   >
                                                     <div
-                                                      className="button-label css-5ipae5"
-                                                      is={null}
+                                                      className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                      size="small"
                                                     >
                                                       Full Documentation
                                                     </div>
-                                                  </Base>
-                                                </Flex>
-                                              </a>
-                                            </ExternalLink>
+                                                  </ButtonLabel>
+                                                </a>
+                                              </ExternalLink>
+                                            </UnstyledButton>
                                           </Button>
                                         </div>
                                       </Base>

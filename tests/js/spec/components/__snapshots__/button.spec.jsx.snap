@@ -1,53 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Button renders 1`] = `
-<button
-  className="button button-primary button-lg"
+<UnstyledButton
+  className="css-1e11s1h-Button css-16x0j7h0"
   disabled={false}
-  onClick={[Function]}
-  role="button"
+  priority="primary"
 >
-  <Flex
-    align="center"
-    className="button-label"
-  >
-    Button
-  </Flex>
-</button>
+  Button
+</UnstyledButton>
 `;
 
 exports[`Button renders normal link 1`] = `
-<a
-  className="button button-default"
+<UnstyledButton
+  className="css-a8laap-Button css-16x0j7h0"
   disabled={false}
   href="/some/relative/url"
-  onClick={[Function]}
-  role="button"
 >
-  <Flex
-    align="center"
-    className="button-label"
-  >
-    Normal Link
-  </Flex>
-</a>
+  Normal Link
+</UnstyledButton>
 `;
 
 exports[`Button renders react-router link 1`] = `
-<Link
-  className="button button-default"
+<UnstyledButton
+  className="css-a8laap-Button css-16x0j7h0"
   disabled={false}
-  onClick={[Function]}
-  onlyActiveOnIndex={false}
-  role="button"
-  style={Object {}}
   to="/some/route"
 >
-  <Flex
-    align="center"
-    className="button-label"
-  >
-    Router Link
-  </Flex>
-</Link>
+  Router Link
+</UnstyledButton>
 `;

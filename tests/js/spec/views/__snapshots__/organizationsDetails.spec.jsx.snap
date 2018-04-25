@@ -102,11 +102,12 @@ exports[`OrganizationDetails render() pending deletion should render a restorati
             </p>
             <p>
               <button
-                class="button button-primary"
+                class="css-1e11s1h-Button css-16x0j7h0"
+                priority="primary"
                 role="button"
               >
                 <div
-                  class="button-label css-5ipae5"
+                  class="css-1mffzag-ButtonLabel css-16x0j7h1"
                 >
                   Restore Organization
                 </div>

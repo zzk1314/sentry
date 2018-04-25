@@ -63,7 +63,7 @@ describe('TeamMembers', function() {
       expect(mock).not.toHaveBeenCalled();
 
       wrapper
-        .find('.button-default')
+        .find('button[type="remove"]')
         .at(1)
         .simulate('click');
 

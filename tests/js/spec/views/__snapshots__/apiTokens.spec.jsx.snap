@@ -9,7 +9,6 @@ exports[`ApiTokens renders empty result 1`] = `
       action={
         <Button
           className="ref-create-token"
-          disabled={false}
           priority="primary"
           size="small"
           to="/settings/account/api/auth-tokens/new-token/"
@@ -104,7 +103,6 @@ exports[`ApiTokens renders with result 1`] = `
           action={
             <Button
               className="ref-create-token"
-              disabled={false}
               priority="primary"
               size="small"
               to="/settings/account/api/auth-tokens/new-token/"
@@ -139,45 +137,50 @@ exports[`ApiTokens renders with result 1`] = `
                     <div>
                       <Button
                         className="ref-create-token"
-                        disabled={false}
                         priority="primary"
                         size="small"
                         to="/settings/account/api/auth-tokens/new-token/"
                       >
-                        <Link
-                          className="ref-create-token button button-primary button-sm"
+                        <UnstyledButton
+                          className="ref-create-token css-1e11s1h-Button css-16x0j7h0"
                           disabled={false}
-                          onClick={[Function]}
-                          onlyActiveOnIndex={false}
-                          role="button"
-                          style={Object {}}
+                          priority="primary"
+                          size="small"
                           to="/settings/account/api/auth-tokens/new-token/"
                         >
-                          <a
-                            className="ref-create-token button button-primary button-sm"
+                          <Link
+                            className="ref-create-token css-1e11s1h-Button css-16x0j7h0"
                             disabled={false}
                             onClick={[Function]}
+                            onlyActiveOnIndex={false}
+                            priority="primary"
                             role="button"
+                            size="small"
                             style={Object {}}
+                            to="/settings/account/api/auth-tokens/new-token/"
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <a
+                              className="ref-create-token css-1e11s1h-Button css-16x0j7h0"
+                              disabled={false}
+                              onClick={[Function]}
+                              priority="primary"
+                              role="button"
+                              size="small"
+                              style={Object {}}
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
+                              <ButtonLabel
+                                size="small"
                               >
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                  size="small"
                                 >
                                   Create New Token
                                 </div>
-                              </Base>
-                            </Flex>
-                          </a>
-                        </Link>
+                              </ButtonLabel>
+                            </a>
+                          </Link>
+                        </UnstyledButton>
                       </Button>
                     </div>
                   </div>
@@ -459,85 +462,74 @@ exports[`ApiTokens renders with result 1`] = `
                                               onClick={[Function]}
                                               size="small"
                                             >
-                                              <Button
-                                                className="css-fla6ex-StyledButton css-hf2tyc6"
+                                              <UnstyledButton
+                                                className="css-1awdtdu-Button-StyledButton css-hf2tyc6"
                                                 disabled={false}
                                                 icon="icon-circle-subtract"
                                                 onClick={[Function]}
                                                 size="small"
                                               >
                                                 <button
-                                                  className="css-fla6ex-StyledButton css-hf2tyc6 button button-default button-sm"
+                                                  className="css-1awdtdu-Button-StyledButton css-hf2tyc6"
                                                   disabled={false}
                                                   onClick={[Function]}
                                                   role="button"
+                                                  size="small"
                                                 >
-                                                  <Flex
-                                                    align="center"
-                                                    className="button-label"
+                                                  <ButtonLabel
+                                                    size="small"
                                                   >
-                                                    <Base
-                                                      align="center"
-                                                      className="button-label css-5ipae5"
+                                                    <div
+                                                      className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                      size="small"
                                                     >
-                                                      <div
-                                                        className="button-label css-5ipae5"
-                                                        is={null}
+                                                      <IconContainer
+                                                        size="small"
                                                       >
-                                                        <Icon
+                                                        <div
+                                                          className="css-10uznxu-IconContainer css-16x0j7h2"
                                                           size="small"
                                                         >
-                                                          <Base
-                                                            className="css-11bwulm-Icon css-1vxxnb60"
-                                                            size="small"
+                                                          <StyledInlineSvg
+                                                            size="12px"
+                                                            src="icon-circle-subtract"
                                                           >
-                                                            <div
-                                                              className="css-11bwulm-Icon css-1vxxnb60"
-                                                              is={null}
-                                                              size="small"
+                                                            <InlineSvg
+                                                              className="css-1ov3rcq-StyledInlineSvg css-16x0j7h3"
+                                                              size="12px"
+                                                              src="icon-circle-subtract"
                                                             >
-                                                              <StyledInlineSvg
-                                                                size="12px"
-                                                                src="icon-circle-subtract"
+                                                              <StyledSvg
+                                                                className="css-1ov3rcq-StyledInlineSvg css-16x0j7h3"
+                                                                height="12px"
+                                                                viewBox={Object {}}
+                                                                width="12px"
                                                               >
-                                                                <InlineSvg
-                                                                  className="css-1ov3rcq-StyledInlineSvg css-1vxxnb61"
-                                                                  size="12px"
-                                                                  src="icon-circle-subtract"
+                                                                <svg
+                                                                  className="css-16x0j7h3 css-1rlza0i-StyledSvg css-adkcw30"
+                                                                  height="12px"
+                                                                  viewBox={Object {}}
+                                                                  width="12px"
                                                                 >
-                                                                  <StyledSvg
-                                                                    className="css-1ov3rcq-StyledInlineSvg css-1vxxnb61"
-                                                                    height="12px"
-                                                                    viewBox={Object {}}
-                                                                    width="12px"
-                                                                  >
-                                                                    <svg
-                                                                      className="css-1vxxnb61 css-1rlza0i-StyledSvg css-adkcw30"
-                                                                      height="12px"
-                                                                      viewBox={Object {}}
-                                                                      width="12px"
-                                                                    >
-                                                                      <use
-                                                                        href="#test"
-                                                                        xlinkHref="#test"
-                                                                      />
-                                                                    </svg>
-                                                                  </StyledSvg>
-                                                                </InlineSvg>
-                                                              </StyledInlineSvg>
-                                                            </div>
-                                                          </Base>
-                                                        </Icon>
-                                                        <span
-                                                          className="ref-delete-api-token"
-                                                        >
-                                                          Remove
-                                                        </span>
-                                                      </div>
-                                                    </Base>
-                                                  </Flex>
+                                                                  <use
+                                                                    href="#test"
+                                                                    xlinkHref="#test"
+                                                                  />
+                                                                </svg>
+                                                              </StyledSvg>
+                                                            </InlineSvg>
+                                                          </StyledInlineSvg>
+                                                        </div>
+                                                      </IconContainer>
+                                                      <span
+                                                        className="ref-delete-api-token"
+                                                      >
+                                                        Remove
+                                                      </span>
+                                                    </div>
+                                                  </ButtonLabel>
                                                 </button>
-                                              </Button>
+                                              </UnstyledButton>
                                             </StyledButton>
                                           </div>
                                         </Base>

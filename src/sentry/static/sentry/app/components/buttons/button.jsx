@@ -1,25 +1,15 @@
-import {Flex, Box} from 'grid-emotion';
 import {Link} from 'react-router';
 import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
-import styled from 'react-emotion';
+import styled, {css} from 'react-emotion';
 
 import ExternalLink from '../externalLink';
 import InlineSvg from '../inlineSvg';
 
 import '../../../less/components/button.less';
 
-const Icon = styled(Box)`
-  margin-right: ${p => (p.size === 'small' ? '6px' : '8px')};
-  margin-left: -2px;
-`;
-
-const StyledInlineSvg = styled(InlineSvg)`
-  display: block;
-`;
-
-class Button extends React.Component {
+class UnstyledButton extends React.Component {
   static propTypes = {
     priority: PropTypes.oneOf(['primary', 'danger', 'link', 'success']),
     size: PropTypes.oneOf(['zero', 'small', 'xsmall', 'large']),
@@ -34,6 +24,7 @@ class Button extends React.Component {
      */
     href: PropTypes.string,
     icon: PropTypes.string,
+    iconOnly: PropTypes.bool,
     /**
      * Tooltip text
      */
@@ -82,6 +73,7 @@ class Button extends React.Component {
       borderless,
       icon,
       external,
+      iconOnly,
 
       // destructure from `buttonProps`
       // not necessary, but just in case someone re-orders props
@@ -90,36 +82,15 @@ class Button extends React.Component {
       ...buttonProps
     } = this.props;
 
-    let isPrimary = priority === 'primary' && !disabled;
-    let isDanger = priority === 'danger' && !disabled;
-    let isSuccess = priority === 'success' && !disabled;
-    let isLink = priority === 'link';
-
-    let cx = classNames(className, 'button', {
-      tip: !!title,
-      'button-no-border': borderless,
-      'button-primary': isPrimary,
-      'button-danger': isDanger,
-      'button-success': isSuccess,
-      'button-link': isLink && !isPrimary && !isDanger,
-      'button-default': !isLink && !isPrimary && !isDanger,
-      'button-zero': size === 'zero',
-      'button-sm': size === 'small',
-      'button-xs': size === 'xsmall',
-      'button-lg': size === 'large',
-      'button-busy': busy,
-      'button-disabled': disabled,
-    });
-
     let childContainer = (
-      <Flex align="center" className="button-label">
+      <ButtonLabel size={size} iconOnly={iconOnly}>
         {icon && (
-          <Icon size={size}>
+          <IconContainer size={size} iconOnly={iconOnly}>
             <StyledInlineSvg src={icon} size={size === 'small' ? '12px' : '16px'} />
-          </Icon>
+          </IconContainer>
         )}
         {children}
-      </Flex>
+      </ButtonLabel>
     );
 
     // Buttons come in 3 flavors: Link, anchor, and regular buttons. Let's
@@ -128,13 +99,18 @@ class Button extends React.Component {
     // control to screen readers. Note: you must still handle tabindex manually.
 
     // Props common to all elements
+
     let componentProps = {
       disabled,
       ...buttonProps,
       onClick: this.handleClick,
-      className: cx,
+      className: classNames(className, {tip: !!title}),
       role: 'button',
       children: childContainer,
+      borderless,
+      priority,
+      size,
+      busy,
     };
 
     // Handle react-router Links
@@ -155,5 +131,101 @@ class Button extends React.Component {
     return <button {...componentProps} />;
   }
 }
+
+const getTheme = ({priority, theme}) => {
+  return {
+    primary: {
+      background: theme.purple,
+      border: theme.purpleDark,
+    },
+    danger: {
+      background: theme.red,
+      border: theme.redDark,
+    },
+    success: {
+      background: theme.greenDark,
+      border: theme.greenLight,
+    },
+    link: {
+      background: 'transparent',
+      border: 'none',
+      textColor: theme.blue,
+    },
+    default: {
+      background: '#fff',
+      border: theme.gray1,
+      textColor: theme.textColor,
+    },
+  }[priority];
+};
+
+const getButtonTheme = ({priority, disabled, theme}) => {
+  const button = getTheme({
+    priority: disabled && priority !== 'link' ? 'default' : priority || 'default',
+    theme,
+  });
+
+  return `
+    color: ${button.textColor || '#fff'};
+    background: ${button.background};
+    border: 1px solid ${button.border};
+    &:hover,
+    &:focus,
+    &:active {
+      color: ${button.textColor || '#fff'};
+      background: ${button.background};
+      border-color: ${button.border};
+    }
+  `;
+};
+
+const getFontSize = ({size, theme}) => {
+  switch (size) {
+    case 'xsmall':
+      return theme.fontSizeXSmall;
+    case 'small':
+      return theme.fontSizeSmall;
+    case 'large':
+      return theme.fontSizeMedium;
+    default:
+      return theme.fontSizeButton;
+  }
+};
+
+const Button = styled(UnstyledButton)`
+  display: inline-block;
+  line-height: 1;
+  font-weight: ${p => p.isLink ? 400 : 600};
+  border-radius: 3px;
+  box-shadow: ${p => (p => p.isLink || p.isDisabled ? '0 2px rgba(0, 0, 0, 0.05)' : 'none')};
+  cursor: ${p => (p.isDisabled ? 'not-allowed' : 'pointer')};
+  font-size: ${p => getFontSize(p)};
+  padding: 0;
+  text-transform: none;
+
+  ${p => getButtonTheme(p)};
+
+  opacity: ${p => (p.busy || p.disabled ? 0.65 : 1)};
+`;
+
+const getPadding = ({iconOnly, size, priority}) => {
+  if (size == 'zero' || priority == 'link') return 0;
+  return iconOnly ? '0.5em' : '0.5em 0.75em';
+};
+
+const ButtonLabel = styled('div')`
+  padding: ${p => getPadding(p)};
+  display: flex;
+  align-items: center;
+`;
+
+const IconContainer = styled('div')`
+  margin-right: ${p => (p.iconOnly ? 0 : '0.5em')};
+  margin-left: ${p => (p.iconOnly ? 0 : '-2px')};
+`;
+
+const StyledInlineSvg = styled(InlineSvg)`
+  display: block;
+`;
 
 export default Button;

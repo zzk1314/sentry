@@ -1,7 +1,6 @@
 import {Flex, Box} from 'grid-emotion';
 import PropTypes from 'prop-types';
 import React from 'react';
-import styled from 'react-emotion';
 
 import {addErrorMessage} from '../../../actionCreators/indicator';
 import {t} from '../../../locale';
@@ -16,14 +15,6 @@ import Tag from '../components/tag';
 import accountEmailsFields from '../../../data/forms/accountEmails';
 
 const ENDPOINT = '/users/me/emails/';
-
-const RemoveButton = styled(({hidden, ...props}) => (
-  <Button priority="danger" size="small" {...props}>
-    <span className="icon-trash" />
-  </Button>
-))`
-  ${p => (p.hidden ? 'opacity: 0' : '')};
-`;
 
 class EmailRow extends React.Component {
   static propTypes = {
@@ -74,9 +65,13 @@ class EmailRow extends React.Component {
           )}
           {!hideRemove && (
             <Box ml={1}>
-              <RemoveButton
+              <Button
+                priority="danger"
+                size="small"
                 onClick={this.handleRemove}
-                hidden={isPrimary || hideRemove}
+                icon="icon-trash"
+                iconOnly={true}
+                disabled={isPrimary || hideRemove}
               />
             </Box>
           )}

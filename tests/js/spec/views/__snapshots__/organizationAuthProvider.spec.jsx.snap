@@ -173,7 +173,6 @@ exports[`OrganizationAuthProvider renders 1`] = `
         className="form-actions"
       >
         <Button
-          disabled={false}
           onClick={[Function]}
           priority="danger"
         >
@@ -256,7 +255,6 @@ exports[`OrganizationAuthProvider renders with Unlinked members  1`] = `
         </h4>
         <Button
           className="pull-right"
-          disabled={false}
           onClick={[Function]}
           priority="primary"
           style={
@@ -428,7 +426,6 @@ exports[`OrganizationAuthProvider renders with Unlinked members  1`] = `
         className="form-actions"
       >
         <Button
-          disabled={false}
           onClick={[Function]}
           priority="danger"
         >
@@ -585,7 +582,6 @@ Array [
       className="form-actions"
     >
       <Button
-        disabled={false}
         onClick={[Function]}
         priority="danger"
       >

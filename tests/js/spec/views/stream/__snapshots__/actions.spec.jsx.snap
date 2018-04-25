@@ -144,7 +144,6 @@ exports[`StreamActions Bulk Total results < bulk limit bulk resolves 1`] = `
           className="modal-footer"
         >
           <Button
-            disabled={false}
             onClick={[Function]}
             style={
               Object {
@@ -152,34 +151,36 @@ exports[`StreamActions Bulk Total results < bulk limit bulk resolves 1`] = `
               }
             }
           >
-            <button
-              className="button button-default"
+            <UnstyledButton
+              className="css-13sn83c-Button css-16x0j7h0"
               disabled={false}
               onClick={[Function]}
-              role="button"
               style={
                 Object {
                   "marginRight": 10,
                 }
               }
             >
-              <Flex
-                align="center"
-                className="button-label"
+              <button
+                className="css-13sn83c-Button css-16x0j7h0"
+                disabled={false}
+                onClick={[Function]}
+                role="button"
+                style={
+                  Object {
+                    "marginRight": 10,
+                  }
+                }
               >
-                <Base
-                  align="center"
-                  className="button-label css-5ipae5"
-                >
+                <ButtonLabel>
                   <div
-                    className="button-label css-5ipae5"
-                    is={null}
+                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                   >
                     Cancel
                   </div>
-                </Base>
-              </Flex>
-            </button>
+                </ButtonLabel>
+              </button>
+            </UnstyledButton>
           </Button>
           <Button
             autoFocus={true}
@@ -187,30 +188,30 @@ exports[`StreamActions Bulk Total results < bulk limit bulk resolves 1`] = `
             onClick={[Function]}
             priority="primary"
           >
-            <button
+            <UnstyledButton
               autoFocus={true}
-              className="button button-primary"
+              className="css-rigvt6-Button css-16x0j7h0"
               disabled={false}
               onClick={[Function]}
-              role="button"
+              priority="primary"
             >
-              <Flex
-                align="center"
-                className="button-label"
+              <button
+                autoFocus={true}
+                className="css-rigvt6-Button css-16x0j7h0"
+                disabled={false}
+                onClick={[Function]}
+                priority="primary"
+                role="button"
               >
-                <Base
-                  align="center"
-                  className="button-label css-5ipae5"
-                >
+                <ButtonLabel>
                   <div
-                    className="button-label css-5ipae5"
-                    is={null}
+                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                   >
                     Bulk resolve issues
                   </div>
-                </Base>
-              </Flex>
-            </button>
+                </ButtonLabel>
+              </button>
+            </UnstyledButton>
           </Button>
         </div>
       </div>
@@ -395,7 +396,6 @@ exports[`StreamActions Bulk Total results > bulk limit bulk resolves 1`] = `
           className="modal-footer"
         >
           <Button
-            disabled={false}
             onClick={[Function]}
             style={
               Object {
@@ -403,34 +403,36 @@ exports[`StreamActions Bulk Total results > bulk limit bulk resolves 1`] = `
               }
             }
           >
-            <button
-              className="button button-default"
+            <UnstyledButton
+              className="css-13sn83c-Button css-16x0j7h0"
               disabled={false}
               onClick={[Function]}
-              role="button"
               style={
                 Object {
                   "marginRight": 10,
                 }
               }
             >
-              <Flex
-                align="center"
-                className="button-label"
+              <button
+                className="css-13sn83c-Button css-16x0j7h0"
+                disabled={false}
+                onClick={[Function]}
+                role="button"
+                style={
+                  Object {
+                    "marginRight": 10,
+                  }
+                }
               >
-                <Base
-                  align="center"
-                  className="button-label css-5ipae5"
-                >
+                <ButtonLabel>
                   <div
-                    className="button-label css-5ipae5"
-                    is={null}
+                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                   >
                     Cancel
                   </div>
-                </Base>
-              </Flex>
-            </button>
+                </ButtonLabel>
+              </button>
+            </UnstyledButton>
           </Button>
           <Button
             autoFocus={true}
@@ -438,30 +440,30 @@ exports[`StreamActions Bulk Total results > bulk limit bulk resolves 1`] = `
             onClick={[Function]}
             priority="primary"
           >
-            <button
+            <UnstyledButton
               autoFocus={true}
-              className="button button-primary"
+              className="css-rigvt6-Button css-16x0j7h0"
               disabled={false}
               onClick={[Function]}
-              role="button"
+              priority="primary"
             >
-              <Flex
-                align="center"
-                className="button-label"
+              <button
+                autoFocus={true}
+                className="css-rigvt6-Button css-16x0j7h0"
+                disabled={false}
+                onClick={[Function]}
+                priority="primary"
+                role="button"
               >
-                <Base
-                  align="center"
-                  className="button-label css-5ipae5"
-                >
+                <ButtonLabel>
                   <div
-                    className="button-label css-5ipae5"
-                    is={null}
+                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                   >
                     Bulk resolve issues
                   </div>
-                </Base>
-              </Flex>
-            </button>
+                </ButtonLabel>
+              </button>
+            </UnstyledButton>
           </Button>
         </div>
       </div>

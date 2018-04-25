@@ -126,7 +126,6 @@ exports[`ProjectPluginDetails renders 1`] = `
                 className="pull-right"
               >
                 <Button
-                  disabled={false}
                   onClick={[Function]}
                   style={
                     Object {
@@ -137,7 +136,6 @@ exports[`ProjectPluginDetails renders 1`] = `
                   Enable Plugin
                 </Button>
                 <Button
-                  disabled={false}
                   onClick={[Function]}
                 >
                   Reset Configuration
@@ -173,7 +171,6 @@ exports[`ProjectPluginDetails renders 1`] = `
                           className="pull-right"
                         >
                           <Button
-                            disabled={false}
                             onClick={[Function]}
                             style={
                               Object {
@@ -181,62 +178,60 @@ exports[`ProjectPluginDetails renders 1`] = `
                               }
                             }
                           >
-                            <button
-                              className="button button-default"
+                            <UnstyledButton
+                              className="css-a8laap-Button css-16x0j7h0"
                               disabled={false}
                               onClick={[Function]}
-                              role="button"
                               style={
                                 Object {
                                   "marginRight": "6px",
                                 }
                               }
                             >
-                              <Flex
-                                align="center"
-                                className="button-label"
+                              <button
+                                className="css-a8laap-Button css-16x0j7h0"
+                                disabled={false}
+                                onClick={[Function]}
+                                role="button"
+                                style={
+                                  Object {
+                                    "marginRight": "6px",
+                                  }
+                                }
                               >
-                                <Base
-                                  align="center"
-                                  className="button-label css-5ipae5"
-                                >
+                                <ButtonLabel>
                                   <div
-                                    className="button-label css-5ipae5"
-                                    is={null}
+                                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                                   >
                                     Enable Plugin
                                   </div>
-                                </Base>
-                              </Flex>
-                            </button>
+                                </ButtonLabel>
+                              </button>
+                            </UnstyledButton>
                           </Button>
                           <Button
-                            disabled={false}
                             onClick={[Function]}
                           >
-                            <button
-                              className="button button-default"
+                            <UnstyledButton
+                              className="css-a8laap-Button css-16x0j7h0"
                               disabled={false}
                               onClick={[Function]}
-                              role="button"
                             >
-                              <Flex
-                                align="center"
-                                className="button-label"
+                              <button
+                                className="css-a8laap-Button css-16x0j7h0"
+                                disabled={false}
+                                onClick={[Function]}
+                                role="button"
                               >
-                                <Base
-                                  align="center"
-                                  className="button-label css-5ipae5"
-                                >
+                                <ButtonLabel>
                                   <div
-                                    className="button-label css-5ipae5"
-                                    is={null}
+                                    className="css-1mffzag-ButtonLabel css-16x0j7h1"
                                   >
                                     Reset Configuration
                                   </div>
-                                </Base>
-                              </Flex>
-                            </button>
+                                </ButtonLabel>
+                              </button>
+                            </UnstyledButton>
                           </Button>
                         </div>
                       </div>

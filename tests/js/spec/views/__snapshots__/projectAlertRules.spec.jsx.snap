@@ -19,7 +19,6 @@ exports[`projectAlertRules renders 1`] = `
       <SettingsPageHeading
         action={
           <Button
-            disabled={false}
             icon="icon-circle-add"
             priority="primary"
             size="small"
@@ -105,90 +104,90 @@ exports[`projectAlertRules renders 1`] = `
                   </Title>
                   <div>
                     <Button
-                      disabled={false}
                       icon="icon-circle-add"
                       priority="primary"
                       size="small"
                       to="new/"
                     >
-                      <Link
-                        className="button button-primary button-sm"
+                      <UnstyledButton
+                        className="css-1e11s1h-Button css-16x0j7h0"
                         disabled={false}
-                        onClick={[Function]}
-                        onlyActiveOnIndex={false}
-                        role="button"
-                        style={Object {}}
+                        icon="icon-circle-add"
+                        priority="primary"
+                        size="small"
                         to="new/"
                       >
-                        <a
-                          className="button button-primary button-sm"
+                        <Link
+                          className="css-1e11s1h-Button css-16x0j7h0"
                           disabled={false}
                           onClick={[Function]}
+                          onlyActiveOnIndex={false}
+                          priority="primary"
                           role="button"
+                          size="small"
                           style={Object {}}
+                          to="new/"
                         >
-                          <Flex
-                            align="center"
-                            className="button-label"
+                          <a
+                            className="css-1e11s1h-Button css-16x0j7h0"
+                            disabled={false}
+                            onClick={[Function]}
+                            priority="primary"
+                            role="button"
+                            size="small"
+                            style={Object {}}
                           >
-                            <Base
-                              align="center"
-                              className="button-label css-5ipae5"
+                            <ButtonLabel
+                              size="small"
                             >
                               <div
-                                className="button-label css-5ipae5"
-                                is={null}
+                                className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                size="small"
                               >
-                                <Icon
+                                <IconContainer
                                   size="small"
                                 >
-                                  <Base
-                                    className="css-11bwulm-Icon css-1vxxnb60"
+                                  <div
+                                    className="css-10uznxu-IconContainer css-16x0j7h2"
                                     size="small"
                                   >
-                                    <div
-                                      className="css-11bwulm-Icon css-1vxxnb60"
-                                      is={null}
-                                      size="small"
+                                    <StyledInlineSvg
+                                      size="12px"
+                                      src="icon-circle-add"
                                     >
-                                      <StyledInlineSvg
+                                      <InlineSvg
+                                        className="css-1ov3rcq-StyledInlineSvg css-16x0j7h3"
                                         size="12px"
                                         src="icon-circle-add"
                                       >
-                                        <InlineSvg
-                                          className="css-1ov3rcq-StyledInlineSvg css-1vxxnb61"
-                                          size="12px"
-                                          src="icon-circle-add"
+                                        <StyledSvg
+                                          className="css-1ov3rcq-StyledInlineSvg css-16x0j7h3"
+                                          height="12px"
+                                          viewBox={Object {}}
+                                          width="12px"
                                         >
-                                          <StyledSvg
-                                            className="css-1ov3rcq-StyledInlineSvg css-1vxxnb61"
+                                          <svg
+                                            className="css-16x0j7h3 css-1rlza0i-StyledSvg css-adkcw30"
                                             height="12px"
                                             viewBox={Object {}}
                                             width="12px"
                                           >
-                                            <svg
-                                              className="css-1vxxnb61 css-1rlza0i-StyledSvg css-adkcw30"
-                                              height="12px"
-                                              viewBox={Object {}}
-                                              width="12px"
-                                            >
-                                              <use
-                                                href="#test"
-                                                xlinkHref="#test"
-                                              />
-                                            </svg>
-                                          </StyledSvg>
-                                        </InlineSvg>
-                                      </StyledInlineSvg>
-                                    </div>
-                                  </Base>
-                                </Icon>
+                                            <use
+                                              href="#test"
+                                              xlinkHref="#test"
+                                            />
+                                          </svg>
+                                        </StyledSvg>
+                                      </InlineSvg>
+                                    </StyledInlineSvg>
+                                  </div>
+                                </IconContainer>
                                 New Alert Rule
                               </div>
-                            </Base>
-                          </Flex>
-                        </a>
-                      </Link>
+                            </ButtonLabel>
+                          </a>
+                        </Link>
+                      </UnstyledButton>
                     </Button>
                   </div>
                 </div>
@@ -342,7 +341,6 @@ exports[`projectAlertRules renders 1`] = `
                             </TextColorLink>
                             <div>
                               <Button
-                                disabled={false}
                                 size="small"
                                 style={
                                   Object {
@@ -351,12 +349,10 @@ exports[`projectAlertRules renders 1`] = `
                                 }
                                 to="1/"
                               >
-                                <Link
-                                  className="button button-default button-sm"
+                                <UnstyledButton
+                                  className="css-a8laap-Button css-16x0j7h0"
                                   disabled={false}
-                                  onClick={[Function]}
-                                  onlyActiveOnIndex={false}
-                                  role="button"
+                                  size="small"
                                   style={
                                     Object {
                                       "marginRight": 5,
@@ -364,35 +360,45 @@ exports[`projectAlertRules renders 1`] = `
                                   }
                                   to="1/"
                                 >
-                                  <a
-                                    className="button button-default button-sm"
+                                  <Link
+                                    className="css-a8laap-Button css-16x0j7h0"
                                     disabled={false}
                                     onClick={[Function]}
+                                    onlyActiveOnIndex={false}
                                     role="button"
+                                    size="small"
                                     style={
                                       Object {
                                         "marginRight": 5,
                                       }
                                     }
+                                    to="1/"
                                   >
-                                    <Flex
-                                      align="center"
-                                      className="button-label"
+                                    <a
+                                      className="css-a8laap-Button css-16x0j7h0"
+                                      disabled={false}
+                                      onClick={[Function]}
+                                      role="button"
+                                      size="small"
+                                      style={
+                                        Object {
+                                          "marginRight": 5,
+                                        }
+                                      }
                                     >
-                                      <Base
-                                        align="center"
-                                        className="button-label css-5ipae5"
+                                      <ButtonLabel
+                                        size="small"
                                       >
                                         <div
-                                          className="button-label css-5ipae5"
-                                          is={null}
+                                          className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                          size="small"
                                         >
                                           Edit Rule
                                         </div>
-                                      </Base>
-                                    </Flex>
-                                  </a>
-                                </Link>
+                                      </ButtonLabel>
+                                    </a>
+                                  </Link>
+                                </UnstyledButton>
                               </Button>
                               <Confirm
                                 cancelText="Cancel"
@@ -402,35 +408,36 @@ exports[`projectAlertRules renders 1`] = `
                                 priority="primary"
                               >
                                 <Button
-                                  disabled={false}
                                   onClick={[Function]}
                                   size="small"
                                 >
-                                  <button
-                                    className="button button-default button-sm"
+                                  <UnstyledButton
+                                    className="css-a8laap-Button css-16x0j7h0"
                                     disabled={false}
                                     onClick={[Function]}
-                                    role="button"
+                                    size="small"
                                   >
-                                    <Flex
-                                      align="center"
-                                      className="button-label"
+                                    <button
+                                      className="css-a8laap-Button css-16x0j7h0"
+                                      disabled={false}
+                                      onClick={[Function]}
+                                      role="button"
+                                      size="small"
                                     >
-                                      <Base
-                                        align="center"
-                                        className="button-label css-5ipae5"
+                                      <ButtonLabel
+                                        size="small"
                                       >
                                         <div
-                                          className="button-label css-5ipae5"
-                                          is={null}
+                                          className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                          size="small"
                                         >
                                           <span
                                             className="icon-trash"
                                           />
                                         </div>
-                                      </Base>
-                                    </Flex>
-                                  </button>
+                                      </ButtonLabel>
+                                    </button>
+                                  </UnstyledButton>
                                 </Button>
                                 <Modal
                                   animation={false}

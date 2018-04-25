@@ -45,7 +45,6 @@ exports[`Confirm renders 1`] = `
       className="modal-footer"
     >
       <Button
-        disabled={false}
         onClick={[Function]}
         style={
           Object {

@@ -116,26 +116,26 @@ exports[`OrganizationTeamProjects Should render 1`] = `
                                           >
                                             <Button
                                               className="css-ngzubs-StyledButton css-1pig06q1"
-                                              disabled={false}
                                               size="xsmall"
                                             >
-                                              <button
-                                                className="css-ngzubs-StyledButton css-1pig06q1 button button-default button-xs"
+                                              <UnstyledButton
+                                                className="css-1pig06q1 css-1bmxiln-Button css-16x0j7h0"
                                                 disabled={false}
-                                                onClick={[Function]}
-                                                role="button"
+                                                size="xsmall"
                                               >
-                                                <Flex
-                                                  align="center"
-                                                  className="button-label"
+                                                <button
+                                                  className="css-1pig06q1 css-1bmxiln-Button css-16x0j7h0"
+                                                  disabled={false}
+                                                  onClick={[Function]}
+                                                  role="button"
+                                                  size="xsmall"
                                                 >
-                                                  <Base
-                                                    align="center"
-                                                    className="button-label css-5ipae5"
+                                                  <ButtonLabel
+                                                    size="xsmall"
                                                   >
                                                     <div
-                                                      className="button-label css-5ipae5"
-                                                      is={null}
+                                                      className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                      size="xsmall"
                                                     >
                                                       Add Project
                                                       <StyledChevronDown>
@@ -168,9 +168,9 @@ exports[`OrganizationTeamProjects Should render 1`] = `
                                                         </Component>
                                                       </StyledChevronDown>
                                                     </div>
-                                                  </Base>
-                                                </Flex>
-                                              </button>
+                                                  </ButtonLabel>
+                                                </button>
+                                              </UnstyledButton>
                                             </Button>
                                           </Component>
                                         </StyledButton>
@@ -455,27 +455,28 @@ exports[`OrganizationTeamProjects Should render 1`] = `
                         </div>
                       </ProjectItem>
                       <Button
-                        disabled={false}
                         onClick={[Function]}
                         size="small"
                       >
-                        <button
-                          className="button button-default button-sm"
+                        <UnstyledButton
+                          className="css-a8laap-Button css-16x0j7h0"
                           disabled={false}
                           onClick={[Function]}
-                          role="button"
+                          size="small"
                         >
-                          <Flex
-                            align="center"
-                            className="button-label"
+                          <button
+                            className="css-a8laap-Button css-16x0j7h0"
+                            disabled={false}
+                            onClick={[Function]}
+                            role="button"
+                            size="small"
                           >
-                            <Base
-                              align="center"
-                              className="button-label css-5ipae5"
+                            <ButtonLabel
+                              size="small"
                             >
                               <div
-                                className="button-label css-5ipae5"
-                                is={null}
+                                className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                size="small"
                               >
                                 <RemoveIcon>
                                   <Component
@@ -509,9 +510,9 @@ exports[`OrganizationTeamProjects Should render 1`] = `
                                  
                                 Remove
                               </div>
-                            </Base>
-                          </Flex>
-                        </button>
+                            </ButtonLabel>
+                          </button>
+                        </UnstyledButton>
                       </Button>
                     </div>
                   </Base>

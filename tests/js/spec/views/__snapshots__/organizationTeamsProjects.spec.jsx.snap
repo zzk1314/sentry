@@ -232,44 +232,46 @@ exports[`OrganizationTeamProjects Should render 1`] = `
                                     is={null}
                                   >
                                     <Button
-                                      disabled={false}
                                       size="small"
                                       to="/settings/org-slug/project-slug-2/"
                                     >
-                                      <Link
-                                        className="button button-default button-sm"
+                                      <UnstyledButton
+                                        className="css-a8laap-Button css-16x0j7h0"
                                         disabled={false}
-                                        onClick={[Function]}
-                                        onlyActiveOnIndex={false}
-                                        role="button"
-                                        style={Object {}}
+                                        size="small"
                                         to="/settings/org-slug/project-slug-2/"
                                       >
-                                        <a
-                                          className="button button-default button-sm"
+                                        <Link
+                                          className="css-a8laap-Button css-16x0j7h0"
                                           disabled={false}
                                           onClick={[Function]}
+                                          onlyActiveOnIndex={false}
                                           role="button"
+                                          size="small"
                                           style={Object {}}
+                                          to="/settings/org-slug/project-slug-2/"
                                         >
-                                          <Flex
-                                            align="center"
-                                            className="button-label"
+                                          <a
+                                            className="css-a8laap-Button css-16x0j7h0"
+                                            disabled={false}
+                                            onClick={[Function]}
+                                            role="button"
+                                            size="small"
+                                            style={Object {}}
                                           >
-                                            <Base
-                                              align="center"
-                                              className="button-label css-5ipae5"
+                                            <ButtonLabel
+                                              size="small"
                                             >
                                               <div
-                                                className="button-label css-5ipae5"
-                                                is={null}
+                                                className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                size="small"
                                               >
                                                 Manage Project
                                               </div>
-                                            </Base>
-                                          </Flex>
-                                        </a>
-                                      </Link>
+                                            </ButtonLabel>
+                                          </a>
+                                        </Link>
+                                      </UnstyledButton>
                                     </Button>
                                   </div>
                                 </Base>

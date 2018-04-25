@@ -102,7 +102,6 @@ exports[`OrganizationRepositories renders with a repository 1`] = `
               priority="primary"
             >
               <Button
-                disabled={false}
                 size="xsmall"
               >
                 <span

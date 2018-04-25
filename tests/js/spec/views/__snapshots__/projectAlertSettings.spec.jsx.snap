@@ -8,7 +8,6 @@ exports[`ProjectAlertSettings render() renders 1`] = `
     <SettingsPageHeading
       action={
         <Button
-          disabled={false}
           icon="icon-circle-add"
           priority="primary"
           size="small"

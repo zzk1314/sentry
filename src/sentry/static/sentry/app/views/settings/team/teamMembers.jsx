@@ -215,7 +215,7 @@ const TeamMembers = createReactClass({
 
   removeButton(member) {
     return (
-      <Button size="small" onClick={this.removeMember.bind(this, member)}>
+      <Button size="small" type="remove" onClick={this.removeMember.bind(this, member)}>
         <InlineSvg
           src="icon-circle-subtract"
           size="1.25em"

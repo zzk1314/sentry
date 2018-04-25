@@ -400,34 +400,41 @@ exports[`Issues -> Merged View renders with mocked data 1`] = `
                             }
                           }
                         >
-                          <button
-                            className="button button-default button-sm button-disabled"
+                          <UnstyledButton
+                            className="css-ta0bwm-Button css-16x0j7h0"
                             disabled={true}
                             onClick={[Function]}
-                            role="button"
+                            size="small"
                             style={
                               Object {
                                 "marginLeft": 10,
                               }
                             }
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <button
+                              className="css-ta0bwm-Button css-16x0j7h0"
+                              disabled={true}
+                              onClick={[Function]}
+                              role="button"
+                              size="small"
+                              style={
+                                Object {
+                                  "marginLeft": 10,
+                                }
+                              }
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
+                              <ButtonLabel
+                                size="small"
                               >
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                  size="small"
                                 >
                                   Compare
                                 </div>
-                              </Base>
-                            </Flex>
-                          </button>
+                              </ButtonLabel>
+                            </button>
+                          </UnstyledButton>
                         </Button>
                       </div>
                     </div>
@@ -442,33 +449,34 @@ exports[`Issues -> Merged View renders with mocked data 1`] = `
                       <div>
                         <Button
                           className="toggle-collapse-all"
-                          disabled={false}
                           onClick={[Function]}
                           size="small"
                         >
-                          <button
-                            className="toggle-collapse-all button button-default button-sm"
+                          <UnstyledButton
+                            className="toggle-collapse-all css-a8laap-Button css-16x0j7h0"
                             disabled={false}
                             onClick={[Function]}
-                            role="button"
+                            size="small"
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <button
+                              className="toggle-collapse-all css-a8laap-Button css-16x0j7h0"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="button"
+                              size="small"
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
+                              <ButtonLabel
+                                size="small"
                               >
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                  size="small"
                                 >
                                   Collapse All
                                 </div>
-                              </Base>
-                            </Flex>
-                          </button>
+                              </ButtonLabel>
+                            </button>
+                          </UnstyledButton>
                         </Button>
                       </div>
                     </div>
@@ -1773,34 +1781,41 @@ exports[`Issues -> Merged View renders with mocked data 2`] = `
                             }
                           }
                         >
-                          <button
-                            className="button button-default button-sm button-disabled"
+                          <UnstyledButton
+                            className="css-ta0bwm-Button css-16x0j7h0"
                             disabled={true}
                             onClick={[Function]}
-                            role="button"
+                            size="small"
                             style={
                               Object {
                                 "marginLeft": 10,
                               }
                             }
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <button
+                              className="css-ta0bwm-Button css-16x0j7h0"
+                              disabled={true}
+                              onClick={[Function]}
+                              role="button"
+                              size="small"
+                              style={
+                                Object {
+                                  "marginLeft": 10,
+                                }
+                              }
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
+                              <ButtonLabel
+                                size="small"
                               >
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                  size="small"
                                 >
                                   Compare
                                 </div>
-                              </Base>
-                            </Flex>
-                          </button>
+                              </ButtonLabel>
+                            </button>
+                          </UnstyledButton>
                         </Button>
                       </div>
                     </div>
@@ -1815,33 +1830,34 @@ exports[`Issues -> Merged View renders with mocked data 2`] = `
                       <div>
                         <Button
                           className="toggle-collapse-all"
-                          disabled={false}
                           onClick={[Function]}
                           size="small"
                         >
-                          <button
-                            className="toggle-collapse-all button button-default button-sm"
+                          <UnstyledButton
+                            className="toggle-collapse-all css-a8laap-Button css-16x0j7h0"
                             disabled={false}
                             onClick={[Function]}
-                            role="button"
+                            size="small"
                           >
-                            <Flex
-                              align="center"
-                              className="button-label"
+                            <button
+                              className="toggle-collapse-all css-a8laap-Button css-16x0j7h0"
+                              disabled={false}
+                              onClick={[Function]}
+                              role="button"
+                              size="small"
                             >
-                              <Base
-                                align="center"
-                                className="button-label css-5ipae5"
+                              <ButtonLabel
+                                size="small"
                               >
                                 <div
-                                  className="button-label css-5ipae5"
-                                  is={null}
+                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                  size="small"
                                 >
                                   Collapse All
                                 </div>
-                              </Base>
-                            </Flex>
-                          </button>
+                              </ButtonLabel>
+                            </button>
+                          </UnstyledButton>
                         </Button>
                       </div>
                     </div>

@@ -139,27 +139,28 @@ exports[`OrganizationIntegrationConfig render() with one integration renders 1`]
                               is={null}
                             >
                               <Button
-                                disabled={false}
                                 onClick={[Function]}
                                 size="xsmall"
                               >
-                                <button
-                                  className="button button-default button-xs"
+                                <UnstyledButton
+                                  className="css-a8laap-Button css-16x0j7h0"
                                   disabled={false}
                                   onClick={[Function]}
-                                  role="button"
+                                  size="xsmall"
                                 >
-                                  <Flex
-                                    align="center"
-                                    className="button-label"
+                                  <button
+                                    className="css-a8laap-Button css-16x0j7h0"
+                                    disabled={false}
+                                    onClick={[Function]}
+                                    role="button"
+                                    size="xsmall"
                                   >
-                                    <Base
-                                      align="center"
-                                      className="button-label css-5ipae5"
+                                    <ButtonLabel
+                                      size="xsmall"
                                     >
                                       <div
-                                        className="button-label css-5ipae5"
-                                        is={null}
+                                        className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                        size="xsmall"
                                       >
                                         <span
                                           className="icon icon-add"
@@ -167,9 +168,9 @@ exports[`OrganizationIntegrationConfig render() with one integration renders 1`]
                                          
                                         Add Workspace
                                       </div>
-                                    </Base>
-                                  </Flex>
-                                </button>
+                                    </ButtonLabel>
+                                  </button>
+                                </UnstyledButton>
                               </Button>
                             </div>
                           </Base>
@@ -279,27 +280,28 @@ exports[`OrganizationIntegrationConfig render() with one integration renders 1`]
                                 priority="primary"
                               >
                                 <Button
-                                  disabled={false}
                                   onClick={[Function]}
                                   size="small"
                                 >
-                                  <button
-                                    className="button button-default button-sm"
+                                  <UnstyledButton
+                                    className="css-a8laap-Button css-16x0j7h0"
                                     disabled={false}
                                     onClick={[Function]}
-                                    role="button"
+                                    size="small"
                                   >
-                                    <Flex
-                                      align="center"
-                                      className="button-label"
+                                    <button
+                                      className="css-a8laap-Button css-16x0j7h0"
+                                      disabled={false}
+                                      onClick={[Function]}
+                                      role="button"
+                                      size="small"
                                     >
-                                      <Base
-                                        align="center"
-                                        className="button-label css-5ipae5"
+                                      <ButtonLabel
+                                        size="small"
                                       >
                                         <div
-                                          className="button-label css-5ipae5"
-                                          is={null}
+                                          className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                          size="small"
                                         >
                                           <span
                                             className="icon icon-trash"
@@ -310,9 +312,9 @@ exports[`OrganizationIntegrationConfig render() with one integration renders 1`]
                                             }
                                           />
                                         </div>
-                                      </Base>
-                                    </Flex>
-                                  </button>
+                                      </ButtonLabel>
+                                    </button>
+                                  </UnstyledButton>
                                 </Button>
                                 <Modal
                                   animation={false}

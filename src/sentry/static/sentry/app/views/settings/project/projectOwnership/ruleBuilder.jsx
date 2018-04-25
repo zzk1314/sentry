@@ -152,11 +152,11 @@ class RuleBuilder extends React.Component {
             />
           </Flex>
 
-          <RuleAddButton
+          <Button
             priority="primary"
             onClick={this.handleAddRule}
             icon="icon-circle-add"
-            size="zero"
+            iconOnly={true}
           />
         </BuilderBar>
       </React.Fragment>
@@ -217,13 +217,6 @@ const Divider = styled(InlineSvg)`
   color: ${p => p.theme.borderDark};
   flex-shrink: 0;
   margin-right: 5px;
-`;
-
-const RuleAddButton = styled(Button)`
-  width: 37px;
-  height: 37px;
-  flex-shrink: 0;
-  padding: 10px 12px !important;
 `;
 
 export default RuleBuilder;

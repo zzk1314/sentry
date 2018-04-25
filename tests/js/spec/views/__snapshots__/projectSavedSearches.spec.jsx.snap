@@ -348,35 +348,36 @@ exports[`ProjectSavedSearches renders 1`] = `
                                         priority="primary"
                                       >
                                         <Button
-                                          disabled={false}
                                           onClick={[Function]}
                                           size="small"
                                         >
-                                          <button
-                                            className="button button-default button-sm"
+                                          <UnstyledButton
+                                            className="css-a8laap-Button css-16x0j7h0"
                                             disabled={false}
                                             onClick={[Function]}
-                                            role="button"
+                                            size="small"
                                           >
-                                            <Flex
-                                              align="center"
-                                              className="button-label"
+                                            <button
+                                              className="css-a8laap-Button css-16x0j7h0"
+                                              disabled={false}
+                                              onClick={[Function]}
+                                              role="button"
+                                              size="small"
                                             >
-                                              <Base
-                                                align="center"
-                                                className="button-label css-5ipae5"
+                                              <ButtonLabel
+                                                size="small"
                                               >
                                                 <div
-                                                  className="button-label css-5ipae5"
-                                                  is={null}
+                                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                  size="small"
                                                 >
                                                   <span
                                                     className="icon icon-trash"
                                                   />
                                                 </div>
-                                              </Base>
-                                            </Flex>
-                                          </button>
+                                              </ButtonLabel>
+                                            </button>
+                                          </UnstyledButton>
                                         </Button>
                                         <Modal
                                           animation={false}
@@ -605,35 +606,36 @@ exports[`ProjectSavedSearches renders 1`] = `
                                         priority="primary"
                                       >
                                         <Button
-                                          disabled={false}
                                           onClick={[Function]}
                                           size="small"
                                         >
-                                          <button
-                                            className="button button-default button-sm"
+                                          <UnstyledButton
+                                            className="css-a8laap-Button css-16x0j7h0"
                                             disabled={false}
                                             onClick={[Function]}
-                                            role="button"
+                                            size="small"
                                           >
-                                            <Flex
-                                              align="center"
-                                              className="button-label"
+                                            <button
+                                              className="css-a8laap-Button css-16x0j7h0"
+                                              disabled={false}
+                                              onClick={[Function]}
+                                              role="button"
+                                              size="small"
                                             >
-                                              <Base
-                                                align="center"
-                                                className="button-label css-5ipae5"
+                                              <ButtonLabel
+                                                size="small"
                                               >
                                                 <div
-                                                  className="button-label css-5ipae5"
-                                                  is={null}
+                                                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                                                  size="small"
                                                 >
                                                   <span
                                                     className="icon icon-trash"
                                                   />
                                                 </div>
-                                              </Base>
-                                            </Flex>
-                                          </button>
+                                              </ButtonLabel>
+                                            </button>
+                                          </UnstyledButton>
                                         </Button>
                                         <Modal
                                           animation={false}

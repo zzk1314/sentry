@@ -89,7 +89,7 @@ exports[`ProjectTeamsSettings render() renders 1`] = `
   >
     <BuilderBar>
       <div
-        className="css-1rsoebt-BuilderBar css-13f5eg05"
+        className="css-1rsoebt-BuilderBar css-1rd74gn5"
       >
         <BuilderSelect
           onChange={[Function]}
@@ -97,7 +97,7 @@ exports[`ProjectTeamsSettings render() renders 1`] = `
           value="path"
         >
           <SelectInput
-            className="css-1eslqkc-BuilderSelect css-13f5eg06"
+            className="css-1eslqkc-BuilderSelect css-1rd74gn6"
             disabled={false}
             multiple={false}
             onChange={[Function]}
@@ -107,7 +107,7 @@ exports[`ProjectTeamsSettings render() renders 1`] = `
             value="path"
           >
             <select
-              className="css-1eslqkc-BuilderSelect css-13f5eg06"
+              className="css-1eslqkc-BuilderSelect css-1rd74gn6"
               disabled={false}
               multiple={false}
               onChange={[Function]}
@@ -135,7 +135,7 @@ exports[`ProjectTeamsSettings render() renders 1`] = `
           value=""
         >
           <input
-            className="css-1t4syiu-Input-BuilderInput css-13f5eg07"
+            className="css-1t4syiu-Input-BuilderInput css-1rd74gn7"
             onChange={[Function]}
             placeholder="src/example/*"
             value=""
@@ -145,17 +145,17 @@ exports[`ProjectTeamsSettings render() renders 1`] = `
           src="icon-chevron-right"
         >
           <InlineSvg
-            className="css-a4tn6s-Divider css-13f5eg08"
+            className="css-a4tn6s-Divider css-1rd74gn8"
             src="icon-chevron-right"
           >
             <StyledSvg
-              className="css-a4tn6s-Divider css-13f5eg08"
+              className="css-a4tn6s-Divider css-1rd74gn8"
               height="1em"
               viewBox={Object {}}
               width="1em"
             >
               <svg
-                className="css-13f5eg08 css-5e2rei-StyledSvg css-adkcw30"
+                className="css-1rd74gn8 css-5e2rei-StyledSvg css-adkcw30"
                 height="1em"
                 viewBox={Object {}}
                 width="1em"
@@ -379,88 +379,75 @@ exports[`ProjectTeamsSettings render() renders 1`] = `
             </div>
           </Base>
         </Flex>
-        <RuleAddButton
+        <Button
           icon="icon-circle-add"
+          iconOnly={true}
           onClick={[Function]}
           priority="primary"
-          size="zero"
         >
-          <Button
-            className="css-3daogo-RuleAddButton css-13f5eg09"
+          <UnstyledButton
+            className="css-rigvt6-Button css-16x0j7h0"
             disabled={false}
             icon="icon-circle-add"
+            iconOnly={true}
             onClick={[Function]}
             priority="primary"
-            size="zero"
           >
             <button
-              className="css-3daogo-RuleAddButton css-13f5eg09 button button-primary button-zero"
+              className="css-rigvt6-Button css-16x0j7h0"
               disabled={false}
               onClick={[Function]}
+              priority="primary"
               role="button"
             >
-              <Flex
-                align="center"
-                className="button-label"
+              <ButtonLabel
+                iconOnly={true}
               >
-                <Base
-                  align="center"
-                  className="button-label css-5ipae5"
+                <div
+                  className="css-hey48x-ButtonLabel css-16x0j7h1"
                 >
-                  <div
-                    className="button-label css-5ipae5"
-                    is={null}
+                  <IconContainer
+                    iconOnly={true}
                   >
-                    <Icon
-                      size="zero"
+                    <div
+                      className="css-1ut89tx-IconContainer css-16x0j7h2"
                     >
-                      <Base
-                        className="css-l3pkcx-Icon css-1vxxnb60"
-                        size="zero"
+                      <StyledInlineSvg
+                        size="16px"
+                        src="icon-circle-add"
                       >
-                        <div
-                          className="css-l3pkcx-Icon css-1vxxnb60"
-                          is={null}
-                          size="zero"
+                        <InlineSvg
+                          className="css-1ov3rcq-StyledInlineSvg css-16x0j7h3"
+                          size="16px"
+                          src="icon-circle-add"
                         >
-                          <StyledInlineSvg
-                            size="16px"
-                            src="icon-circle-add"
+                          <StyledSvg
+                            className="css-1ov3rcq-StyledInlineSvg css-16x0j7h3"
+                            height="16px"
+                            viewBox={Object {}}
+                            width="16px"
                           >
-                            <InlineSvg
-                              className="css-1ov3rcq-StyledInlineSvg css-1vxxnb61"
-                              size="16px"
-                              src="icon-circle-add"
+                            <svg
+                              className="css-16x0j7h3 css-1rlza0i-StyledSvg css-adkcw30"
+                              height="16px"
+                              viewBox={Object {}}
+                              width="16px"
                             >
-                              <StyledSvg
-                                className="css-1ov3rcq-StyledInlineSvg css-1vxxnb61"
-                                height="16px"
-                                viewBox={Object {}}
-                                width="16px"
-                              >
-                                <svg
-                                  className="css-1vxxnb61 css-1rlza0i-StyledSvg css-adkcw30"
-                                  height="16px"
-                                  viewBox={Object {}}
-                                  width="16px"
-                                >
-                                  <use
-                                    href="#test"
-                                    xlinkHref="#test"
-                                  />
-                                </svg>
-                              </StyledSvg>
-                            </InlineSvg>
-                          </StyledInlineSvg>
-                        </div>
-                      </Base>
-                    </Icon>
-                  </div>
-                </Base>
-              </Flex>
+                              <use
+                                href="#test"
+                                xlinkHref="#test"
+                              />
+                            </svg>
+                          </StyledSvg>
+                        </InlineSvg>
+                      </StyledInlineSvg>
+                    </div>
+                  </IconContainer>
+                </div>
+              </ButtonLabel>
             </button>
-          </Button>
-        </RuleAddButton>
+          </UnstyledButton>
+        </Button>
       </div>
     </BuilderBar>
   </RuleBuilder>
@@ -521,29 +508,33 @@ url:http://example.com/settings/* #product"
           priority="primary"
           size="small"
         >
-          <button
-            className="button button-primary button-sm"
+          <UnstyledButton
+            className="css-df8a3d-Button css-16x0j7h0"
             disabled={false}
             onClick={[Function]}
-            role="button"
+            priority="primary"
+            size="small"
           >
-            <Flex
-              align="center"
-              className="button-label"
+            <button
+              className="css-df8a3d-Button css-16x0j7h0"
+              disabled={false}
+              onClick={[Function]}
+              priority="primary"
+              role="button"
+              size="small"
             >
-              <Base
-                align="center"
-                className="button-label css-5ipae5"
+              <ButtonLabel
+                size="small"
               >
                 <div
-                  className="button-label css-5ipae5"
-                  is={null}
+                  className="css-1mffzag-ButtonLabel css-16x0j7h1"
+                  size="small"
                 >
                   Save Changes
                 </div>
-              </Base>
-            </Flex>
-          </button>
+              </ButtonLabel>
+            </button>
+          </UnstyledButton>
         </Button>
       </div>
     </SaveButton>

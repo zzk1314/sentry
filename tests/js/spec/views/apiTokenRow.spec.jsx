@@ -16,7 +16,7 @@ describe('ApiTokenRow', function() {
     let cb = jest.fn();
     let wrapper = mount(<ApiTokenRow onRemove={cb} token={TestStubs.ApiToken()} />);
 
-    wrapper.find('Button').simulate('click');
+    wrapper.find('button').simulate('click');
     expect(cb).toHaveBeenCalled();
   });
 });

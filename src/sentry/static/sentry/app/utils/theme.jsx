@@ -33,6 +33,7 @@ const theme = {
   red: '#e03e2f',
   redLight: '#FA5849',
   redDark: '#C72516',
+  redDarkest: 'green',
 
   pink: '#F868BC',
   pinkLight: '#FF82D6',
@@ -86,7 +87,10 @@ const theme = {
   },
 
   grid: 8,
+
+  fontSizeXSmall: '10px',
   fontSizeSmall: '12px',
+  fontSizeButton: '14px',
   fontSizeMedium: '16px',
   fontSizeLarge: '18px',
 

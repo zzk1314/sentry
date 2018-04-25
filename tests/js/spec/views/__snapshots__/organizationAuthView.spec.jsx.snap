@@ -152,7 +152,6 @@ exports[`OrganizationAuthView renders from api 1`] = `
         className="form-actions"
       >
         <Button
-          disabled={false}
           onClick={[Function]}
           priority="danger"
         >
