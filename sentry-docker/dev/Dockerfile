@@ -70,8 +70,10 @@ RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - \
 # make directories that we mount from local
 RUN mkdir -p /usr/src/sentry
 RUN mkdir -p /etc/sentry
+COPY sentry-docker/dev/docker-config.yml /etc/sentry/config.yml
+COPY sentry-docker/dev/docker-sentry.conf.py /etc/sentry/sentry.conf.py
 WORKDIR /usr/src/sentry
 ADD  scripts/docker-entrypoint.sh /entrypoint.sh
-# ENTRYPOINT [ "/entrypoint.sh" ]
+#ENTRYPOINT [ "/entrypoint.sh" ]
 
-CMD [ "/bin/bash"]
+#CMD [ "bash" ]
