@@ -5,20 +5,24 @@ import os.path
 
 CONF_ROOT = os.path.dirname(__file__)
 
-# environment variables that would be set by a docker link
+# environment variables (previously set in db.env but those aren't read in here)
 REDIS_ADDR = "redis"
 REDIS_PORT = 6379
 POSTGRES_ADDR = "db"
 POSTGRES_PORT = 5432
+POSTGRES_DB="sentry"
+POSTGRES_USER="sentry"
+POSTGRES_PASSWORD="secret_secret_sentry_pass"
+
 
 DATABASES = {
     'default': {
         'ENGINE': 'sentry.db.postgres',
-        'NAME': 'sentry',
-        'USER': 'sentry',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'NAME': POSTGRES_DB,
+        'USER': POSTGRES_USER,
+        'PASSWORD': POSTGRES_PASSWORD,
+        'HOST': POSTGRES_ADDR,
+        'PORT': POSTGRES_PORT,
         'AUTOCOMMIT': True,
         'ATOMIC_REQUESTS': False,
     }
@@ -87,7 +91,7 @@ SENTRY_CACHE = 'sentry.cache.redis.RedisCache'
 # information on configuring your queue broker and workers. Sentry relies
 # on a Python framework called Celery to manage queues.
 
-BROKER_URL = 'redis://localhost:6379'
+BROKER_URL = 'redis://redis:6379'
 
 ###############
 # Rate Limits #
