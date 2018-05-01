@@ -24,7 +24,7 @@ mail.backend: '%(mail.backend)s'  # Use dummy if you want to disable email entir
 
 # If you're using mailgun for inbound mail, set your API key and configure a
 # route to forward to /api/hooks/mailgun/inbound/
-x
+
 ###################
 # System Settings #
 ###################
