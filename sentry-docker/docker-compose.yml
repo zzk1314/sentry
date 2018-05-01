@@ -16,6 +16,8 @@ services:
       - "80:8000"
     volumes:
       - ../:/usr/src/sentry
+      #TODOelaine - perhaps mount script at this point of build?
+      # - ../scripts/docker-entrypoint.sh:/setup.sh
     depends_on:
       - redis
       - db
