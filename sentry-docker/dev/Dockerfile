@@ -3,8 +3,8 @@ FROM python:2.7.14-slim
 RUN groupadd -r redis --gid=998 && useradd -r -g redis --uid=998 redis \
     && groupadd -r postgres --gid=999 && useradd -r -g postgres --uid=999 postgres
 
-RUN apt-get update -q=2\
-    && apt-get install -y --no-install-recommends -q=2\
+RUN apt-get update -q=2 \
+    && apt-get install -y --no-install-recommends -q=2 \
         clang \
         curl \
         g++ \
@@ -68,12 +68,9 @@ RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - \
 
 
 # make directories that we mount from local
-RUN mkdir -p /usr/src/sentry
-RUN mkdir -p /etc/sentry
-# COPY sentry-docker/dev/docker-config.yml /etc/sentry/config.yml
-# COPY sentry-docker/dev/docker-sentry.conf.py /etc/sentry/sentry.conf.py
+RUN mkdir -p /usr/src/sentry /etc/sentry
 WORKDIR /usr/src/sentry
-ADD  scripts/docker-entrypoint.sh /entrypoint.sh
-ENTRYPOINT [ "/entrypoint.sh" ]
+# ADD  scripts/docker-entrypoint.sh /entrypoint.sh
+#ENTRYPOINT [ "/entrypoint.sh" ]
 
 CMD [ "bash" ]
