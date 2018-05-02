@@ -13,7 +13,7 @@ services:
     env_file:
        - dev/dev.env
     ports:
-      - "80:8000"
+      - "8000"
     volumes:
       - ../:/usr/src/sentry
       #TODOelaine - perhaps mount script at this point of build?
@@ -23,7 +23,6 @@ services:
       - db
     networks:
       - sentry
-    command: tail -f /dev/null
 
   # build redis service from official image
   redis:
