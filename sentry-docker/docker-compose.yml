@@ -14,10 +14,7 @@ services:
        - dev/dev.env
     ports:
       - "8000"
-<<<<<<< HEAD
       - "9000"
-=======
->>>>>>> 2827ddeb5c339baf01f5440146647b0cf139cee2
     volumes:
       - ../:/usr/src/sentry
       #TODOelaine - perhaps mount script at this point of build?
@@ -26,13 +23,9 @@ services:
       - redis
       - db
     networks:
-<<<<<<< HEAD
       - denver
     container_name: sentry-box
     command: tail -f /dev/null
-=======
-      - sentry
->>>>>>> 2827ddeb5c339baf01f5440146647b0cf139cee2
 
   # build redis service from official image
   redis:
