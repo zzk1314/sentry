@@ -12,7 +12,7 @@ if [ ! -f /.bootstrapped ]; then
   sentry createuser --email=root@localhost --password=admin --superuser --no-input
   touch /.bootstrapped
 
-  echo "done" && exit 0
+  echo "done" # && exit 0
 fi
 
 exec "$@"
