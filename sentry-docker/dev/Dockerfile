@@ -74,6 +74,6 @@ RUN mkdir -p /etc/sentry
 # COPY sentry-docker/dev/docker-sentry.conf.py /etc/sentry/sentry.conf.py
 WORKDIR /usr/src/sentry
 ADD  scripts/docker-entrypoint.sh /entrypoint.sh
-#ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
 
-#CMD [ "bash" ]
+CMD [ "bash" ]
