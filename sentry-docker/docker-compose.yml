@@ -18,11 +18,11 @@ services:
     volumes:
       - ../:/usr/src/sentry
       - ../sentry-docker/dev/docker-config.yml:/etc/sentry/config.yml
-      - ../sentry-docker/dev/docker-sentry.conf.py:/etc/sentry/conf.py
-      #TODOelaine - perhaps mount script at this point of build?
+      - ../sentry-docker/dev/docker-sentry.conf.py:/etc/sentry/sentry.conf.py
       - ../scripts/docker-entrypoint.sh:/entrypoint.sh
+      # - ../sentry-docker/dev/redis-cache.py:/usr/src/sentry/src/sentry/cache/redis.py
     depends_on:
-      - redis
+      - redis_mem
       - db
     networks:
       - denver
@@ -30,7 +30,7 @@ services:
     command: tail -f /dev/null
 
   # build redis service from official image
-  redis:
+  redis_mem:
     image: redis:alpine
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
@@ -52,8 +52,8 @@ services:
       - "5432:5432"
     networks:
       - denver
-    # env_file:
-    #   - db/db.env
+    env_file:
+      - db/db.env
     restart: always
     container_name: postgres
 
