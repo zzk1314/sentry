@@ -6,13 +6,16 @@ import os.path
 CONF_ROOT = os.path.dirname(__file__)
 
 # environment variables (previously set in db.env but those aren't read in here)
-REDIS_ADDR = 'redis://redis_mem'
+REDIS_ADDR = 'redis_mem'
 REDIS_PORT = 6379
-POSTGRES_ADDR = db
+REDIS_DB = 0
+
+
+POSTGRES_ADDR = 'db'
 POSTGRES_PORT = 5432
-POSTGRES_DB = sentry
-POSTGRES_USER = sentry
-# POSTGRES_PASSWORD =
+POSTGRES_DB = 'sentry'
+POSTGRES_USER = 'sentry'
+POSTGRES_PASSWORD = 'secret_secret_sentry_pass'
 
 
 DATABASES = {
@@ -20,7 +23,7 @@ DATABASES = {
         'ENGINE': 'sentry.db.postgres',
         'NAME': POSTGRES_DB,
         'USER': POSTGRES_USER,
-        'PASSWORD': 'secret_secret_sentry_pass',
+        'PASSWORD': POSTGRES_PASSWORD,
         'HOST': POSTGRES_ADDR,
         'PORT': POSTGRES_PORT,
         'AUTOCOMMIT': True,
@@ -93,7 +96,7 @@ SENTRY_CACHE = 'sentry.cache.redis.RedisCache'
 # information on configuring your queue broker and workers. Sentry relies
 # on a Python framework called Celery to manage queues.
 
-BROKER_URL = 'redis://localhost:6379'
+BROKER_URL = 'redis://redis_mem:6379/0'
 
 ###############
 # Rate Limits #
