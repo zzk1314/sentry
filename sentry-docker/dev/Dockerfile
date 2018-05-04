@@ -71,6 +71,6 @@ RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - \
 RUN mkdir -p /usr/src/sentry /etc/sentry
 WORKDIR /usr/src/sentry
 # ADD  scripts/docker-entrypoint.sh /entrypoint.sh
-#ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 CMD [ "bash" ]
