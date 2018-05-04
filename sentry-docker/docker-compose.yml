@@ -14,6 +14,7 @@ services:
        - dev/dev.env
     ports:
       - "9000:9000"
+      - "8000:8000"
     volumes:
       - ../:/usr/src/sentry
       - ../sentry-docker/dev/docker-config.yml:/etc/sentry/config.yml
