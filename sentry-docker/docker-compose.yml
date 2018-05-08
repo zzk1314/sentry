@@ -9,11 +9,11 @@ services:
       dockerfile: sentry-docker/dev/Dockerfile
       args:
         NODE_VERSION: 9.11.1
-        SENTRY_LIGHT_BUILD: 1
+        # SENTRY_LIGHT_BUILD: 1
     env_file:
        - dev/dev.env
     ports:
-      - "9000:9000"
+      # - "9000:9000"
       - "8000:8000"
     volumes:
       - ../:/usr/src/sentry
