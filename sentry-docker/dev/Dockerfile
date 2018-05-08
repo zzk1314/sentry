@@ -54,23 +54,16 @@ RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-
 # install yarn
 RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends yarn
-
-# temp steps to run pip install and yarn install during build
-# WORKDIR ~
-# ADD ./setup.py .
-# ADD ./requirements-dev.txt .
-# ARG SENTRY_LIGHT_BUILD
-# # RUN pip install -vvv -e ./requirements-dev.txt
-# ADD ./yarn.lock .
-# RUN yarn install
-
+    && apt-get update -q=2 \
+    && apt-get install -y --no-install-recommends -q=2 yarn
 
 # make directories that we mount from local
 RUN mkdir -p /usr/src/sentry /etc/sentry
+
+# change working directory to the volume we've mounted from host
 WORKDIR /usr/src/sentry
-# ADD  scripts/docker-entrypoint.sh /entrypoint.sh
+
+# install libraries, dependencies and sentry
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 CMD [ "bash" ]
