@@ -2,9 +2,9 @@
 set -ex
 
 if [ ! -f /.bootstrapped-lib ]; then
-    SENTRY_LIGHT_BUILD=1 pip install -vvv -e .[dev,tests]
+    pip install -vvv -e .[dev,tests]
     yarn install
-    touch /.bootstrapped
+    touch /.bootstrapped-lib
     make develop
     echo "SUCCESS: Libraries and dependencies installed!"
 fi
