@@ -11,7 +11,7 @@ fi
 
 if [ ! -f /.bootstrapped-sentry ]; then
     sentry upgrade --noinput
-    sentry createuser --email=root@localhost --password=admin --superuser --no-input
+    # sentry createuser --email=root@localhost --password=admin --superuser --no-input
     echo "User created
 
     login: root@localhost
@@ -20,7 +20,7 @@ if [ ! -f /.bootstrapped-sentry ]; then
 
     "
     touch /.bootstrapped-sentry
-    echo "SUCCESS: Sentry development environment set up" && exit 0
+    echo "SUCCESS: Sentry development environment set up" # && exit 0
 fi
 
 exec "$@"

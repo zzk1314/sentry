@@ -64,6 +64,11 @@ RUN mkdir -p /usr/src/sentry /etc/sentry
 WORKDIR /usr/src/sentry
 
 # install libraries, dependencies and sentry
-ENTRYPOINT [ "/entrypoint.sh" ]
+
+RUN pip install -vvv -e .[dev,tests] \
+    && yarn install \
+    && make develop \
+    && sentry upgrade --noinput \
+    && sentry createuser --email=root@localhost --password=admin --superuser --no-input
 
 CMD [ "sentry devserver" ]

@@ -24,6 +24,7 @@ services:
     networks:
       - denver-net
     container_name: sentry-box
+    # command: tail -f /dev/null
 
   # build redis service from official image
   redis_mem:
