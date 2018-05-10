@@ -66,4 +66,4 @@ WORKDIR /usr/src/sentry
 # install libraries, dependencies and sentry
 ENTRYPOINT [ "/entrypoint.sh" ]
 
-CMD [ "bash" ]
+CMD [ "sentry devserver" ]
