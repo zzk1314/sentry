@@ -6,8 +6,10 @@ from sentry.identity.pipeline import IdentityProviderPipeline
 from django.utils.translation import ugettext_lazy as _
 from sentry.utils.http import absolute_uri
 
-from .repository import BitbucketRepositoryProvider
 from .client import BitbucketApiClient
+from .issues import BitbucketIssueSync
+from .repository import BitbucketRepositoryProvider
+
 
 DESCRIPTION = """
 Bitbucket for Sentry.io
@@ -29,7 +31,11 @@ scopes = (
 )
 
 
-class BitbucketIntegration(Integration):
+class BitbucketIntegration(Integration, BitbucketIssueSync):
+    @property
+    def repository(self):
+        self.model.metadata['name']
+
     def get_client(self):
         return BitbucketApiClient(
             self.model.metadata['base_url'],
