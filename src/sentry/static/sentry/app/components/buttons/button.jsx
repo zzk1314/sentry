@@ -7,6 +7,7 @@ import styled, {css} from 'react-emotion';
 import ExternalLink from 'app/components/externalLink';
 import InlineSvg from 'app/components/inlineSvg';
 import Tooltip from 'app/components/tooltip';
+import {StyledButtonGroup} from 'app/components/buttonGroup';
 
 class Button extends React.Component {
   static propTypes = {
@@ -122,8 +123,6 @@ class Button extends React.Component {
   }
 }
 
-export default Button;
-
 const getFontSize = ({size, theme}) => {
   switch (size) {
     case 'xsmall':
@@ -202,6 +201,26 @@ const StyledButton = styled(({busy, external, borderless, ...props}) => {
   padding: 0;
   text-transform: none;
 
+  ${StyledButtonGroup} & {
+    &:last-child:not(:first-child) {
+      border-bottom-left-radius: 0;
+      border-top-left-radius: 0;
+    }
+
+    &:first-child:not(:last-child):not(.dropdown-toggle) {
+      border-bottom-right-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    & {
+      margin-left: -1px;
+    }
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+
   ${getFontWeight};
   font-size: ${getFontSize};
   ${getColors};
@@ -267,3 +286,6 @@ const Icon = styled(({hasChildren, ...props}) => <Box {...props} />)`
 const StyledInlineSvg = styled(InlineSvg)`
   display: block;
 `;
+
+export default Button;
+export {ButtonLabel};
