@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import logging
+
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -11,6 +13,7 @@ from sentry.integrations.issues import IssueSyncMixin
 
 from .client import JiraApiClient
 
+logger = logging.getLogger('sentry.integrations.jira')
 
 alert_link = {
     'text': 'Visit the **Atlassian Marketplace** to install this integration.',
@@ -406,6 +409,54 @@ class JiraIntegration(Integration, IssueSyncMixin):
             'description': issue['fields']['description'],
             'key': issue_key,
         }
+
+    def sync_assignee_outbound(self, external_issue, user, **kwargs):
+        """
+        Propagate a sentry issue's assignee to a jira issue's assignee
+        if user is None, unassign
+        """
+        client = self.get_client()
+
+        jira_user = None
+        if user is not None:
+            for ue in user.emails.filter(is_verified=True):
+                try:
+                    res = client.search_users_for_issue(external_issue.key, ue.email)
+                except (ApiUnauthorized, ApiError):
+                    continue
+                try:
+                    jira_user = [
+                        r for r in res if r['emailAddress'] == ue.email
+                    ][0]
+                except IndexError:
+                    pass
+                else:
+                    break
+
+            if jira_user is None:
+                # TODO(jess): do we want to email people about these types of failures?
+                logger.info(
+                    'jira.assignee-not-found',
+                    extra={
+                        'integration_id': external_issue.integration_id,
+                        'user_id': user.id,
+                        'issue_key': external_issue.key,
+                    }
+                )
+                return
+
+        try:
+            client.assign_issue(external_issue.key, jira_user and jira_user['name'])
+        except (ApiUnauthorized, ApiError):
+            # TODO(jess): do we want to email people about these types of failures?
+            logger.info(
+                'jira.failed-to-assign',
+                extra={
+                    'integration_id': external_issue.integration_id,
+                    'user_id': user.id,
+                    'issue_key': external_issue.key,
+                }
+            )
 
 
 class JiraIntegrationProvider(IntegrationProvider):
