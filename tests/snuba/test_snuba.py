@@ -2,12 +2,22 @@ from __future__ import absolute_import
 
 from datetime import datetime, timedelta
 import pytest
+import subprocess
 import time
 import uuid
 
 from sentry.models import GroupHash, GroupHashTombstone
 from sentry.testutils import SnubaTestCase
 from sentry.utils import snuba
+
+
+def run_kafka_topic_command(args):
+    subprocess.check_call(['docker', 'exec', 'kafka', 'kafka-topics', '--zookeeper', 'zookeeper:2181'] + list(args))
+
+
+def test_kafka():
+    run_kafka_topic_command(['--create', '--topic', 'messages', '--replication-factor', '1', '--partitions', '1'])
+    run_kafka_topic_command(['--delete', '--topic', 'messages'])
 
 
 class SnubaTest(SnubaTestCase):
