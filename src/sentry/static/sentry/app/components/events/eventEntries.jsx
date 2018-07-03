@@ -42,6 +42,7 @@ export const INTERFACES = {
   expectct: GenericInterface,
   expectstaple: GenericInterface,
   hpkp: GenericInterface,
+  'policy-report': GenericInterface,
   breadcrumbs: BreadcrumbsInterface,
   threads: ThreadsInterface,
   debugmeta: DebugMetaInterface,

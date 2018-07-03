@@ -377,6 +377,13 @@ const projectSettingsRoutes = (
         component={errorHandler(LazyLoad)}
       />
       <Route
+        path="feature-policy/"
+        name="Feature Policy"
+        componentPromise={() =>
+          import(/*webpackChunkName: "ProjectFeaturePolicyReports"*/ './views/settings/projectSecurityHeaders/featurePolicy')}
+        component={errorHandler(LazyLoad)}
+      />
+      <Route
         path="hpkp/"
         name="HPKP"
         componentPromise={() =>
