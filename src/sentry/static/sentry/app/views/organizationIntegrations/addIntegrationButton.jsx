@@ -56,7 +56,6 @@ export default class AddIntegrationButton extends React.Component {
     const {left, top} = computeCenteredWindow(width, height);
 
     const installUrl = reinstall ? url + `?reinstall_id=${integration.id}` : url;
-
     this.dialog = window.open(
       installUrl,
       name,
