@@ -30,6 +30,21 @@ class BitbucketDescriptorEndpoint(Endpoint):
                     'uninstalled': '/extensions/bitbucket/uninstalled/'
                 },
                 'scopes': scopes,
-                'contexts': ['account']
+                'contexts': ['account'],
+                'modules': {
+                    'postInstallRedirect': {
+                        # from depricated example here: https://developer.atlassian.com/cloud/bitbucket/modules/post-install-redirect/
+                        'key': 'redirect',
+                        'url': '/extensions/bitbucket/installed?user={user_username}/'  # is this the idea? to give context to the intalled endpoint?
+                        # ????
+                        # user.username
+                        # user.uuid
+                        # user. (etc)
+                        # target_user.username
+                        # target_user.uuid
+                        # target_user. (etc)
+                        # where user is the authenticated user and target_user is the account into which the app is installed (could be a team or a personal account)
+                    }
+                }
             }
         )
