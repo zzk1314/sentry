@@ -5,6 +5,7 @@ import {Box} from 'grid-emotion';
 
 import AutoSelectText from 'app/components/autoSelectText';
 import Chart from 'app/views/organizationDiscover/chart.jsx';
+import BarChart from 'app/views/organizationDiscover/barchart.jsx';
 
 import _ from 'lodash';
 
@@ -21,7 +22,8 @@ export default class Result extends React.Component {
   renderTable() {
     const {meta, data} = this.props.result;
     console.log('Table Data: ', data);
-
+    // const x = _.groupBy(data, 'platform');
+    // console.log('~~~~~ grouped by', x);
     const {renderChart} = this.props;
     return (
       <StyledTable className="table table-bordered table-hover">
@@ -105,6 +107,7 @@ export default class Result extends React.Component {
         </Summary>
         {this.renderTable()}
         {this.renderChart()}
+        <BarChart/>
       </div>
     );
   }
