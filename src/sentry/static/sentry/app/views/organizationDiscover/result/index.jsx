@@ -64,7 +64,7 @@ export default class Result extends React.Component {
 
     let found = data[0].keys().some(r => whitelisted.includes(r));
 
-    for (var key in data[0]) {
+    for (let key in data[0]) {
       if (data[0].hasOwnProperty(key)) {
         if (contains.call(whitelisted, key)) {
           // decide which field will represent lines in chart
@@ -74,15 +74,15 @@ export default class Result extends React.Component {
     }
 
     if (found && chosen) {
-      for (var i = 0; i < data.length; i++) {
+      for (let i = 0; i < data.length; i++) {
         if (!$.inArray(data[i][chosen], lines)) {
           // get all values for field chosen to represent lines in chart
           lines.push(data[i][chosen]);
         }
       }
-      for (var obj in data) {
+      for (let obj in data) {
         if (obj.hasOwnProperty(chosen)) {
-          for (var item in lines) {
+          for (let item in lines) {
           }
         }
       }
@@ -92,7 +92,7 @@ export default class Result extends React.Component {
   render() {
     const {error, timing, data} = this.props.result;
     const {renderChart} = this.props;
-    console.log("Rendering Chart? - ", renderChart);
+    console.log('Rendering Chart? - ', renderChart);
 
     if (error) {
       return <div>{error}</div>;
