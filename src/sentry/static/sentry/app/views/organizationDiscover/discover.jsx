@@ -140,11 +140,13 @@ export default class OrganizationDiscover extends React.Component {
 
     const query = queryBuilder.getInternal();
     const columns = queryBuilder.getColumns();
+    console.log("Query: ", query);
 
     const fieldOptions = columns.map(({name}) => ({
       value: name,
       label: name,
     }));
+    const renderChart = !!query["aggregations"].length;
 
     return (
       <div className="organization-home">
@@ -224,7 +226,7 @@ export default class OrganizationDiscover extends React.Component {
             </Button>
           </Box>
           <Box w={[2 / 3, 2 / 3, 2 / 3, 3 / 4]} pl={2}>
-            {result && <Result result={result} />}
+            {result && <Result result={result} renderChart={renderChart}/>}
           </Box>
         </Flex>
       </div>

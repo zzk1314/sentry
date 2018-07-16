@@ -4,6 +4,9 @@ import styled from 'react-emotion';
 import {Box} from 'grid-emotion';
 
 import AutoSelectText from 'app/components/autoSelectText';
+import Chart from 'app/views/organizationDiscover/chart.jsx';
+
+import _ from 'lodash';
 
 import {getDisplayValue} from './utils';
 /**
@@ -17,7 +20,9 @@ export default class Result extends React.Component {
 
   renderTable() {
     const {meta, data} = this.props.result;
+    console.log('Table Data: ', data);
 
+    const {renderChart} = this.props;
     return (
       <StyledTable className="table table-bordered table-hover">
         <thead>
@@ -42,8 +47,52 @@ export default class Result extends React.Component {
     );
   }
 
+  renderChart() {
+    const {data} = this.props.result;
+    const labels = data.map(entry => moment(entry.timestamp).format('MM-DD'));
+
+    // this.parseData();
+    return <Chart />;
+  }
+
+  parseData() {
+    const {data} = this.props.result;
+    const blacklisted = ['timestamp'];
+    const whitelisted = ['platform', 'environment'];
+    let chosen;
+    let lines = [];
+
+    let found = data[0].keys().some(r => whitelisted.includes(r));
+
+    for (var key in data[0]) {
+      if (data[0].hasOwnProperty(key)) {
+        if (contains.call(whitelisted, key)) {
+          // decide which field will represent lines in chart
+          chosen = key;
+        }
+      }
+    }
+
+    if (found && chosen) {
+      for (var i = 0; i < data.length; i++) {
+        if (!$.inArray(data[i][chosen], lines)) {
+          // get all values for field chosen to represent lines in chart
+          lines.push(data[i][chosen]);
+        }
+      }
+      for (var obj in data) {
+        if (obj.hasOwnProperty(chosen)) {
+          for (var item in lines) {
+          }
+        }
+      }
+    }
+  }
+
   render() {
     const {error, timing, data} = this.props.result;
+    const {renderChart} = this.props;
+    console.log("Rendering Chart? - ", renderChart);
 
     if (error) {
       return <div>{error}</div>;
@@ -55,6 +104,7 @@ export default class Result extends React.Component {
           snuba query time: {timing.duration_ms}ms, {data.length} rows
         </Summary>
         {this.renderTable()}
+        {this.renderChart()}
       </div>
     );
   }
