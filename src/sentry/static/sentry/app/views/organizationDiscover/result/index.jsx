@@ -6,6 +6,7 @@ import {Box} from 'grid-emotion';
 import AutoSelectText from 'app/components/autoSelectText';
 import Chart from 'app/views/organizationDiscover/chart.jsx';
 import BarChart from 'app/views/organizationDiscover/barchart.jsx';
+import OurChart from 'app/components/charts/baseChart'
 
 import _ from 'lodash';
 

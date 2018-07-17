@@ -2,16 +2,38 @@ import React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import moment from 'moment/moment';
 import theme from 'app/utils/theme';
+import _ from 'lodash';
 
-const {data} = require('./tempData.js');
+const {data} = require('./transData.js');
 
-export default class chart extends React.Component {
+export default class Chart extends React.Component {
+  getLineSeries = () => {
+    const lineSeries = _.groupBy(data, (dataPoint) => {return dataPoint['tags[transaction]']});
+    return lineSeries;
+  };
+
+  getColorList(idx) {
+    return [theme.blueDark, theme.gray2, theme.purple,
+              theme.orangeDark, theme.gray5, theme.purpleDark][idx % 5]
+  }
+
+ defineSeries = ([key, value], idx) => {
+   console.log(idx)
+   return {
+    name: key,
+    type: 'line',
+    // areaStyle: {normal: {}},
+    data: value.map(entry => entry.count), //TODO: make reusable
+    color: this.getColorList(idx), //function for color picking
+    }
+  };
+
   getOption = () => {
     const labels = data.map(entry => moment(entry.time).format('MM-DD'));
-    const dataSet = data.map(entry => entry.aggregate);
-    const dataSet2 = data.map(
-      entry => entry.aggregate + entry.aggregate / 12 * 13 + Math.random()
-    );
+    const dataset = this.getLineSeries();
+
+    const series = Object.entries(dataset).map(this.defineSeries)
+    console.log('series', series)
 
     return {
       title: {
@@ -46,28 +68,30 @@ export default class chart extends React.Component {
           type: 'value',
         },
       ],
-      series: [
-        {
-          name: 'Aggregate Events over Time',
-          type: 'line',
-          stack: 'Aggregates',
-          areaStyle: {normal: {}},
-          data: dataSet,
-          color: theme.blueDark,
-        },
-        {
-          name: 'Aggregate Events over Time 2',
-          type: 'line',
-          stack: 'Aggregates 2',
-          areaStyle: {normal: {}},
-          data: dataSet2,
-          color: theme.gray2,
-        },
-      ],
+      series,
+      //   [
+      //   {
+      //     name: 'Aggregate Events over Time',
+      //     type: 'line',
+      //     stack: 'Aggregates',
+      //     areaStyle: {normal: {}},
+      //     data: dataSet,
+      //     color: theme.blueDark,
+      //   },
+      //   {
+      //     name: 'Aggregate Events over Time 2',
+      //     type: 'line',
+      //     stack: 'Aggregates 2',
+      //     areaStyle: {normal: {}},
+      //     data: dataSet2,
+      //     color: theme.gray2,
+      //   },
+      // ],
     };
   };
 
   render() {
+    console.log("touches render");
     return (
       <div>
         <ReactEcharts
@@ -75,6 +99,8 @@ export default class chart extends React.Component {
           style={{height: '350px', width: '100%'}}
           className="react_for_echarts"
         />
+
+
       </div>
     );
   }
