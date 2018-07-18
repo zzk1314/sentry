@@ -57,6 +57,7 @@ const PluginActions = createReactClass({
         this.setState({
           issue: null,
           error: null,
+          actionType: 'create',
         });
       },
       error: error => {},
@@ -85,10 +86,18 @@ const PluginActions = createReactClass({
   },
 
   closeModal(data) {
-    this.setState({
-      showModal: false,
-      actionType: null,
-    });
+    if (data.issue_url) {
+      const url = data.issue_url.replace(/{'id': /, '').replace('}', '');
+      const issue_id = url.split('/').pop();
+      this.setState({
+        issue: {issue_id: issue_id, url: url},
+        showModal: false,
+      });
+    } else {
+      this.setState({
+        showModal: false,
+      });
+    }
   },
 
   handleClick(evt) {
