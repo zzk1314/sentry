@@ -72,8 +72,8 @@ export default class Result extends React.Component {
         </Summary>
         {this.renderTable()}
         {this.renderChart()}
-        <BarChart/>
-        <DynamicChart/>
+        <BarChart />
+        <DynamicChart />
       </div>
     );
   }

@@ -13,7 +13,7 @@ export function getQueryFromQueryString(queryString) {
     }
   });
   result.rollup = 86400;
-  console.log("QUERY: ", result);
+  console.log('QUERY: ', result);
 
   return result;
 }

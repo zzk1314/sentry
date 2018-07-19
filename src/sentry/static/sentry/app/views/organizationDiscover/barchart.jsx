@@ -13,29 +13,37 @@ export default class chart extends React.Component {
     },
     tooltip: {},
     legend: {
-      data:['legend-data']
+      data: ['legend-data'],
     },
     xAxis: {
-      data: ['a', 'b', 'c', 'd', 'e', 'f']
+      data: ['a', 'b', 'c', 'd', 'e', 'f'],
     },
     grid: {
       top: 20,
     },
     yAxis: {},
-    series: [{
-      name: 'series name',
-      type: 'bar',
-      data: [5, 20, 36, 10, 10, 20],
-      itemStyle: {
-        normal: {
-          color: function(params) {
-            const colorList = [theme.blueDark, theme.gray2, theme.purple,
-              theme.orangeDark, theme.gray5, theme.purpleDark];
-            return colorList[params.dataIndex];
-          }
-        }
-      }
-    }]
+    series: [
+      {
+        name: 'series name',
+        type: 'bar',
+        data: [5, 20, 36, 10, 10, 20],
+        itemStyle: {
+          normal: {
+            color: function(params) {
+              const colorList = [
+                theme.blueDark,
+                theme.gray2,
+                theme.purple,
+                theme.orangeDark,
+                theme.gray5,
+                theme.purpleDark,
+              ];
+              return colorList[params.dataIndex];
+            },
+          },
+        },
+      },
+    ],
   });
 
   render() {
@@ -45,7 +53,7 @@ export default class chart extends React.Component {
           option={this.getOption()}
           style={{height: '350px', width: '100%'}}
           className="react_for_echarts"
-          opts={{ renderer: 'svg' }}
+          opts={{renderer: 'svg'}}
         />
       </div>
     );

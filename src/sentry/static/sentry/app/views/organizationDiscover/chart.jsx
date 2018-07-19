@@ -8,31 +8,39 @@ const {data} = require('./transData.js');
 
 export default class Chart extends React.Component {
   getLineSeries = () => {
-    return  _.groupBy(data, (dataPoint) => {return dataPoint['tags[transaction]']});
+    return _.groupBy(data, dataPoint => {
+      return dataPoint['tags[transaction]'];
+    });
   };
 
   getColorList(idx) {
-    return [theme.blueDark, theme.gray2, theme.purple,
-              theme.orangeDark, theme.gray5, theme.purpleDark][idx % 5]
+    return [
+      theme.blueDark,
+      theme.gray2,
+      theme.purple,
+      theme.orangeDark,
+      theme.gray5,
+      theme.purpleDark,
+    ][idx % 5];
   }
 
- defineSeries = ([key, value], idx) => {
-   console.log(idx)
-   return {
-    name: key,
-    type: 'line',
-    // areaStyle: {normal: {}},
-    data: value.map(entry => entry.count), //TODO: make reusable
-    color: this.getColorList(idx),
-    }
+  defineSeries = ([key, value], idx) => {
+    console.log(idx);
+    return {
+      name: key,
+      type: 'line',
+      // areaStyle: {normal: {}},
+      data: value.map(entry => entry.count), //TODO: make reusable
+      color: this.getColorList(idx),
+    };
   };
 
   getOption = () => {
     const labels = data.map(entry => moment(entry.timestamp).format('MM-DD'));
     const dataset = this.getLineSeries();
 
-    const series = Object.entries(dataset).map(this.defineSeries)
-    console.log('series', series)
+    const series = Object.entries(dataset).map(this.defineSeries);
+    console.log('series', series);
 
     return {
       title: {
@@ -68,39 +76,18 @@ export default class Chart extends React.Component {
         },
       ],
       series,
-      //   [
-      //   {
-      //     name: 'Aggregate Events over Time',
-      //     type: 'line',
-      //     stack: 'Aggregates',
-      //     areaStyle: {normal: {}},
-      //     data: dataSet,
-      //     color: theme.blueDark,
-      //   },
-      //   {
-      //     name: 'Aggregate Events over Time 2',
-      //     type: 'line',
-      //     stack: 'Aggregates 2',
-      //     areaStyle: {normal: {}},
-      //     data: dataSet2,
-      //     color: theme.gray2,
-      //   },
-      // ],
     };
   };
 
   render() {
-    console.log("touches render");
     return (
       <div>
         <ReactEcharts
           option={this.getOption()}
           style={{height: '350px', width: '100%'}}
           className="react_for_echarts"
-          opts={{ renderer: 'svg' }}
+          opts={{renderer: 'svg'}}
         />
-
-
       </div>
     );
   }
