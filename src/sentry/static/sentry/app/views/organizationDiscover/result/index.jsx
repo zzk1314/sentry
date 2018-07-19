@@ -6,9 +6,7 @@ import {Box} from 'grid-emotion';
 import AutoSelectText from 'app/components/autoSelectText';
 import Chart from 'app/views/organizationDiscover/chart.jsx';
 import BarChart from 'app/views/organizationDiscover/barchart.jsx';
-import OurChart from 'app/components/charts/baseChart'
-
-import _ from 'lodash';
+import DynamicChart from 'app/views/organizationDiscover/dynamicChart.jsx';
 
 import {getDisplayValue} from './utils';
 /**
@@ -58,40 +56,6 @@ export default class Result extends React.Component {
     return <Chart />;
   }
 
-  parseData() {
-    const {data} = this.props.result;
-    const blacklisted = ['timestamp'];
-    const whitelisted = ['platform', 'environment'];
-    let chosen;
-    let lines = [];
-
-    let found = data[0].keys().some(r => whitelisted.includes(r));
-
-    for (let key in data[0]) {
-      if (data[0].hasOwnProperty(key)) {
-        if (contains.call(whitelisted, key)) {
-          // decide which field will represent lines in chart
-          chosen = key;
-        }
-      }
-    }
-
-    if (found && chosen) {
-      for (let i = 0; i < data.length; i++) {
-        if (!$.inArray(data[i][chosen], lines)) {
-          // get all values for field chosen to represent lines in chart
-          lines.push(data[i][chosen]);
-        }
-      }
-      for (let obj in data) {
-        if (obj.hasOwnProperty(chosen)) {
-          for (let item in lines) {
-          }
-        }
-      }
-    }
-  }
-
   render() {
     const {error, timing, data} = this.props.result;
     const {renderChart} = this.props;
@@ -109,6 +73,7 @@ export default class Result extends React.Component {
         {this.renderTable()}
         {this.renderChart()}
         <BarChart/>
+        <DynamicChart/>
       </div>
     );
   }

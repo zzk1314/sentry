@@ -8,8 +8,7 @@ const {data} = require('./transData.js');
 
 export default class Chart extends React.Component {
   getLineSeries = () => {
-    const lineSeries = _.groupBy(data, (dataPoint) => {return dataPoint['tags[transaction]']});
-    return lineSeries;
+    return  _.groupBy(data, (dataPoint) => {return dataPoint['tags[transaction]']});
   };
 
   getColorList(idx) {
@@ -24,12 +23,12 @@ export default class Chart extends React.Component {
     type: 'line',
     // areaStyle: {normal: {}},
     data: value.map(entry => entry.count), //TODO: make reusable
-    color: this.getColorList(idx), //function for color picking
+    color: this.getColorList(idx),
     }
   };
 
   getOption = () => {
-    const labels = data.map(entry => moment(entry.time).format('MM-DD'));
+    const labels = data.map(entry => moment(entry.timestamp).format('MM-DD'));
     const dataset = this.getLineSeries();
 
     const series = Object.entries(dataset).map(this.defineSeries)
@@ -98,6 +97,7 @@ export default class Chart extends React.Component {
           option={this.getOption()}
           style={{height: '350px', width: '100%'}}
           className="react_for_echarts"
+          opts={{ renderer: 'svg' }}
         />
 
 

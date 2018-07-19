@@ -12,6 +12,8 @@ export function getQueryFromQueryString(queryString) {
       result[key] = value;
     }
   });
+  result.rollup = 86400;
+  console.log("QUERY: ", result);
 
   return result;
 }

@@ -8,7 +8,8 @@ const {data} = require('./tempData.js');
 export default class chart extends React.Component {
   getOption = () => ({
     title: {
-      text: 'bar chart'
+      show: false,
+      // text: 'bar chart'
     },
     tooltip: {},
     legend: {
@@ -16,6 +17,9 @@ export default class chart extends React.Component {
     },
     xAxis: {
       data: ['a', 'b', 'c', 'd', 'e', 'f']
+    },
+    grid: {
+      top: 20,
     },
     yAxis: {},
     series: [{

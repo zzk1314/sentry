@@ -520,7 +520,7 @@ const theme =
 
 
 
-export default class Charts extends React.Component {
+class Charts extends React.Component {
 
 
   static propTypes = {
@@ -531,7 +531,7 @@ export default class Charts extends React.Component {
 
 
   mountChartComponent = (ref) => {
-    const {series, title}
+    const {series, title} = this.props;
     this.chartComponent = ref;
         const myChart = echarts.init(this.chartComponent, theme2, {renderer: 'svg'});
 

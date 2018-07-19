@@ -20,7 +20,7 @@ const OrganizationDiscoverContainer = createReactClass({
   },
 
   componentDidMount: function() {
-    const query = this.props.location.search;
+    let query = this.props.location.search;
 
     this.queryBuilder = createQueryBuilder(
       getQueryFromQueryString(query),
