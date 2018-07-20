@@ -3,6 +3,7 @@ import React from 'react';
 import styled from 'react-emotion';
 import InlineSvg from 'app/components/inlineSvg';
 import space from 'app/styles/space';
+import {capitalize} from 'lodash';
 
 class IssueSyncElement extends React.Component {
   static propTypes = {
@@ -10,17 +11,7 @@ class IssueSyncElement extends React.Component {
     externalIssueId: PropTypes.string,
     openModal: PropTypes.func,
     onClose: PropTypes.func,
-    integrationType: PropTypes.oneOf([
-      'github',
-      'github_enterprise',
-      'jira',
-      'vsts',
-      'asana',
-    ]),
-  };
-
-  static defaultProps = {
-    externalIssueLink: '#',
+    integrationType: PropTypes.string,
   };
 
   isLinked() {
@@ -44,7 +35,18 @@ class IssueSyncElement extends React.Component {
       case 'vsts':
         return 'VSTS';
       default:
-        return type.charAt(0).toUpperCase() + type.slice(1);
+        return capitalize(type);
+    }
+  }
+
+  getPrefix() {
+    switch (this.props.integrationType) {
+      case 'github':
+        return 'GH-';
+      case 'github_enterprise':
+        return 'GHE-';
+      default:
+        return this.getHumanName() + '-';
     }
   }
 
@@ -63,27 +65,27 @@ class IssueSyncElement extends React.Component {
     }
   }
 
-  getPrefix() {
-    switch (this.props.integrationType) {
-      case 'github':
-        return 'GH-';
-      case 'github_enterprise':
-        return 'GHE-';
-      default:
-        return this.getHumanName() + '-';
+  getLink() {
+    if (this.props.externalIssueLink) {
+      return (
+        <IntegrationLink href={this.props.externalIssueLink}>
+          {this.getText()}
+        </IntegrationLink>
+      );
+    } else if (this.props.openModal) {
+      return <IntegrationLink onClick={this.openModal}>{this.getText()}</IntegrationLink>;
     }
   }
 
   getText() {
-    return this.isLinked() ? (
-      <IntegrationLink href={this.props.externalIssueLink}>
-        {`${this.getPrefix()}${this.props.externalIssueId}`}
-      </IntegrationLink>
-    ) : (
-      <IntegrationLink onClick={this.handleClick}>
-        Link <IntegrationName>{this.props.integrationType}</IntegrationName> Issue
-      </IntegrationLink>
-    );
+    if (this.props.children) {
+      return this.props.children;
+    }
+    if (this.props.externalIssueId) {
+      return `${this.getPrefix()}${this.props.externalIssueId}`;
+    } else {
+      return `Link ${capitalize(this.props.integrationType)} Issue`;
+    }
   }
 
   render() {
@@ -91,7 +93,7 @@ class IssueSyncElement extends React.Component {
       <IssueSyncListElementContainer>
         <div>
           {this.getIcon()}
-          {this.getText()}
+          {this.getLink()}
         </div>
         <IconClose
           src="icon-close"
@@ -130,10 +132,6 @@ const IntegrationLink = styled('a')`
   &:hover {
     border-bottom: 1px solid ${p => p.theme.linkColor};
   }
-`;
-
-const IntegrationName = styled('span')`
-  text-transform: capitalize;
 `;
 
 const IconClose = styled(InlineSvg)`
