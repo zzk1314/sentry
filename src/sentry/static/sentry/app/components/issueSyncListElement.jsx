@@ -26,30 +26,6 @@ class IssueSyncElement extends React.Component {
     return this.props.onClose(this.props.externalIssueId);
   };
 
-  getHumanName() {
-    const type = this.props.integrationType;
-
-    switch (type) {
-      case 'github_enterprise':
-        return 'Github Enterprise';
-      case 'vsts':
-        return 'VSTS';
-      default:
-        return capitalize(type);
-    }
-  }
-
-  getPrefix() {
-    switch (this.props.integrationType) {
-      case 'github':
-        return 'GH-';
-      case 'github_enterprise':
-        return 'GHE-';
-      default:
-        return this.getHumanName() + '-';
-    }
-  }
-
   getIcon() {
     switch (this.props.integrationType) {
       case 'github':
@@ -65,7 +41,6 @@ class IssueSyncElement extends React.Component {
     }
   }
 
-<<<<<<< HEAD
   getPrettyName() {
     const type = this.props.integrationType;
     switch (type) {
@@ -73,8 +48,10 @@ class IssueSyncElement extends React.Component {
         return 'GitHub';
       case 'github_enterprise':
         return 'GitHub Enterprise';
+      case 'vsts':
+        return 'VSTS';
       default:
-        return type.charAt(0).toUpperCase() + type.slice(1);
+        return capitalize(type);
     }
   }
 
@@ -85,8 +62,8 @@ class IssueSyncElement extends React.Component {
       case 'github_enterprise':
         return 'GHE-';
       default:
-        return this.getHumanName() + '-';
-=======
+        return this.getPrettyName() + '-';
+
   getLink() {
     if (this.props.externalIssueLink) {
       return (
@@ -96,31 +73,19 @@ class IssueSyncElement extends React.Component {
       );
     } else if (this.props.openModal) {
       return <IntegrationLink onClick={this.openModal}>{this.getText()}</IntegrationLink>;
->>>>>>> add in pluginActions and recombine everything into a single list
     }
   }
 
   getText() {
-<<<<<<< HEAD
-    return this.isLinked() ? (
-      <IntegrationLink href={this.props.externalIssueLink}>
-        {`${this.getPrefix()}${this.props.externalIssueId}`}
-      </IntegrationLink>
-    ) : (
-      <IntegrationLink onClick={this.handleClick}>
-        Link {this.getPrettyName()} Issue
-      </IntegrationLink>
-    );
-=======
     if (this.props.children) {
       return this.props.children;
     }
-    if (this.props.externalIssueId) {
+
+    else if (this.props.externalIssueId) {
       return `${this.getPrefix()}${this.props.externalIssueId}`;
     } else {
       return `Link ${capitalize(this.props.integrationType)} Issue`;
     }
->>>>>>> add in pluginActions and recombine everything into a single list
   }
 
   render() {
@@ -128,7 +93,12 @@ class IssueSyncElement extends React.Component {
       <IssueSyncListElementContainer>
         <div>
           {this.getIcon()}
-          {this.getLink()}
+          <IntegrationLink
+            href={this.props.externalIssueLink}
+            onClick={this.props.openModal}
+          >
+            {this.getText()}
+          </IntegrationLink>
         </div>
         <IconClose
           src="icon-close"
