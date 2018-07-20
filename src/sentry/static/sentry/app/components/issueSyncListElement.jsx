@@ -65,18 +65,6 @@ class IssueSyncElement extends React.Component {
     }
   }
 
-  getLink() {
-    if (this.props.externalIssueLink) {
-      return (
-        <IntegrationLink href={this.props.externalIssueLink}>
-          {this.getText()}
-        </IntegrationLink>
-      );
-    } else if (this.props.openModal) {
-      return <IntegrationLink onClick={this.openModal}>{this.getText()}</IntegrationLink>;
-    }
-  }
-
   getText() {
     if (this.props.children) {
       return this.props.children;
@@ -93,7 +81,12 @@ class IssueSyncElement extends React.Component {
       <IssueSyncListElementContainer>
         <div>
           {this.getIcon()}
-          {this.getLink()}
+          <IntegrationLink
+            href={this.props.externalIssueLink}
+            onClick={this.props.openModal}
+          >
+            {this.getText()}
+          </IntegrationLink>
         </div>
         <IconClose
           src="icon-close"

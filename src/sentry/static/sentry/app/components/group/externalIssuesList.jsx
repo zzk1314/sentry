@@ -51,7 +51,7 @@ class ExternalIssueList extends AsyncComponent {
     return group.pluginActions && group.pluginActions.length
       ? group.pluginActions.map((plugin, i) => {
           return (
-            <IssueSyncListElement externalIssueLink={plugin[1]}>
+            <IssueSyncListElement externalIssueLink={plugin[1]} key={i}>
               {plugin[0]}
             </IssueSyncListElement>
           );
