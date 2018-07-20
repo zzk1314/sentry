@@ -114,7 +114,7 @@ describe('Phabricator', function() {
         data: expect.objectContaining({
           description: 'Notes',
           title: 'Sentry Issue Title',
-          tags: ['PHID-PROJ-3dfrsmwmavdv4gbg4fxd'],
+          tags: ['PHID-PROJ-biz3qujawd2dfknvhpqv'],
           assignee: 'PHID-USER-53avnyn5r6z6daqjfwdo',
         }),
       })

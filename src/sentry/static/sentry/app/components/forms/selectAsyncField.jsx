@@ -1,3 +1,4 @@
+import {fromPairs} from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -29,6 +30,10 @@ class SelectAsyncField extends SelectField {
      * Field ID
      */
     id: PropTypes.any,
+  };
+
+  static contextTypes = {
+    form: PropTypes.any,
   };
 
   static defaultProps = {
@@ -84,8 +89,19 @@ class SelectAsyncField extends SelectField {
   };
 
   onQuery = query => {
-    // Used by legacy integrations
-    return {autocomplete_query: query, autocomplete_field: this.props.name};
+    let {depends} = this.props;
+    let {form} = this.context;
+    let dependentFields = {};
+
+    if (form && form.data && depends) {
+      dependentFields = fromPairs(depends.map(key => [key, form.data[key]])) || {};
+    }
+
+    return {
+      autocomplete_query: query,
+      autocomplete_field: this.props.name,
+      ...dependentFields,
+    };
   };
 
   onChange = opt => {
