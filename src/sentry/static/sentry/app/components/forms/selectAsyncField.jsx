@@ -30,6 +30,12 @@ class SelectAsyncField extends SelectField {
      * Field ID
      */
     id: PropTypes.any,
+
+    /**
+     * A list of field names that we will try to retrieve current form values for
+     * in order to send with API request to fetch async results
+     */
+    depends: PropTypes.arrayOf(PropTypes.string),
   };
 
   static contextTypes = {
