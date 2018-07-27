@@ -599,18 +599,6 @@ function routes() {
           import(/*webpackChunkName:"AcceptProjectTransfer"*/ 'app/views/integrationInstallation')}
         component={errorHandler(LazyLoad)}
       />
-      <Route path="/account/" component={errorHandler(AccountLayout)}>
-        <Route path="authorizations/" component={errorHandler(AccountAuthorizations)} />
-      </Route>
-
-      <Route path="/api/" component={errorHandler(ApiLayout)}>
-        <IndexRoute component={errorHandler(ApiTokens)} />
-        <Route path="applications/" component={errorHandler(ApiApplications)} />
-        <Route
-          path="applications/:appId/"
-          component={errorHandler(ApiApplicationDetails)}
-        />
-      </Route>
 
       <Route newnew path="/settings/" name="Settings" component={SettingsWrapper}>
         <IndexRoute
