@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import six
 import logging
 from six.moves.urllib.parse import quote_plus
 
@@ -334,7 +335,14 @@ class JiraIntegration(Integration, IssueSyncMixin):
         fields = super(JiraIntegration, self).get_create_issue_config(group, **kwargs)
         params = kwargs.get('params', {})
 
-        # TODO(jess): update if we allow saving a default project key
+        # project_id is a long, but stored in the config as a string
+        project_id = six.text_type(kwargs.get('project_id'))
+
+        # We have to merge in the fields here since initial fields depend on
+        # persisted default values.
+        field_defaults = self.org_integration.config \
+            .get('project_issue_defaults', {}) \
+            .get(project_id, {})
 
         client = self.get_client()
         try:
@@ -346,16 +354,16 @@ class JiraIntegration(Integration, IssueSyncMixin):
             )
 
         try:
-            meta = resp['projects'][0]
+            projects = resp['projects']
+            project_id = field_defaults.get('project')
+            meta = next((p for p in projects if p['id'] == project_id), projects[0])
         except IndexError:
             raise IntegrationError(
                 'Error in Jira configuration, no projects found.'
             )
 
-        # check if the issuetype was passed as a parameter
-        issue_type = params.get('issuetype')
-
-        # TODO(jess): update if we allow specifying a default issuetype
+        # check if the issuetype was passed as a parameter. Fall back to default
+        issue_type = params.get('issuetype', field_defaults.get('issuetype'))
 
         issue_type_meta = self.get_issue_type_meta(issue_type, meta)
 
@@ -422,6 +430,9 @@ class JiraIntegration(Integration, IssueSyncMixin):
                 field['choices'] = self.make_choices(client.get_versions(meta['key']))
 
         return fields
+
+    def get_persisted_default_config_fields(self):
+        return ['project', 'issuetype']
 
     def create_issue(self, data, **kwargs):
         client = self.get_client()
