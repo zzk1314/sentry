@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import six
+
 from sentry.integrations.exceptions import ApiError, IntegrationError
 from sentry.integrations.issues import IssueBasicMixin
 from sentry.utils.http import absolute_uri
@@ -38,8 +40,17 @@ class GitHubIssueBasic(IssueBasicMixin):
             except ApiError as e:
                 raise IntegrationError(self.message_from_error(e))
 
+    def get_persisted_default_config_fields(self):
+        return ['repo']
+
     def get_create_issue_config(self, group, **kwargs):
         fields = super(GitHubIssueBasic, self).get_create_issue_config(group, **kwargs)
+
+        params = kwargs.get('params', {})
+
+        # project_id is a long, but stored in the config as a string
+        project_id = six.text_type(group.project_id)
+
         try:
             repos = self.get_repositories()
         except ApiError:
@@ -47,8 +58,15 @@ class GitHubIssueBasic(IssueBasicMixin):
         else:
             repo_choices = [(repo['identifier'], repo['name']) for repo in repos]
 
-        params = kwargs.get('params', {})
-        default_repo = params.get('repo', repo_choices[0][0])
+        # We have to merge in the fields here since initial fields depend on
+        # persisted default values.
+        field_defaults = self.org_integration.config \
+            .get('project_issue_defaults', {}) \
+            .get(project_id, {})
+
+        default_repo = field_defaults.get('repo', repo_choices[0][0])
+        default_repo = params.get('repo', default_repo)
+
         assignees = self.get_allowed_assignees(default_repo)
 
         return [
