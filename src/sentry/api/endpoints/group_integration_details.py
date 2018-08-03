@@ -97,6 +97,7 @@ class GroupIntegrationDetailsEndpoint(GroupEndpoint):
         else:
             external_issue.update(**defaults)
 
+        installation.store_issue_last_defaults(group.project_id, request.DATA)
         installation.after_link_issue(external_issue, data=request.DATA)
 
         try:
@@ -144,8 +145,6 @@ class GroupIntegrationDetailsEndpoint(GroupEndpoint):
         except IntegrationError as exc:
             return Response({'non_field_errors': exc.message}, status=400)
 
-        installation.store_issue_last_defaults(group.project_id, request.DATA)
-
         external_issue_key = installation.make_external_key(data)
         external_issue, created = ExternalIssue.objects.get_or_create(
             organization_id=organization_id,
@@ -176,6 +175,8 @@ class GroupIntegrationDetailsEndpoint(GroupEndpoint):
                 id=integration.id,
                 organization_id=organization_id,
             )
+
+        installation.store_issue_last_defaults(group.project_id, request.DATA)
 
         # TODO(jess): return serialized issue
         url = data.get('url') or installation.get_issue_url(external_issue.key)

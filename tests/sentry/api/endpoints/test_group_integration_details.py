@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import six
 
-from sentry.models import ExternalIssue, GroupLink, Integration
+from sentry.models import ExternalIssue, GroupLink, Integration, OrganizationIntegration
 from sentry.testutils import APITestCase
 from sentry.utils.http import absolute_uri
 
@@ -16,7 +16,12 @@ class GroupIntegrationDetailsTest(APITestCase):
             provider='example',
             name='Example',
         )
-        integration.add_organization(org.id)
+        config = {
+            'project_issue_defaults': {
+                group.project_id: {'project': '1'}
+            }
+        }
+        integration.add_organization(org.id, config=config)
 
         path = '/api/0/issues/{}/integrations/{}/?action=link'.format(group.id, integration.id)
 
@@ -44,6 +49,12 @@ class GroupIntegrationDetailsTest(APITestCase):
                 'type': 'string',
                 'name': 'externalIssue',
                 'label': 'Issue',
+            }, {
+                'name': 'project',
+                'label': 'Project',
+                'choices': [('1', 'Project 1'), ('2', 'Project 2')],
+                'type': 'select',
+                'default': '1',
             }]
         }
 
@@ -56,7 +67,12 @@ class GroupIntegrationDetailsTest(APITestCase):
             provider='example',
             name='Example',
         )
-        integration.add_organization(org.id)
+        config = {
+            'project_issue_defaults': {
+                group.project_id: {'project': '2'}
+            }
+        }
+        integration.add_organization(org.id, config=config)
 
         path = '/api/0/issues/{}/integrations/{}/?action=create'.format(group.id, integration.id)
 
@@ -97,6 +113,12 @@ class GroupIntegrationDetailsTest(APITestCase):
                     'label': 'Description',
                     'autosize': True,
                     'maxRows': 10,
+                }, {
+                    'name': 'project',
+                    'label': 'Project',
+                    'choices': [('1', 'Project 1'), ('2', 'Project 2')],
+                    'type': 'select',
+                    'default': '2',
                 }
             ]
         }
@@ -109,12 +131,13 @@ class GroupIntegrationDetailsTest(APITestCase):
             provider='example',
             name='Example',
         )
-        integration.add_organization(org.id)
+        org_integration = integration.add_organization(org.id)
 
         path = '/api/0/issues/{}/integrations/{}/'.format(group.id, integration.id)
 
         response = self.client.put(path, data={
-            'externalIssue': 'APP-123'
+            'project': '2',
+            'externalIssue': 'APP-123',
         })
 
         assert response.status_code == 201
@@ -130,6 +153,9 @@ class GroupIntegrationDetailsTest(APITestCase):
             group_id=group.id,
             linked_id=external_issue.id,
         ).exists()
+        assert OrganizationIntegration.objects.get(
+            id=org_integration.id
+        ).config['project_issue_defaults'][six.text_type(group.project_id)]['project'] == '2'
 
     def test_simple_post(self):
         self.login_as(user=self.user)
@@ -139,7 +165,7 @@ class GroupIntegrationDetailsTest(APITestCase):
             provider='example',
             name='Example',
         )
-        integration.add_organization(org.id)
+        org_integration = integration.add_organization(org.id)
 
         path = '/api/0/issues/{}/integrations/{}/'.format(group.id, integration.id)
 
@@ -147,7 +173,10 @@ class GroupIntegrationDetailsTest(APITestCase):
         assert response.status_code == 400
         assert response.data['non_field_errors'] == 'Assignee is required'
 
-        response = self.client.post(path, data={'assignee': 'foo@sentry.io'})
+        response = self.client.post(path, data={
+            'project': '1',
+            'assignee': 'foo@sentry.io',
+        })
         assert response.status_code == 201
 
         external_issue = ExternalIssue.objects.get(
@@ -163,6 +192,9 @@ class GroupIntegrationDetailsTest(APITestCase):
             group_id=group.id,
             linked_id=external_issue.id,
         ).exists()
+        assert OrganizationIntegration.objects.get(
+            id=org_integration.id
+        ).config['project_issue_defaults'][six.text_type(group.project_id)]['project'] == '1'
 
     def test_simple_delete(self):
         self.login_as(user=self.user)

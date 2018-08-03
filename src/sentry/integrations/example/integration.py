@@ -42,6 +42,13 @@ metadata = IntegrationMetadata(
     aspects={},
 )
 
+example_project_field = {
+    'name': 'project',
+    'label': 'Project',
+    'choices': [('1', 'Project 1'), ('2', 'Project 2')],
+    'type': 'select',
+}
+
 
 class ExampleIntegration(Integration, IssueSyncMixin):
     comment_key = 'sync_comments'
@@ -55,6 +62,19 @@ class ExampleIntegration(Integration, IssueSyncMixin):
 
     def create_comment(self):
         pass
+
+    def get_persisted_default_config_fields(self):
+        return ['project']
+
+    def get_create_issue_config(self, group, **kwargs):
+        fields = super(ExampleIntegration, self).get_create_issue_config(group, **kwargs)
+
+        return fields + [example_project_field]
+
+    def get_link_issue_config(self, group, **kwargs):
+        fields = super(ExampleIntegration, self).get_link_issue_config(group, **kwargs)
+
+        return fields + [example_project_field]
 
     def create_issue(self, data, **kwargs):
         if 'assignee' not in data:
