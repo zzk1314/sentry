@@ -1,9 +1,15 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import styled from 'react-emotion';
+import styled, {css} from 'react-emotion';
 import InlineSvg from 'app/components/inlineSvg';
 import space from 'app/styles/space';
 import {capitalize} from 'lodash';
+import Hovercard from 'app/components/hovercard';
+
+const hoverCardContainer = css`
+  display: flex;
+  align-items: center;
+`;
 
 class IssueSyncElement extends React.Component {
   static propTypes = {
@@ -77,10 +83,14 @@ class IssueSyncElement extends React.Component {
   render() {
     return (
       <IssueSyncListElementContainer>
-        <div>
+        <Hovercard
+          containerClassName={hoverCardContainer}
+          header="cool header"
+          body="cool body"
+        >
           {this.getIcon()}
           {this.getLink()}
-        </div>
+        </Hovercard>
         {this.props.onOpen &&
           this.props.onClose && (
             <OpenCloseIcon
@@ -99,8 +109,9 @@ const IssueSyncListElementContainer = styled('div')`
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   &:not(:last-child) {
-    padding-bottom: ${space(2)};
+    margin-bottom: ${space(2)};
   }
 `;
 
@@ -118,6 +129,7 @@ const IntegrationLink = styled('a')`
   color: ${p => p.theme.gray4};
   border-bottom: 1px solid ${p => p.theme.gray4};
   cursor: pointer;
+  line-height: 1;
 
   &,
   &:hover {
