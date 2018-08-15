@@ -8,6 +8,7 @@ import {addSuccessMessage, addErrorMessage} from 'app/actionCreators/indicator';
 import AsyncComponent from 'app/components/asyncComponent';
 import IssueSyncListElement from 'app/components/issueSyncListElement';
 import FieldFromConfig from 'app/views/settings/components/forms/fieldFromConfig';
+import IntegrationItem from 'app/views/organizationIntegrations/integrationItem';
 import Form from 'app/views/settings/components/forms/form';
 import SentryTypes from 'app/sentryTypes';
 import {t} from 'app/locale';
@@ -240,6 +241,8 @@ class ExternalIssueActions extends AsyncComponent {
   renderBody() {
     let {action, selectedIntegration, issue} = this.state;
 
+    console.log(selectedIntegration);
+
     return (
       <React.Fragment>
         <IssueSyncListElement
@@ -249,6 +252,10 @@ class ExternalIssueActions extends AsyncComponent {
           externalIssueKey={issue ? issue.key : null}
           onClose={this.deleteIssue.bind(this)}
           integrationType={selectedIntegration.provider.key}
+          hoverCardHeader={`Integration: ${selectedIntegration.provider.name}`}
+          hoverCardBody={
+            <IntegrationItem integration={selectedIntegration} compact={false} />
+          }
         />
         {selectedIntegration && (
           <Modal

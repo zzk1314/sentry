@@ -5,6 +5,38 @@ exports[`ExternalIssueActions with an external issue linked renders 1`] = `
   externalIssueId="100"
   externalIssueKey="getsentry/sentry#2"
   externalIssueLink="https://github.com/MeredithAnya/testing/issues/2"
+  hoverCardBody={
+    <IntegrationItem
+      compact={false}
+      integration={
+        Object {
+          "configData": Object {},
+          "configOrganization": Array [],
+          "configProject": Array [],
+          "domainName": "gtithub.com/test-integration",
+          "externalIssues": Array [
+            Object {
+              "id": "100",
+              "key": "getsentry/sentry#2",
+              "url": "https://github.com/MeredithAnya/testing/issues/2",
+            },
+          ],
+          "icon": "http://example.com/integration_icon.png",
+          "id": "1",
+          "name": "Test Integration",
+          "projects": Array [],
+          "provider": Object {
+            "canAdd": true,
+            "canAddProject": false,
+            "features": Array [],
+            "key": "github",
+            "name": "GitHub",
+          },
+        }
+      }
+    />
+  }
+  hoverCardHeader="Integration: GitHub"
   integrationType="github"
   onClose={[Function]}
   onOpen={[Function]}
@@ -14,10 +46,41 @@ exports[`ExternalIssueActions with an external issue linked renders 1`] = `
       className="css-lh3vnw-IssueSyncListElementContainer e1vaar1z0"
     >
       <Hovercard
-        body="cool body"
+        body={
+          <IntegrationItem
+            compact={false}
+            integration={
+              Object {
+                "configData": Object {},
+                "configOrganization": Array [],
+                "configProject": Array [],
+                "domainName": "gtithub.com/test-integration",
+                "externalIssues": Array [
+                  Object {
+                    "id": "100",
+                    "key": "getsentry/sentry#2",
+                    "url": "https://github.com/MeredithAnya/testing/issues/2",
+                  },
+                ],
+                "icon": "http://example.com/integration_icon.png",
+                "id": "1",
+                "name": "Test Integration",
+                "projects": Array [],
+                "provider": Object {
+                  "canAdd": true,
+                  "canAddProject": false,
+                  "features": Array [],
+                  "key": "github",
+                  "name": "GitHub",
+                },
+              }
+            }
+          />
+        }
+        className="css-1nc0qe-hoverCardStyles"
         containerClassName="css-1s8b4pt-hoverCardContainer"
         displayTimeout={100}
-        header="cool header"
+        header="Integration: GitHub"
       >
         <span
           className="hovercard-container css-1s8b4pt-hoverCardContainer"
@@ -162,6 +225,32 @@ exports[`ExternalIssueActions with no external issues linked renders 1`] = `
     externalIssueId={null}
     externalIssueKey={null}
     externalIssueLink={null}
+    hoverCardBody={
+      <IntegrationItem
+        compact={false}
+        integration={
+          Object {
+            "configData": Object {},
+            "configOrganization": Array [],
+            "configProject": Array [],
+            "domainName": "gtithub.com/test-integration",
+            "externalIssues": Array [],
+            "icon": "http://example.com/integration_icon.png",
+            "id": "1",
+            "name": "Test Integration",
+            "projects": Array [],
+            "provider": Object {
+              "canAdd": true,
+              "canAddProject": false,
+              "features": Array [],
+              "key": "github",
+              "name": "GitHub",
+            },
+          }
+        }
+      />
+    }
+    hoverCardHeader="Integration: GitHub"
     integrationType="github"
     onClose={[Function]}
     onOpen={[Function]}
@@ -171,10 +260,35 @@ exports[`ExternalIssueActions with no external issues linked renders 1`] = `
         className="css-lh3vnw-IssueSyncListElementContainer e1vaar1z0"
       >
         <Hovercard
-          body="cool body"
+          body={
+            <IntegrationItem
+              compact={false}
+              integration={
+                Object {
+                  "configData": Object {},
+                  "configOrganization": Array [],
+                  "configProject": Array [],
+                  "domainName": "gtithub.com/test-integration",
+                  "externalIssues": Array [],
+                  "icon": "http://example.com/integration_icon.png",
+                  "id": "1",
+                  "name": "Test Integration",
+                  "projects": Array [],
+                  "provider": Object {
+                    "canAdd": true,
+                    "canAddProject": false,
+                    "features": Array [],
+                    "key": "github",
+                    "name": "GitHub",
+                  },
+                }
+              }
+            />
+          }
+          className="css-1nc0qe-hoverCardStyles"
           containerClassName="css-1s8b4pt-hoverCardContainer"
           displayTimeout={100}
-          header="cool header"
+          header="Integration: GitHub"
         >
           <span
             className="hovercard-container css-1s8b4pt-hoverCardContainer"
