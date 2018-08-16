@@ -70,7 +70,6 @@ exports[`OrganizationIntegrations render() with installed integrations Displays 
               Object {
                 "configData": Object {},
                 "configOrganization": Array [],
-                "configProject": Array [],
                 "domainName": "gtithub.com/test-integration",
                 "icon": "http://example.com/integration_icon.png",
                 "id": "1",
@@ -78,7 +77,6 @@ exports[`OrganizationIntegrations render() with installed integrations Displays 
                 "projects": Array [],
                 "provider": Object {
                   "canAdd": true,
-                  "canAddProject": false,
                   "features": Array [],
                   "key": "github",
                   "name": "GitHub",
@@ -93,7 +91,6 @@ exports[`OrganizationIntegrations render() with installed integrations Displays 
             provider={
               Object {
                 "canAdd": true,
-                "canAddProject": false,
                 "config": Array [],
                 "externalIssues": Array [],
                 "features": Array [],
@@ -173,7 +170,6 @@ exports[`OrganizationIntegrations render() with installed integrations Displays 
               Object {
                 "configData": Object {},
                 "configOrganization": Array [],
-                "configProject": Array [],
                 "domainName": "jira.com/test-integration",
                 "icon": "http://jira.example.com/integration_icon.png",
                 "id": "2",
@@ -181,7 +177,6 @@ exports[`OrganizationIntegrations render() with installed integrations Displays 
                 "projects": Array [],
                 "provider": Object {
                   "canAdd": true,
-                  "canAddProject": true,
                   "features": Array [],
                   "key": "jira",
                   "name": "Jira",
@@ -196,7 +191,6 @@ exports[`OrganizationIntegrations render() with installed integrations Displays 
             provider={
               Object {
                 "canAdd": false,
-                "canAddProject": true,
                 "config": Array [],
                 "features": Array [],
                 "key": "jira",
