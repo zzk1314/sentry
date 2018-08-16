@@ -11,12 +11,11 @@ import space from 'app/styles/space';
 const Delta = ({current, previous, className}) => {
   const changePercent = Math.round(Math.abs(current - previous) / (current + previous));
   const direction = !changePercent ? 0 : current - previous;
-
   return (
-    <div className={className}>
-      {!!direction && <DeltaCaret direction={direction} src="icon-caret" />}
+    <StyledDelta direction={direction} className={className}>
+      {!!direction && <DeltaCaret direction={direction} src="icon-chevron-down" />}
       {changePercent}%
-    </div>
+    </StyledDelta>
   );
 };
 Delta.propTypes = {
@@ -25,11 +24,18 @@ Delta.propTypes = {
 };
 
 const DeltaCaret = styled(InlineSvg)`
-  ${p => p.direction > 0 && `transform: rotate(180deg)`};
+  /* should probably have a chevron-up svg (: */
+  ${p => p.direction > 0 && 'transform: rotate(180deg)'};
+  width: 10px;
+  height: 10px;
 `;
 
-const StyledDelta = styled(Delta)`
-  border: 1px solid ${p => p.theme.borderLight};
+const StyledDelta = styled(Flex)`
+  align-items: center;
+  padding: 0 ${space(0.25)};
+  margin-right: ${space(0.5)};
+  font-size: ${p => p.theme.fontSizeSmall};
+  color: ${p => (p.direction > 0 ? p.theme.green : p.theme.red)};
 `;
 
 class EventsTableChart extends React.Component {
@@ -56,8 +62,8 @@ class EventsTableChart extends React.Component {
         data={data.map(({count, lastCount, name, percentage}) => [
           <Name key="name">{name}</Name>,
           <Events key="events">
-            {count}
-            <StyledDelta current={count} previous={lastCount} />
+            <Delta current={count} previous={lastCount} />
+            <span>{count}</span>
           </Events>,
           <React.Fragment key="bar">
             <BarWrapper>
@@ -115,6 +121,8 @@ const Name = styled('span')`
 `;
 
 const Events = styled(Name)`
+  display: flex;
+  align-items: center;
   margin-left: ${space(0.5)};
 `;
 
