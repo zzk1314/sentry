@@ -20,8 +20,15 @@ class EventsTableChart extends React.Component {
     ),
   };
 
+  getDifference(count, lastCount) {
+    const changePercent = Math.round(Math.abs(count - lastCount) / (count + lastCount));
+    const changeDir = !changePercent ? '' : count - lastCount > 0 ? '+' : '-';
+
+    return `${changeDir}${changePercent}%`;
+  }
+
   render() {
-    let {headers, data} = this.props;
+    const {headers, data} = this.props;
 
     return (
       <TableChart
@@ -30,9 +37,7 @@ class EventsTableChart extends React.Component {
           <Name key="name">{name}</Name>,
           <Events key="events">
             {`${count}
-            (${count > lastCount ? '+' : count === lastCount ? '' : '-'}${Math.round(
-              Math.abs(count - lastCount) / (count + lastCount)
-            )}%)`}
+            (${this.getDifference(count, lastCount)})`}
           </Events>,
           <React.Fragment key="bar">
             <BarWrapper>
@@ -77,9 +82,9 @@ const BarWrapper = styled('div')`
   margin-right: ${space(1)};
 `;
 
-const Bar = styled('div')`
+const Bar = styled(({width, ...props}) => <div {...props} />)`
   flex: 1;
-  width: ${p => p.width};
+  width: ${p => p.width}%;
   background-color: ${p => p.theme.gray1};
   height: 12px;
   border-radius: 2px;
