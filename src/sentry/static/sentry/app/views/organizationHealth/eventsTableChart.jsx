@@ -3,9 +3,34 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import styled from 'react-emotion';
 
+import InlineSvg from 'app/components/inlineSvg';
 import TableChart from 'app/components/charts/tableChart';
 import overflowEllipsis from 'app/styles/overflowEllipsis';
 import space from 'app/styles/space';
+
+const Delta = ({current, previous, className}) => {
+  const changePercent = Math.round(Math.abs(current - previous) / (current + previous));
+  const direction = !changePercent ? 0 : current - previous;
+
+  return (
+    <div className={className}>
+      {!!direction && <DeltaCaret direction={direction} src="icon-caret" />}
+      {changePercent}%
+    </div>
+  );
+};
+Delta.propTypes = {
+  current: PropTypes.number,
+  previous: PropTypes.number,
+};
+
+const DeltaCaret = styled(InlineSvg)`
+  ${p => p.direction > 0 && `transform: rotate(180deg)`};
+`;
+
+const StyledDelta = styled(Delta)`
+  border: 1px solid ${p => p.theme.borderLight};
+`;
 
 class EventsTableChart extends React.Component {
   static propTypes = {
@@ -20,12 +45,7 @@ class EventsTableChart extends React.Component {
     ),
   };
 
-  getDifference(count, lastCount) {
-    const changePercent = Math.round(Math.abs(count - lastCount) / (count + lastCount));
-    const changeDir = !changePercent ? '' : count - lastCount > 0 ? '+' : '-';
-
-    return `${changeDir}${changePercent}%`;
-  }
+  getDifference(count, lastCount) {}
 
   render() {
     const {headers, data} = this.props;
@@ -36,8 +56,8 @@ class EventsTableChart extends React.Component {
         data={data.map(({count, lastCount, name, percentage}) => [
           <Name key="name">{name}</Name>,
           <Events key="events">
-            {`${count}
-            (${this.getDifference(count, lastCount)})`}
+            {count}
+            <StyledDelta current={count} previous={lastCount} />
           </Events>,
           <React.Fragment key="bar">
             <BarWrapper>
